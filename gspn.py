@@ -20,9 +20,9 @@ class gspn(object):
         ntokens.reverse()
         while name:
             if ntokens:
-                self.places[name.pop()].append(ntokens.pop())
+                self.places[name.pop()] = ntokens.pop()
             else:
-                self.places[name.pop()].append(0)
+                self.places[name.pop()] = 0
 
         return self.places
 
@@ -54,7 +54,7 @@ class gspn(object):
         '''
         PxT represents the arc connections from places to transitions
         '''
-
+        # check how to create a matrix!
         return True
 
     def add_out_connections(self):
@@ -82,6 +82,7 @@ class gspn(object):
 if __name__ == '__main__':
     # create a generalized stochastic petri net structure
     my_pn = gspn()
-    trans = my_pn.add_transitions(['1', '2', '3', '4'], ['exp', 'imm', 'exp'], [0.5, 0.1])
+    places = my_pn.add_places(['p1', 'p2', 'p3', 'p4'], [1, 10])
+    trans = my_pn.add_transitions(['t1', 't2', 't3', 't4'], ['exp', 'exp', 'exp', 'exp'])
     print(trans)
-    # my_pn.add_places()
+    print(places)
