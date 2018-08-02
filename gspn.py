@@ -1,3 +1,8 @@
+import numpy as np
+# import pntools as pnt
+# from pntools import *
+import petrinet as pn
+import xml.etree.ElementTree as et # XML parser
 
 class gspn(object):
     '''
@@ -10,7 +15,6 @@ class gspn(object):
         '''
         self.places = {}
         self.transitions = {}
-        self.in_transitions = []
         self.arc_in = {}
         self.arc_out = {}
 
@@ -56,8 +60,13 @@ class gspn(object):
         '''
         PxT represents the arc connections from places to transitions
         '''
-        # check how to create a matrix!
-        self.arc_in = arc
+        # self.arc_in = arc
+        # self.arc_in_m = np.array([])
+
+        # self.arc_in_m = [0] * len(arc)
+        # for place, token in arc.items():
+        #     np.append(self.arc_in_m, [, ])
+        #     np.append(self.arc_in_m, [place, ])
 
         return True
 
@@ -101,10 +110,12 @@ class gspn(object):
 
         '''
 
+        # for place, token in self.places.items():
+
+
         return True
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # create a generalized stochastic petri net structure
     my_pn = gspn()
     # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
@@ -133,3 +144,16 @@ if __name__ == '__main__':
     print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
 
     print('Places: ', my_pn.get_current_marking(), '\n')
+
+    # tree = et.parse('example.pnml') # parse XML with ElementTree
+    # root = tree.getroot()
+    # print(tree)
+    #
+    # for net_node in root.iter('net'):
+    #     print(net_node)
+
+    nets = pn.parse_pnml_file('example.pnml')
+    # print(nets)
+    for net in nets:
+        print(nets.pop())
+        print('------------')
