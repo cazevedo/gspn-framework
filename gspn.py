@@ -3,8 +3,9 @@ import numpy as np
 # from pntools import *
 import petrinet as pn
 import xml.etree.ElementTree as et # XML parser
-from graphviz import Digraph
+# from graphviz import Digraph
 import time
+import warnings
 
 class gspn(object):
     '''
@@ -19,8 +20,10 @@ class gspn(object):
         self.transitions = {}
         self.arc_in = {}
         self.arc_out = {}
-        self.arc_in_m = np.array([[]])
-        self.arc_out_m = np.array([[]])
+        # self.arc_in_m = np.array([[]], dtype=object)
+        # self.arc_out_m = np.array([[]], dtype=object)
+        self.arc_in_m = []
+        self.arc_out_m = []
 
     def add_places(self, name, ntokens=[]):
         '''
@@ -71,38 +74,52 @@ class gspn(object):
         # ]
         # column -> a[:,1]
         # row -> a[1,:]
+        # self.column(A, 1)
+        # zip(*mm)[1] -> column
+
         self.arc_in = arc_in
         self.arc_out = arc_out
 
-        list_items = np.array([])
-        for source, target in arc_in.items():
-            for item in target:
-                list_items = np.append(list_items, item)
+        # IN ARCS MAP
+        self.arc_in_m = []
+        for i in range(len(self.places.keys())+1):
+            self.arc_in_m.append([0]*(len(self.transitions.keys())))
 
-        self.arc_in_m = np.zeros( (len(arc_in)+1 , len(np.unique(list_items))+1) )
-        # self.arc_in_m[0,:] =
-        # self.arc_in_m[:,0] =
+        first_column = list(self.places.keys())
+        first_column.insert(0, None)
+        self.arc_in_m[0] = list(self.transitions.keys())
 
-        # for source, target in arc_in.items():
-        #     arc_in_m
+        self.arc_in_m = list(zip(*self.arc_in_m))
+        self.arc_in_m.insert(0, first_column)
+        self.arc_in_m = map(list, zip(*self.arc_in_m))
+        # self.arc_in_m = zip(*list(list([first_column])+list(zip(*self.arc_in_m))))
 
-        # arc_in = {}
-        # arc_in['p1'] = ['t1']
-        # arc_in['p2'] = ['t2']
-        # arc_in['p3'] = ['t3']
-        # arc_in['p4'] = ['t4']
-        # arc_in['p5'] = ['t1', 't3']
+        temp = zip(*self.arc_in_m)
+        for place, target in arc_in.items():
+            for transition in target:
+                self.arc_in_m[temp[0].index(place)][self.arc_in_m[0].index(transition)] = 1
 
-        # self.arc_in = arc
+        # OUT ARCS MAP
+        self.arc_out_m = []
+        for i in range(len(self.places.keys())+1):
+            self.arc_out_m.append([0]*(len(self.transitions.keys())))
 
-        # self.arc_in_m = np.array([])
+        first_column = list(self.places.keys())
+        first_column.insert(0, None)
+        self.arc_in_m[0] = list(self.transitions.keys())
 
-        # self.arc_in_m = [0] * len(arc)
-        # for place, token in arc.items():
-        #     np.append(self.arc_in_m, [, ])
-        #     np.append(self.arc_in_m, [place, ])
+        self.arc_in_m = list(zip(*self.arc_in_m))
+        self.arc_in_m.insert(0, first_column)
+        self.arc_in_m = map(list, zip(*self.arc_in_m))
+        # self.arc_in_m = zip(*list(list([first_column])+list(zip(*self.arc_in_m))))
 
-        return True
+        temp = zip(*self.arc_in_m)
+        for place, target in arc_in.items():
+            for transition in target:
+                self.arc_in_m[temp[0].index(place)][self.arc_in_m[0].index(transition)] = 1
+
+
+        return self.arc_in_m, temp
 
     def add_arc_out(self, arc):
         '''
@@ -148,6 +165,9 @@ class gspn(object):
 
 
         return True
+
+    def __column(matrix, i):
+        return [row[i] for row in matrix]
 
 class pnml_tools(object):
     def __init__(self):
@@ -199,12 +219,13 @@ class pnml_tools(object):
         return True
 
     def show_gspn(self, file='', gspn=''):
+        warnings.filterwarnings("ignore")
         # shape
         # style box rect
         # ref: https://www.graphviz.org/documentation/
         # check where to put forcelabels=true and  labelfloat='true'
 
-        gspn_draw = Digraph(name='gspn')
+        gspn_draw = Digraph()
 
         # places
         gspn_draw.node('P0',shape='circle', label='<&#9899;>', xlabel='P0')
@@ -253,7 +274,7 @@ if __name__ == "__main__":
     arc_out['t2'] = ['p5', 'p1']
     arc_out['t3'] = ['p4']
     arc_out['t4'] = ['p3', 'p5']
-    mm = my_pn.add_arcs(arc_in ,arc_out)
+    mm , z = my_pn.add_arcs(arc_in ,arc_out)
 
     # print('Places: ' , my_pn.get_current_marking(), '\n')
     # print('Trans: ' , my_pn.get_transitions(), '\n')
@@ -268,8 +289,8 @@ if __name__ == "__main__":
     # mm = parset.import_pnml('pipediag.xml')
     # print(mm)
 
-    parset = pnml_tools()
-    parset.show_gspn()
+    # parset = pnml_tools()
+    # parset.show_gspn()
 
     # nets = pn.parse_pnml_file('example.pnml')
     # # print(nets)
