@@ -1,11 +1,4 @@
-import numpy as np
-# import pntools as pnt
-# from pntools import *
-import petrinet as pn
-import xml.etree.ElementTree as et # XML parser
-# from graphviz import Digraph
-import time
-import warnings
+# import time
 
 class gspn(object):
     '''
@@ -17,8 +10,8 @@ class gspn(object):
         '''
         self.places = {}
         self.transitions = {}
-        self.arc_in = {}
-        self.arc_out = {}
+        # self.arc_in = {}
+        # self.arc_out = {}
         self.arc_in_m = []
         self.arc_out_m = []
 
@@ -63,6 +56,11 @@ class gspn(object):
 
         return self.transitions
 
+    def add_arcs_matrices(self, arc_in_m, arc_out_m):
+        self.arc_in_m = arc_in_m
+        self.arc_out_m = arc_out_m
+        return True
+
     def add_arcs(self, arc_in, arc_out):
         '''
         Input:
@@ -86,48 +84,22 @@ class gspn(object):
         Output:
         arc_in_m -> two-dimentional list
         arc_out_m -> two-dimentional list
-
-        arc_in_m = P × T : represents the arc connections from places to transitions, such that i lj = 1 if,
-        and only if, there is an arc from p l to t j , and i lj = 0 otherwise;
-
-        arc_out_m = T × P represent the arc connections from transition to places, such that o lj = 1 if,
-        and only if, there is an arc from t l to p j , and o lj = 0 otherwise;
         '''
 
-        self.arc_in = arc_in
-        self.arc_out = arc_out
+        # self.arc_in = arc_in
+        # self.arc_out = arc_out
 
-        # IN ARCS MAP
-        self.arc_in_m = []
-        for i in range(len(self.places.keys())+1):
-            self.arc_in_m.append([0]*(len(self.transitions.keys())))
+        self.arc_in_m, self.arc_out_m = self.__CreateArcMatrix(self.places, self.transitions)
 
-        first_column = list(self.places.keys())
-        first_column.insert(0, None)
-        self.arc_in_m[0] = list(self.transitions.keys())
-
-        self.arc_in_m = list(zip(*self.arc_in_m))
-        self.arc_in_m.insert(0, first_column)
-        self.arc_in_m = list(map(list, zip(*self.arc_in_m)))
-
+        # IN ARCS MATRIX
+        # replace the zeros by ones in the positions where there is an arc connection from a place to a transition
         temp = list(zip(*self.arc_in_m))
         for place, target in arc_in.items():
             for transition in target:
                 self.arc_in_m[temp[0].index(place)][self.arc_in_m[0].index(transition)] = 1
 
-        # OUT ARCS MAP
-        self.arc_out_m = []
-        for i in range(len(self.transitions.keys())+1):
-            self.arc_out_m.append([0]*(len(self.places.keys())))
-
-        first_column = list(self.transitions.keys())
-        first_column.insert(0, None)
-        self.arc_out_m[0] = list(self.places.keys())
-
-        self.arc_out_m = list(zip(*self.arc_out_m))
-        self.arc_out_m.insert(0, first_column)
-        self.arc_out_m = list(map(list, zip(*self.arc_out_m)))
-
+        # OUT ARCS MATRIX
+        # replace the zeros by ones in the positions where there is an arc connection from a transition to a place
         temp = list(zip(*self.arc_out_m))
         for transition, target in arc_out.items():
             for place in target:
@@ -135,6 +107,40 @@ class gspn(object):
 
 
         return self.arc_in_m, self.arc_out_m
+
+    def __CreateArcMatrix(self, places, transitions):
+        # create a zeros matrix (# of places + 1) by (# of transitions)
+        arc_in_m = []
+        for i in range(len(places.keys())+1):
+            arc_in_m.append([0]*(len(transitions.keys())))
+
+        # replace the first row with all the transitions names
+        arc_in_m[0] = list(transitions.keys())
+
+        # add a first column with all the places names
+        first_column = list(places.keys())
+        first_column.insert(0, None) # put None in the element (0,0) since it has no use
+        arc_in_m = list(zip(*arc_in_m))
+        arc_in_m.insert(0, first_column)
+        arc_in_m = list(map(list, zip(*arc_in_m)))
+
+        # create a zeros matrix (# of transitions + 1) by (# of places)
+        arc_out_m = []
+        for i in range(len(transitions.keys())+1):
+            arc_out_m.append([0]*(len(places.keys())))
+
+        # replace the first row with all the places names
+        arc_out_m[0] = list(places.keys())
+
+        # add a first column with all the transitions names
+        first_column = list(transitions.keys())
+        first_column.insert(0, None)  # put None in the element (0,0) since it has no use
+        arc_out_m = list(zip(*arc_out_m))
+        arc_out_m.insert(0, first_column)
+        arc_out_m = list(map(list, zip(*arc_out_m)))
+
+        return arc_in_m, arc_out_m
+
 
     def add_tokens(self, place_name, ntokens):
         '''
@@ -158,7 +164,7 @@ class gspn(object):
         return self.transitions
 
     def get_arcs(self):
-        return self.arc_in, self.arc_out, self.arc_in_m, self.arc_out_m
+        return self.arc_in_m, self.arc_out_m
 
     def execute(self, steps):
         '''
@@ -170,94 +176,8 @@ class gspn(object):
 
         return True
 
-    def __column(matrix, i):
-        return [row[i] for row in matrix]
-
-class pnml_tools(object):
-    def __init__(self):
-        '''
-        Class constructor: will get executed at the moment
-        of object creation
-        '''
-        self.list_gspn = []  # list of parsed GSPN objects
-        self.gspn = gspn()
-
-
-    def import_pnml(self, file):
-        tree = et.parse(file)  # parse XML with ElementTree
-        root = tree.getroot()
-
-        for petrinet in root.iter('net'):
-
-            place_name = []
-            place_marking = []
-            for pl in petrinet.iter('place'): # iterate over all places of the petri net
-                place_name.append(pl.get('id')) # get place name encoded as 'id' in the pnml structure
-
-                text = pl.find('./initialMarking/value').text
-                place_marking.append(int(text.split(',')[-1])) # get place marking encoded inside 'initalMarking', as the 'text' of the key 'value'
-
-            self.gspn.add_places(place_name, place_marking) # add the compiled list of places to the gspn object
-
-            transition_name = []
-            transition_type = []
-            transition_rate = []
-            for tr in petrinet.iter('transition'): # iterate over all transitions of the petri net
-                transition_name.append(tr.get('id')) # get transition name encoded as 'id' in the pnml structure
-
-                if (tr.find('./timed/value').text == 'true'): # get the transition type either exponential ('exp') or immediate ('imm')
-                    transition_type.append('exp')
-                else:
-                    transition_type.append('imm')
-
-                transition_rate.append(float(tr.find('./rate/value').text)) # get the transition fire rate or weight
-
-            self.gspn.add_transitions(transition_name, transition_type, transition_rate)  # add the compiled list of transitions to the gspn object
-
-
-
-        return True
-
-    def export_pnml(self, file):
-
-        return True
-
-    def show_gspn(self, file='', gspn=''):
-        warnings.filterwarnings("ignore")
-        # shape
-        # style box rect
-        # ref: https://www.graphviz.org/documentation/
-        # check where to put forcelabels=true and  labelfloat='true'
-
-        gspn_draw = Digraph()
-
-        # places
-        gspn_draw.node('P0',shape='circle', label='<&#9899;>', xlabel='P0')
-        gspn_draw.node('P1',shape='circle',  label='', xlabel='P1')
-
-        # exponential transitions
-        gspn_draw.node('T0', shape='rectangle', color='black', label='', xlabel='T2')
-
-        # immediate transitions
-        gspn_draw.node('T1', shape='rectangle', style='filled', color='black', label='', xlabel='T2')
-        gspn_draw.node('T2', shape='rectangle', style='filled', color='black', label='', xlabel='T2')
-
-        gspn_draw.edge('P0','T0')
-        gspn_draw.edge('P0','T1')
-        gspn_draw.edge('P1','T2')
-        gspn_draw.edge('T0','P1')
-        gspn_draw.edge('T1','P1')
-        gspn_draw.edge('T2','P0')
-
-        gspn_draw.render('GV_gspn.gv', view=True)
-
-        time.sleep(5)
-
-        gspn_draw.node('P0', shape='circle', label='', xlabel='P0')
-        gspn_draw.node('P1', shape='circle', label='<&#9899;>', xlabel='P1')
-
-        gspn_draw.render('GV_gspn.gv', view=True)
-
+    # def __column(matrix, i):
+    #     return [row[i] for row in matrix]
 
 if __name__ == "__main__":
     # create a generalized stochastic petri net structure
@@ -278,7 +198,7 @@ if __name__ == "__main__":
     arc_out['t2'] = ['p5', 'p1']
     arc_out['t3'] = ['p4']
     arc_out['t4'] = ['p3', 'p5']
-    my_pn.add_arcs(arc_in ,arc_out)
+    a, b = my_pn.add_arcs(arc_in ,arc_out)
 
     # print('Places: ' , my_pn.get_current_marking(), '\n')
     # print('Trans: ' , my_pn.get_transitions(), '\n')
