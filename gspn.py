@@ -13,15 +13,12 @@ class gspn(object):
     '''
     def __init__(self):
         '''
-        Class constructor: will get executed at the moment
-        of object creation
+
         '''
         self.places = {}
         self.transitions = {}
         self.arc_in = {}
         self.arc_out = {}
-        # self.arc_in_m = np.array([[]], dtype=object)
-        # self.arc_out_m = np.array([[]], dtype=object)
         self.arc_in_m = []
         self.arc_out_m = []
 
@@ -41,10 +38,13 @@ class gspn(object):
 
     def add_transitions(self, name, type=[], rate=[]):
         '''
+        Input
         name: list of strings, denoting the name of the transition
         type: list of strings, indicating if the corresponding transition is either immediate ('imm') or exponential ('exp')
         rate: list of floats, representing a static firing rate in an exponential transition and
                 a static (non marking dependent) weight in a immediate transition
+        Output
+        dictionary of transitions
         '''
         name.reverse()
         type.reverse()
@@ -65,17 +65,34 @@ class gspn(object):
 
     def add_arcs(self, arc_in, arc_out):
         '''
-        PxT represents the arc connections from places to transitions
+        Input:
+        arc_in -> dictionary mapping the arc connections from places to transitions
+        arc_out -> dictionary mapping the arc connections from transitions to places
+
+        example:
+        arc_in = {}
+        arc_in['p1'] = ['t1']
+        arc_in['p2'] = ['t2']
+        arc_in['p3'] = ['t3']
+        arc_in['p4'] = ['t4']
+        arc_in['p5'] = ['t1', 't3']
+
+        arc_out = {}
+        arc_out['t1'] = ['p2']
+        arc_out['t2'] = ['p5', 'p1']
+        arc_out['t3'] = ['p4']
+        arc_out['t4'] = ['p3', 'p5']
+
+        Output:
+        arc_in_m -> two-dimentional list
+        arc_out_m -> two-dimentional list
+
+        arc_in_m = P × T : represents the arc connections from places to transitions, such that i lj = 1 if,
+        and only if, there is an arc from p l to t j , and i lj = 0 otherwise;
+
+        arc_out_m = T × P represent the arc connections from transition to places, such that o lj = 1 if,
+        and only if, there is an arc from t l to p j , and o lj = 0 otherwise;
         '''
-        # matrix = two dimentional array
-        # [
-        # [1, 2, 3],
-        # [4, 5, 6]
-        # ]
-        # column -> a[:,1]
-        # row -> a[1,:]
-        # self.column(A, 1)
-        # zip(*mm)[1] -> column
 
         self.arc_in = arc_in
         self.arc_out = arc_out
@@ -91,43 +108,33 @@ class gspn(object):
 
         self.arc_in_m = list(zip(*self.arc_in_m))
         self.arc_in_m.insert(0, first_column)
-        self.arc_in_m = map(list, zip(*self.arc_in_m))
-        # self.arc_in_m = zip(*list(list([first_column])+list(zip(*self.arc_in_m))))
+        self.arc_in_m = list(map(list, zip(*self.arc_in_m)))
 
-        temp = zip(*self.arc_in_m)
+        temp = list(zip(*self.arc_in_m))
         for place, target in arc_in.items():
             for transition in target:
                 self.arc_in_m[temp[0].index(place)][self.arc_in_m[0].index(transition)] = 1
 
         # OUT ARCS MAP
         self.arc_out_m = []
-        for i in range(len(self.places.keys())+1):
-            self.arc_out_m.append([0]*(len(self.transitions.keys())))
+        for i in range(len(self.transitions.keys())+1):
+            self.arc_out_m.append([0]*(len(self.places.keys())))
 
-        first_column = list(self.places.keys())
+        first_column = list(self.transitions.keys())
         first_column.insert(0, None)
-        self.arc_in_m[0] = list(self.transitions.keys())
+        self.arc_out_m[0] = list(self.places.keys())
 
-        self.arc_in_m = list(zip(*self.arc_in_m))
-        self.arc_in_m.insert(0, first_column)
-        self.arc_in_m = map(list, zip(*self.arc_in_m))
-        # self.arc_in_m = zip(*list(list([first_column])+list(zip(*self.arc_in_m))))
+        self.arc_out_m = list(zip(*self.arc_out_m))
+        self.arc_out_m.insert(0, first_column)
+        self.arc_out_m = list(map(list, zip(*self.arc_out_m)))
 
-        temp = zip(*self.arc_in_m)
-        for place, target in arc_in.items():
-            for transition in target:
-                self.arc_in_m[temp[0].index(place)][self.arc_in_m[0].index(transition)] = 1
+        temp = list(zip(*self.arc_out_m))
+        for transition, target in arc_out.items():
+            for place in target:
+                self.arc_out_m[temp[0].index(transition)][self.arc_out_m[0].index(place)] = 1
 
 
-        return self.arc_in_m, temp
-
-    def add_arc_out(self, arc):
-        '''
-        TxP represents the arc connections from transitions to places
-        '''
-        self.arc_out = arc
-
-        return True
+        return self.arc_in_m, self.arc_out_m
 
     def add_tokens(self, place_name, ntokens):
         '''
@@ -150,11 +157,8 @@ class gspn(object):
     def get_transitions(self):
         return self.transitions
 
-    def get_in_arcs(self):
-        return self.arc_in
-
-    def get_out_arcs(self):
-        return self.arc_out
+    def get_arcs(self):
+        return self.arc_in, self.arc_out, self.arc_in_m, self.arc_out_m
 
     def execute(self, steps):
         '''
@@ -274,7 +278,7 @@ if __name__ == "__main__":
     arc_out['t2'] = ['p5', 'p1']
     arc_out['t3'] = ['p4']
     arc_out['t4'] = ['p3', 'p5']
-    mm , z = my_pn.add_arcs(arc_in ,arc_out)
+    my_pn.add_arcs(arc_in ,arc_out)
 
     # print('Places: ' , my_pn.get_current_marking(), '\n')
     # print('Trans: ' , my_pn.get_transitions(), '\n')
