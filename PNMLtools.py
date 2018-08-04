@@ -73,7 +73,7 @@ class pnml_tools(object):
 
         return True
 
-    def show_gspn(self, file='', gspn=''):
+    def show_gspn(self, file, gspn):
         warnings.filterwarnings("ignore")
         # shape
         # style box rect
@@ -82,32 +82,40 @@ class pnml_tools(object):
 
         gspn_draw = Digraph()
 
-        # places
-        gspn_draw.node('P0',shape='circle', label='<&#9899;>', xlabel='P0')
-        gspn_draw.node('P1',shape='circle',  label='', xlabel='P1')
+        # draw places and marking
+        plcs = gspn.get_current_marking()
+        for place, marking in plcs.items():
+            if int(marking) == 0:
+                gspn_draw.node(place, shape='circle', label='', xlabel=place)
+            else:
+                lb = '<' + '&#9899;'*int(marking) + '>'
+                gspn_draw.node(place, shape='circle', label=lb, xlabel=place)
 
-        # exponential transitions
-        gspn_draw.node('T0', shape='rectangle', color='black', label='', xlabel='T2')
+        # draw transitions
+        trns = gspn.get_transitions()
+        for transition, value in trns.items():
+            if value[0] == 'exp':
+                gspn_draw.node(transition, shape='rectangle', color='black', label='', xlabel=transition)
+            else:
+                gspn_draw.node(transition, shape='rectangle', style='filled', color='black', label='', xlabel=transition)
 
-        # immediate transitions
-        gspn_draw.node('T1', shape='rectangle', style='filled', color='black', label='', xlabel='T2')
-        gspn_draw.node('T2', shape='rectangle', style='filled', color='black', label='', xlabel='T2')
+        # draw edges
+        edge_in, edge_out = gspn.get_arcs()
 
-        gspn_draw.edge('P0','T0')
-        gspn_draw.edge('P0','T1')
-        gspn_draw.edge('P1','T2')
-        gspn_draw.edge('T0','P1')
-        gspn_draw.edge('T1','P1')
-        gspn_draw.edge('T2','P0')
+        # draw arcs in connections from place to transition
+        for row_index in range(1,len(edge_in)):
+            for column_index in range(1,len(edge_in[row_index])):
+                if edge_in[row_index][column_index] == 1:
+                    gspn_draw.edge(edge_in[row_index][0], edge_in[0][column_index])
 
-        gspn_draw.render('GV_gspn.gv', view=True)
+        # draw arcs out connections from transition to place
+        for row_index in range(1,len(edge_out)):
+            for column_index in range(1,len(edge_out[row_index])):
+                if edge_out[row_index][column_index] == 1:
+                    gspn_draw.edge(edge_out[row_index][0], edge_out[0][column_index])
 
-        # time.sleep(5)
-
-        gspn_draw.node('P0', shape='circle', label='', xlabel='P0')
-        gspn_draw.node('P1', shape='circle', label='<&#9899;>', xlabel='P1')
-
-        gspn_draw.render('GV_gspn.gv', view=True)
+        gspn_draw.render(file+'.gv', view=True)
+        return True
 
     def __CreateArcMatrix(self, places, transitions):
         # create a zeros matrix (# of places + 1) by (# of transitions)
@@ -174,6 +182,12 @@ if __name__ == "__main__":
 
     parset = pnml_tools()
     a = parset.import_pnml('pipediag.xml')
+    pn = a[0]
+    # cr = pn.get_current_marking()
+    # print(cr.keys())
+    # for place, marking in cr:
+    #     print(place)
+    parset.show_gspn('pipediag', pn)
     # print(mm)
 
     # parset = pnml_tools()
