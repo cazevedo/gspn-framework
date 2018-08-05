@@ -132,10 +132,6 @@ class gspn_tools(object):
                 if edge_out[row_index][column_index] == 1:
                     gspn_draw.edge(edge_out[row_index][0], edge_out[0][column_index])
 
-        # gspn_draw.node_attr.update()
-        #     _attr.update(arrowhead='vee', arrowsize='2')
-        # gspn_draw.subgraph()
-
         gspn_draw.render(file+'.gv', view=True)
 
         return gspn_draw
