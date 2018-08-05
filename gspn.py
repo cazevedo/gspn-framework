@@ -1,19 +1,20 @@
 # import time
+import gspn_tools as gst
 
 class gspn(object):
     '''
-
+    # TODO: include arc firing with more than one token
     '''
     def __init__(self):
         '''
 
         '''
-        self.places = {}
-        self.transitions = {}
+        self.__places = {}
+        self.__transitions = {}
         # self.arc_in = {}
         # self.arc_out = {}
-        self.arc_in_m = []
-        self.arc_out_m = []
+        self.__arc_in_m = []
+        self.__arc_out_m  = []
 
     def add_places(self, name, ntokens=[]):
         '''
@@ -23,11 +24,11 @@ class gspn(object):
         ntokens.reverse()
         while name:
             if ntokens:
-                self.places[name.pop()] = ntokens.pop()
+                self.__places[name.pop()] = ntokens.pop()
             else:
-                self.places[name.pop()] = 0
+                self.__places[name.pop()] = 0
 
-        return self.places
+        return self.__places
 
     def add_transitions(self, name, type=[], rate=[]):
         '''
@@ -44,21 +45,21 @@ class gspn(object):
         rate.reverse()
         while name:
             tn = name.pop()
-            self.transitions[tn] = []
+            self.__transitions[tn] = []
             if type:
-                self.transitions[tn].append(type.pop())
+                self.__transitions[tn].append(type.pop())
             else:
-                self.transitions[tn].append('imm')
+                self.__transitions[tn].append('imm')
             if rate:
-                self.transitions[tn].append(rate.pop())
+                self.__transitions[tn].append(rate.pop())
             else:
-                self.transitions[tn].append(1.0)
+                self.__transitions[tn].append(1.0)
 
-        return self.transitions
+        return self.__transitions
 
     def add_arcs_matrices(self, arc_in_m, arc_out_m):
-        self.arc_in_m = arc_in_m
-        self.arc_out_m = arc_out_m
+        self.__arc_in_m = arc_in_m
+        self.__arc_out_m  = arc_out_m
         return True
 
     def add_arcs(self, arc_in, arc_out):
@@ -89,24 +90,24 @@ class gspn(object):
         # self.arc_in = arc_in
         # self.arc_out = arc_out
 
-        self.arc_in_m, self.arc_out_m = self.__CreateArcMatrix(self.places, self.transitions)
+        self.__arc_in_m, self.__arc_out_m  = self.__CreateArcMatrix(self.__places, self.__transitions)
 
         # IN ARCS MATRIX
         # replace the zeros by ones in the positions where there is an arc connection from a place to a transition
-        temp = list(zip(*self.arc_in_m))
+        temp = list(zip(*self.__arc_in_m))
         for place, target in arc_in.items():
             for transition in target:
-                self.arc_in_m[temp[0].index(place)][self.arc_in_m[0].index(transition)] = 1
+                self.__arc_in_m[temp[0].index(place)][self.__arc_in_m[0].index(transition)] = 1
 
         # OUT ARCS MATRIX
         # replace the zeros by ones in the positions where there is an arc connection from a transition to a place
-        temp = list(zip(*self.arc_out_m))
+        temp = list(zip(*self.__arc_out_m ))
         for transition, target in arc_out.items():
             for place in target:
-                self.arc_out_m[temp[0].index(transition)][self.arc_out_m[0].index(place)] = 1
+                self.__arc_out_m [temp[0].index(transition)][self.__arc_out_m [0].index(place)] = 1
 
 
-        return self.arc_in_m, self.arc_out_m
+        return self.__arc_in_m, self.__arc_out_m
 
     def __CreateArcMatrix(self, places, transitions):
         # create a zeros matrix (# of places + 1) by (# of transitions)
@@ -151,83 +152,125 @@ class gspn(object):
             ntokens.reverse()
             while place_name:
                 p = place_name.pop()
-                self.places[p] = self.places[p] + ntokens.pop()
+                self.__places[p] = self.__places[p] + ntokens.pop()
 
             return True
         else:
             return False
 
     def get_current_marking(self):
-        return self.places
+        return self.__places
 
     def get_transitions(self):
-        return self.transitions
+        return self.__transitions
 
     def get_arcs(self):
-        return self.arc_in_m, self.arc_out_m
+        return self.__arc_in_m, self.__arc_out_m
 
     def get_enabled_transitions(self):
-        list_enabled_transitions = []
+        dict_enabled_transitions = {}
+        arcs_in = list(zip(*self.__arc_in_m))
+        current_marking = self.__places
 
-        arcs_in = list(zip(*self.arc_in_m))
-
-        current_marking = self.places
-        for row_index in range(1, len(arcs_in)):  # for each transition get the places that have an input arc connection
+        # for each transition get all the places that have an input arc connection
+        for row_index in range(1, len(arcs_in)):
             places_in = []
             for column_index in range(1, len(arcs_in[row_index])):
                 if arcs_in[row_index][column_index] > 0:
                     places_in.append(arcs_in[0][column_index])
             # print(arcs_in[row_index][0], places_in)
 
+            # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it have one or more tokens)
             enabled_transition = True
             for place in places_in:
                 if current_marking.get(place) == 0:
                     enabled_transition = False
 
             if enabled_transition:
-                list_enabled_transitions.append(arcs_in[row_index][0])
+                dict_enabled_transitions[arcs_in[row_index][0]] = places_in
 
-        return list_enabled_transitions
+        return dict_enabled_transitions
 
-    def execute(self, steps):
-        '''
-
-        '''
-
-        # for place, token in self.places.items():
-
-
+    def simulate(self, steps):
+        # in this case the transition firing is sampled from the temporal distribution and the method actually waits
+        # for the time to elapse before firing
         return True
+
+    def execute(self, steps=1):
+        '''
+
+        '''
+        conflicting_transitions = {}
+        enabled_transitions = self.get_enabled_transitions()
+
+        temp = enabled_transitions.copy()
+        # check which transitions are in conflict
+        for curr_transition in enabled_transitions.keys():
+            curr_place_list = temp.pop(curr_transition)
+            conflicting_transitions[curr_transition] = []
+            for tr, pl_lst in temp.items():
+                for pl in pl_lst:
+                    if pl in curr_place_list:
+                        conflicting_transitions[curr_transition].append(tr)
+
+            # if the list is empty (i.e. there is no conflict with any other transition, just remove the dict entry
+            if not conflicting_transitions[curr_transition]:
+                del conflicting_transitions[curr_transition]
+
+
+
+
+        # from conflicting enabled transitions delete the ones that are in conflict with immediate ones and are not immediate
+
+        # sample from the probability distribution the ones in conflict and fire the one that was drawn
+
+        # the ones that are not in conflict just fire them and save the sampled times
+
+        # check the arcs out and place the tokens from the fired transitions in the output places
+
+        # return True
 
     # def __column(matrix, i):
     #     return [row[i] for row in matrix]
 
 if __name__ == "__main__":
     # create a generalized stochastic petri net structure
-    my_pn = gspn()
-    places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
-    # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'])
-    trans = my_pn.add_transitions(['t1', 't2', 't3', 't4'], ['exp', 'exp', 'exp', 'exp'], [1, 1, 0.5, 0.5])
-
-    arc_in = {}
-    arc_in['p1'] = ['t1']
-    arc_in['p2'] = ['t2']
-    arc_in['p3'] = ['t3']
-    arc_in['p4'] = ['t4']
-    arc_in['p5'] = ['t1', 't3']
-
-    arc_out = {}
-    arc_out['t1'] = ['p2']
-    arc_out['t2'] = ['p5', 'p1']
-    arc_out['t3'] = ['p4']
-    arc_out['t4'] = ['p3', 'p5']
-    a, b = my_pn.add_arcs(arc_in ,arc_out)
+    # my_pn = gspn()
+    # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
+    # # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'])
+    # trans = my_pn.add_transitions(['t1', 't2', 't3', 't4'], ['exp', 'exp', 'exp', 'exp'], [1, 1, 0.5, 0.5])
+    #
+    # arc_in = {}
+    # arc_in['p1'] = ['t1']
+    # arc_in['p2'] = ['t2']
+    # arc_in['p3'] = ['t3']
+    # arc_in['p4'] = ['t4']
+    # arc_in['p5'] = ['t1', 't3']
+    #
+    # arc_out = {}
+    # arc_out['t1'] = ['p2']
+    # arc_out['t2'] = ['p5', 'p1']
+    # arc_out['t3'] = ['p4']
+    # arc_out['t4'] = ['p3', 'p5']
+    # a, b = my_pn.add_arcs(arc_in ,arc_out)
+    #
+    # print(my_pn.get_enabled_transitions())
+    # a = my_pn.get_enabled_transitions()
 
     # print('Places: ' , my_pn.get_current_marking(), '\n')
     # print('Trans: ' , my_pn.get_transitions(), '\n')
     # print('Arcs IN: ' , my_pn.get_in_arcs(), '\n')
-    # print('Arcs OUT: ' , my_pn.get_out_arcs(), '\n')
+    # print('Arcs OUT: ' , my_pn.get_out_arcs(), '\n')z
     #
     # print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
     #
     # print('Places: ', my_pn.get_current_marking(), '\n')
+
+    parset = gst.gspn_tools()
+    a = parset.import_pnml('debug/pipediag.xml')
+    pn = a[0]
+
+    z = pn.get_enabled_transitions()
+    # print(z)
+
+    t = pn.execute(1)

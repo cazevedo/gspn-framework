@@ -75,7 +75,7 @@ class gspn_tools(object):
         return True
 
     def show_enabled_transitions(self, gspn, gspn_draw, file='default'):
-        enabled_transitions = gspn.get_enabled_transitions()
+        enabled_transitions = gspn.get_enabled_transitions().keys()
 
         trns = gspn.get_transitions()
         for transition in enabled_transitions:
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     # print('Places: ', my_pn.get_current_marking(), '\n')
 
     parset = gspn_tools()
-    a = parset.import_pnml('pipediag.xml')
+    a = parset.import_pnml('debug/pipediag.xml')
     pn = a[0]
 
     drawing = parset.show_gspn(pn, 'pipediag')
