@@ -166,6 +166,29 @@ class gspn(object):
     def get_arcs(self):
         return self.arc_in_m, self.arc_out_m
 
+    def get_enabled_transitions(self):
+        list_enabled_transitions = []
+
+        arcs_in = list(zip(*self.arc_in_m))
+
+        current_marking = self.places
+        for row_index in range(1, len(arcs_in)):  # for each transition get the places that have an input arc connection
+            places_in = []
+            for column_index in range(1, len(arcs_in[row_index])):
+                if arcs_in[row_index][column_index] > 0:
+                    places_in.append(arcs_in[0][column_index])
+            # print(arcs_in[row_index][0], places_in)
+
+            enabled_transition = True
+            for place in places_in:
+                if current_marking.get(place) == 0:
+                    enabled_transition = False
+
+            if enabled_transition:
+                list_enabled_transitions.append(arcs_in[row_index][0])
+
+        return list_enabled_transitions
+
     def execute(self, steps):
         '''
 
@@ -208,16 +231,3 @@ if __name__ == "__main__":
     # print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
     #
     # print('Places: ', my_pn.get_current_marking(), '\n')
-
-    # parset = pnml_tools()
-    # mm = parset.import_pnml('pipediag.xml')
-    # print(mm)
-
-    # parset = pnml_tools()
-    # parset.show_gspn()
-
-    # nets = pn.parse_pnml_file('example.pnml')
-    # # print(nets)
-    # for net in nets:
-    #     print(nets.pop())
-    #     print('------------')

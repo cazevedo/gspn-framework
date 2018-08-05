@@ -2,8 +2,9 @@ import gspn as pn
 import xml.etree.ElementTree as et # XML parser
 from graphviz import Digraph
 import warnings
+import time
 
-class pnml_tools(object):
+class gspn_tools(object):
     def __init__(self):
         '''
         Class constructor: will get executed at the moment
@@ -70,10 +71,25 @@ class pnml_tools(object):
         return list_gspn
 
     def export_pnml(self, gspn):
-
+        # TODO: EXPORT PNML FROM GSPN
         return True
 
-    def show_gspn(self, file, gspn):
+    def show_enabled_transitions(self, gspn, gspn_draw, file='default'):
+        enabled_transitions = gspn.get_enabled_transitions()
+
+        trns = gspn.get_transitions()
+        for transition in enabled_transitions:
+            transition_type = trns.get(transition)[0]
+            if transition_type == 'exp':
+                gspn_draw.node(transition, shape='rectangle', color='red', label='', xlabel=transition)
+            else:
+                gspn_draw.node(transition, shape='rectangle', style='filled', color='red', label='', xlabel=transition)
+
+        gspn_draw.render(file + '.gv', view=True)
+
+        return gspn_draw
+
+    def show_gspn(self, gspn, file='default'):
         warnings.filterwarnings("ignore")
         # shape
         # style box rect
@@ -81,6 +97,8 @@ class pnml_tools(object):
         # check where to put forcelabels=true and  labelfloat='true'
 
         gspn_draw = Digraph()
+
+        gspn_draw.attr('node', forcelabels='true')
 
         # draw places and marking
         plcs = gspn.get_current_marking()
@@ -114,8 +132,13 @@ class pnml_tools(object):
                 if edge_out[row_index][column_index] == 1:
                     gspn_draw.edge(edge_out[row_index][0], edge_out[0][column_index])
 
+        # gspn_draw.node_attr.update()
+        #     _attr.update(arrowhead='vee', arrowsize='2')
+        # gspn_draw.subgraph()
+
         gspn_draw.render(file+'.gv', view=True)
-        return True
+
+        return gspn_draw
 
     def __CreateArcMatrix(self, places, transitions):
         # create a zeros matrix (# of places + 1) by (# of transitions)
@@ -180,22 +203,13 @@ if __name__ == "__main__":
     #
     # print('Places: ', my_pn.get_current_marking(), '\n')
 
-    parset = pnml_tools()
+    parset = gspn_tools()
     a = parset.import_pnml('pipediag.xml')
     pn = a[0]
-    # cr = pn.get_current_marking()
-    # print(cr.keys())
-    # for place, marking in cr:
-    #     print(place)
-    parset.show_gspn('pipediag', pn)
-    # print(mm)
 
-    # parset = pnml_tools()
-    # parset.show_gspn()
+    drawing = parset.show_gspn(pn, 'pipediag')
 
-    # nets = pn.parse_pnml_file('example.pnml')
-    # # print(nets)
-    # for net in nets:
-    #     print(nets.pop())
-    #     print('------------')
+    time.sleep(2)
+
+    parset.show_enabled_transitions(pn, drawing, 'pipediag')
 
