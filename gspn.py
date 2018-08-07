@@ -3,7 +3,7 @@ import gspn_tools as gst
 
 class gspn(object):
     '''
-    # TODO: include arc firing with more than one token
+    # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
     '''
     def __init__(self):
         '''
@@ -101,7 +101,7 @@ class gspn(object):
 
         # OUT ARCS MATRIX
         # replace the zeros by ones in the positions where there is an arc connection from a transition to a place
-        temp = list(zip(*self.__arc_out_m ))
+        temp = list(zip(*self.__arc_out_m))
         for transition, target in arc_out.items():
             for place in target:
                 self.__arc_out_m [temp[0].index(transition)][self.__arc_out_m [0].index(place)] = 1
@@ -120,7 +120,7 @@ class gspn(object):
 
         # add a first column with all the places names
         first_column = list(places.keys())
-        first_column.insert(0, None) # put None in the element (0,0) since it has no use
+        first_column.insert(0, '') # put None in the element (0,0) since it has no use
         arc_in_m = list(zip(*arc_in_m))
         arc_in_m.insert(0, first_column)
         arc_in_m = list(map(list, zip(*arc_in_m)))
@@ -135,7 +135,7 @@ class gspn(object):
 
         # add a first column with all the transitions names
         first_column = list(transitions.keys())
-        first_column.insert(0, None)  # put None in the element (0,0) since it has no use
+        first_column.insert(0, '')  # put None in the element (0,0) since it has no use
         arc_out_m = list(zip(*arc_out_m))
         arc_out_m.insert(0, first_column)
         arc_out_m = list(map(list, zip(*arc_out_m)))
@@ -158,6 +158,21 @@ class gspn(object):
         else:
             return False
 
+    def remove_tokens(self, place_name, ntokens):
+        '''
+        add tokens to the current marking
+        '''
+        if len(place_name) == len(ntokens):
+            place_name.reverse()
+            ntokens.reverse()
+            while place_name:
+                p = place_name.pop()
+                self.__places[p] = self.__places[p] - ntokens.pop()
+
+            return True
+        else:
+            return False
+
     def get_current_marking(self):
         return self.__places
 
@@ -168,7 +183,11 @@ class gspn(object):
         return self.__arc_in_m, self.__arc_out_m
 
     def get_enabled_transitions(self):
-        dict_enabled_transitions = {}
+        '''
+        returns a dictionary with the enabled transitions and the corresponding set of input places
+        '''
+        enabled_exp_transitions = set()
+        random_switch = set()
         arcs_in = list(zip(*self.__arc_in_m))
         current_marking = self.__places
 
@@ -187,37 +206,103 @@ class gspn(object):
                     enabled_transition = False
 
             if enabled_transition:
-                dict_enabled_transitions[arcs_in[row_index][0]] = places_in
+                transition = arcs_in[row_index][0]
+                if self.__transitions[transition][0] == 'exp':
+                    # enabled_exp_transitions[transition] = places_in
+                    enabled_exp_transitions.add(transition)
+                else:
+                    # random_switch[transition] = places_in
+                    random_switch.add(transition)
 
-        return dict_enabled_transitions
+        return enabled_exp_transitions, random_switch
+
+    # NOT TESTED
+    # def get_conflicting_transitions(self):
+    #     conflicting_transitions = []
+    #     enabled_transitions = self.get_enabled_transitions()
+    #
+    #     temp = enabled_transitions.copy()
+    #     # check which transitions are in conflict
+    #     for curr_transition in enabled_transitions.keys():
+    #         curr_place_list = temp.pop(curr_transition)
+    #         curr_trans_conflicts = {curr_transition}
+    #
+    #         # print('LAST CONFL: ', conflicting_transitions)
+    #         # print('CURRENT TRANS : ', curr_transition)
+    #
+    #         for tr, pl_lst in temp.items():
+    #             for pl in pl_lst:
+    #                 if pl in curr_place_list:
+    #                     curr_trans_conflicts.add(tr)
+    #
+    #         # print('CURRENT : ', curr_trans_conflicts)
+    #
+    #         # if the list is empty (i.e. there is no conflict with any other transition, just remove the dict entry
+    #         if len(curr_trans_conflicts) > 1:
+    #             inexistent_in_list = True
+    #             for conflict in conflicting_transitions:
+    #                 if curr_trans_conflicts.issubset(conflict):
+    #                     inexistent_in_list = False
+    #                     break
+    #
+    #             if inexistent_in_list:
+    #                 conflicting_transitions.append(curr_trans_conflicts)
+    #
+    #         return conflicting_transitions
 
     def simulate(self, steps):
         # in this case the transition firing is sampled from the temporal distribution and the method actually waits
         # for the time to elapse before firing
         return True
 
-    def execute(self, steps=1):
+    def fire_transition(self, transition):
+        index_transition = self.__arc_in_m[0].index(transition)
+        arc_in_temp = list(zip(*self.__arc_in_m))
+
+        # obtain a list with all the input places of given transition
+        list_of_input_places = []
+        for i in range(1,len(arc_in_temp[index_transition])):
+            if arc_in_temp[index_transition][i] > 0:
+                list_of_input_places.append(arc_in_temp[0][i])
+
+        arc_out_temp = list(zip(*self.__arc_out_m))
+        index_transition = arc_out_temp[0].index(transition)
+
+        # obtain a list with all the output places of given transition
+        list_of_output_places = []
+        for k in range(1,len(self.__arc_out_m[index_transition])):
+            if self.__arc_out_m[index_transition][k] > 0:
+                list_of_output_places.append(self.__arc_out_m[0][k])
+
+        # remove tokens from input places
+        self.remove_tokens(list_of_input_places, [1]*len(list_of_input_places))
+
+        # add tokens to output places
+        self.add_tokens(list_of_output_places, [1]*len(list_of_output_places))
+
+        return True
+
+    def execute(self, nsteps=1, step=1):
         '''
 
         '''
-        conflicting_transitions = {}
-        enabled_transitions = self.get_enabled_transitions()
+        # for i in range(nsteps):
+        enabled_exp_transitions, random_switch = self.get_enabled_transitions()
 
-        temp = enabled_transitions.copy()
-        # check which transitions are in conflict
-        for curr_transition in enabled_transitions.keys():
-            curr_place_list = temp.pop(curr_transition)
-            conflicting_transitions[curr_transition] = []
-            for tr, pl_lst in temp.items():
-                for pl in pl_lst:
-                    if pl in curr_place_list:
-                        conflicting_transitions[curr_transition].append(tr)
+        # if random_switch:
+        #     if len(random_switch) > 1:
+        #         # Draw from all enabled immediate transitons
+        #         # Fire transition
+        #     else:
+        #         # Fire that transition
+        # else:
+        #     if len(enabled_exp_transitions) > 1:
+        #         # Draw from all enabled exp transitons
+        #         # Fire transition
+        #     else:
+        #         # Fire that transition
 
-            # if the list is empty (i.e. there is no conflict with any other transition, just remove the dict entry
-            if not conflicting_transitions[curr_transition]:
-                del conflicting_transitions[curr_transition]
-
-
+        return True
 
 
         # from conflicting enabled transitions delete the ones that are in conflict with immediate ones and are not immediate
@@ -270,7 +355,10 @@ if __name__ == "__main__":
     a = parset.import_pnml('debug/pipediag.xml')
     pn = a[0]
 
-    z = pn.get_enabled_transitions()
-    # print(z)
+    z, t = pn.get_enabled_transitions()
+    # print(z,t)
+    print(pn.get_current_marking())
+    pn.fire_transition('T1')
+    print(pn.get_current_marking())
 
-    t = pn.execute(1)
+    # ex = pn.execute(1,1)

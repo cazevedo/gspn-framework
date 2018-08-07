@@ -75,15 +75,13 @@ class gspn_tools(object):
         return True
 
     def show_enabled_transitions(self, gspn, gspn_draw, file='default'):
-        enabled_transitions = gspn.get_enabled_transitions().keys()
+        enabled_exp_transitions, random_switch = gspn.get_enabled_transitions()
 
-        trns = gspn.get_transitions()
-        for transition in enabled_transitions:
-            transition_type = trns.get(transition)[0]
-            if transition_type == 'exp':
-                gspn_draw.node(transition, shape='rectangle', color='red', label='', xlabel=transition)
-            else:
-                gspn_draw.node(transition, shape='rectangle', style='filled', color='red', label='', xlabel=transition)
+        for transition in enabled_exp_transitions:
+            gspn_draw.node(transition, shape='rectangle', color='red', label='', xlabel=transition)
+
+        for transition in random_switch:
+            gspn_draw.node(transition, shape='rectangle', style='filled', color='red', label='', xlabel=transition)
 
         gspn_draw.render(file + '.gv', view=True)
 
@@ -147,7 +145,7 @@ class gspn_tools(object):
 
         # add a first column with all the places names
         first_column = list(places.keys())
-        first_column.insert(0, None) # put None in the element (0,0) since it has no use
+        first_column.insert(0, '') # put None in the element (0,0) since it has no use
         arc_in_m = list(zip(*arc_in_m))
         arc_in_m.insert(0, first_column)
         arc_in_m = list(map(list, zip(*arc_in_m)))
@@ -162,7 +160,7 @@ class gspn_tools(object):
 
         # add a first column with all the transitions names
         first_column = list(transitions.keys())
-        first_column.insert(0, None)  # put None in the element (0,0) since it has no use
+        first_column.insert(0, '')  # put None in the element (0,0) since it has no use
         arc_out_m = list(zip(*arc_out_m))
         arc_out_m.insert(0, first_column)
         arc_out_m = list(map(list, zip(*arc_out_m)))
