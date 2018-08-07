@@ -1,5 +1,5 @@
 # import time
-import gspn_tools as gst
+import numpy as np
 
 class gspn(object):
     '''
@@ -186,8 +186,8 @@ class gspn(object):
         '''
         returns a dictionary with the enabled transitions and the corresponding set of input places
         '''
-        enabled_exp_transitions = set()
-        random_switch = set()
+        enabled_exp_transitions = {}
+        random_switch = {}
         arcs_in = list(zip(*self.__arc_in_m))
         current_marking = self.__places
 
@@ -208,11 +208,11 @@ class gspn(object):
             if enabled_transition:
                 transition = arcs_in[row_index][0]
                 if self.__transitions[transition][0] == 'exp':
-                    # enabled_exp_transitions[transition] = places_in
-                    enabled_exp_transitions.add(transition)
+                    enabled_exp_transitions[transition] = self.__transitions[transition][1]
+                    # enabled_exp_transitions.add(transition)
                 else:
-                    # random_switch[transition] = places_in
-                    random_switch.add(transition)
+                    random_switch[transition] = self.__transitions[transition][1]
+                    # random_switch.add(transition)
 
         return enabled_exp_transitions, random_switch
 
@@ -282,43 +282,47 @@ class gspn(object):
 
         return True
 
-    def execute(self, nsteps=1, step=1):
+    def execute(self, nsteps=1, reporting_step=1):
         '''
 
         '''
-        # for i in range(nsteps):
-        enabled_exp_transitions, random_switch = self.get_enabled_transitions()
+        markings = []
+        for step in range(nsteps):
+            if (step%reporting_step == 0):
+                markings.append(self.get_current_marking())
 
-        # if random_switch:
-        #     if len(random_switch) > 1:
-        #         # Draw from all enabled immediate transitons
-        #         # Fire transition
-        #     else:
-        #         # Fire that transition
-        # else:
-        #     if len(enabled_exp_transitions) > 1:
-        #         # Draw from all enabled exp transitons
-        #         # Fire transition
-        #     else:
-        #         # Fire that transition
+            enabled_exp_transitions, random_switch = self.get_enabled_transitions()
 
-        return True
+            if random_switch:
+                if len(random_switch) > 1:
+                    # normalize the associated probabilities
+                    random_switch_prob = list(np.array(list(random_switch.values()), dtype='f')/sum(random_switch.values()))
+                    # Draw from all enabled immediate transitions
+                    firing_transition = np.random.choice(list(random_switch.keys()), 1, random_switch_prob)
+                    # Fire transition
+                    self.fire_transition(firing_transition[0])
+                else:
+                    # Fire the only immediate available transition
+                    self.fire_transition(random_switch.keys()[0])
+            elif enabled_exp_transitions:
+                if len(enabled_exp_transitions) > 1:
+                    # normalize the associated probabilities
+                    exp_trans_prob = list(np.array(list(enabled_exp_transitions.values()), dtype='f')/sum(enabled_exp_transitions.values()))
+                    # print(exp_trans_prob)
+                    # Draw from all enabled exponential transitions
+                    firing_transition = np.random.choice(list(enabled_exp_transitions.keys()), 1, exp_trans_prob)
+                    # Fire transition
+                    self.fire_transition(firing_transition[0])
+                else:
+                    # Fire that transition
+                    self.fire_transition(enabled_exp_transitions.keys()[0])
 
-
-        # from conflicting enabled transitions delete the ones that are in conflict with immediate ones and are not immediate
-
-        # sample from the probability distribution the ones in conflict and fire the one that was drawn
-
-        # the ones that are not in conflict just fire them and save the sampled times
-
-        # check the arcs out and place the tokens from the fired transitions in the output places
-
-        # return True
+        return markings
 
     # def __column(matrix, i):
     #     return [row[i] for row in matrix]
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # create a generalized stochastic petri net structure
     # my_pn = gspn()
     # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
@@ -350,15 +354,3 @@ if __name__ == "__main__":
     # print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
     #
     # print('Places: ', my_pn.get_current_marking(), '\n')
-
-    parset = gst.gspn_tools()
-    a = parset.import_pnml('debug/pipediag.xml')
-    pn = a[0]
-
-    z, t = pn.get_enabled_transitions()
-    # print(z,t)
-    print(pn.get_current_marking())
-    pn.fire_transition('T1')
-    print(pn.get_current_marking())
-
-    # ex = pn.execute(1,1)

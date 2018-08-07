@@ -1,7 +1,6 @@
 import gspn as pn
 import xml.etree.ElementTree as et # XML parser
 from graphviz import Digraph
-import warnings
 import time
 
 class gspn_tools(object):
@@ -77,18 +76,20 @@ class gspn_tools(object):
     def show_enabled_transitions(self, gspn, gspn_draw, file='default'):
         enabled_exp_transitions, random_switch = gspn.get_enabled_transitions()
 
-        for transition in enabled_exp_transitions:
-            gspn_draw.node(transition, shape='rectangle', color='red', label='', xlabel=transition)
+        if random_switch:
+            for transition in random_switch.keys():
+                gspn_draw.node(transition, shape='rectangle', style='filled', color='red', label='', xlabel=transition)
 
-        for transition in random_switch:
-            gspn_draw.node(transition, shape='rectangle', style='filled', color='red', label='', xlabel=transition)
+            gspn_draw.render(file + '.gv', view=True)
+        elif enabled_exp_transitions:
+            for transition in enabled_exp_transitions.keys():
+                gspn_draw.node(transition, shape='rectangle', color='red', label='', xlabel=transition)
 
-        gspn_draw.render(file + '.gv', view=True)
+            gspn_draw.render(file + '.gv', view=True)
 
         return gspn_draw
 
     def show_gspn(self, gspn, file='default'):
-        warnings.filterwarnings("ignore")
         # shape
         # style box rect
         # ref: https://www.graphviz.org/documentation/
