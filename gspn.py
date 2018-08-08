@@ -1,27 +1,31 @@
-# import time
+import time
 import numpy as np
 
-class gspn(object):
-    '''
-    # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
-    '''
-    def __init__(self):
-        '''
 
-        '''
+# TODO : add methods to remove arcs, places and transitions (removing places and trans should remove the corresponding input and output arcs as well)
+# TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
+class GSPN(object):
+    """
+    """
+    def __init__(self):
+        """
+
+        """
         self.__places = {}
         self.__transitions = {}
-        # self.arc_in = {}
-        # self.arc_out = {}
         self.__arc_in_m = []
-        self.__arc_out_m  = []
+        self.__arc_out_m = []
 
-    def add_places(self, name, ntokens=[]):
-        '''
+    def add_places(self, name, ntokens=None):
+        """
 
-        '''
+        """
+        if ntokens is None:
+            ntokens = []
+        else:
+            ntokens.reverse()
+
         name.reverse()
-        ntokens.reverse()
         while name:
             if ntokens:
                 self.__places[name.pop()] = ntokens.pop()
@@ -30,28 +34,36 @@ class gspn(object):
 
         return self.__places
 
-    def add_transitions(self, name, type=[], rate=[]):
-        '''
+    def add_transitions(self, tname, tclass=None, trate=None):
+        """
         Input
-        name: list of strings, denoting the name of the transition
+        tname: list of strings, denoting the name of the transition
         type: list of strings, indicating if the corresponding transition is either immediate ('imm') or exponential ('exp')
         rate: list of floats, representing a static firing rate in an exponential transition and
                 a static (non marking dependent) weight in a immediate transition
         Output
         dictionary of transitions
-        '''
-        name.reverse()
-        type.reverse()
-        rate.reverse()
-        while name:
-            tn = name.pop()
+        """
+        if tclass is None:
+            tclass = []
+        else:
+            tclass.reverse()
+
+        if trate is None:
+            trate = []
+        else:
+            trate.reverse()
+
+        tname.reverse()
+        while tname:
+            tn = tname.pop()
             self.__transitions[tn] = []
             if type:
-                self.__transitions[tn].append(type.pop())
+                self.__transitions[tn].append(tclass.pop())
             else:
                 self.__transitions[tn].append('imm')
-            if rate:
-                self.__transitions[tn].append(rate.pop())
+            if trate:
+                self.__transitions[tn].append(trate.pop())
             else:
                 self.__transitions[tn].append(1.0)
 
@@ -59,11 +71,11 @@ class gspn(object):
 
     def add_arcs_matrices(self, arc_in_m, arc_out_m):
         self.__arc_in_m = arc_in_m
-        self.__arc_out_m  = arc_out_m
+        self.__arc_out_m = arc_out_m
         return True
 
     def add_arcs(self, arc_in, arc_out):
-        '''
+        """
         Input:
         arc_in -> dictionary mapping the arc connections from places to transitions
         arc_out -> dictionary mapping the arc connections from transitions to places
@@ -85,12 +97,8 @@ class gspn(object):
         Output:
         arc_in_m -> two-dimentional list
         arc_out_m -> two-dimentional list
-        '''
-
-        # self.arc_in = arc_in
-        # self.arc_out = arc_out
-
-        self.__arc_in_m, self.__arc_out_m  = self.__CreateArcMatrix(self.__places, self.__transitions)
+        """
+        self.__arc_in_m, self.__arc_out_m = GSPN.__create_arc_matrix(self.__places, self.__transitions)
 
         # IN ARCS MATRIX
         # replace the zeros by ones in the positions where there is an arc connection from a place to a transition
@@ -104,12 +112,12 @@ class gspn(object):
         temp = list(zip(*self.__arc_out_m))
         for transition, target in arc_out.items():
             for place in target:
-                self.__arc_out_m [temp[0].index(transition)][self.__arc_out_m [0].index(place)] = 1
-
+                self.__arc_out_m[temp[0].index(transition)][self.__arc_out_m[0].index(place)] = 1
 
         return self.__arc_in_m, self.__arc_out_m
 
-    def __CreateArcMatrix(self, places, transitions):
+    @staticmethod
+    def __create_arc_matrix(places, transitions):
         # create a zeros matrix (# of places + 1) by (# of transitions)
         arc_in_m = []
         for i in range(len(places.keys())+1):
@@ -120,7 +128,7 @@ class gspn(object):
 
         # add a first column with all the places names
         first_column = list(places.keys())
-        first_column.insert(0, '') # put None in the element (0,0) since it has no use
+        first_column.insert(0, '')  # put None in the element (0,0) since it has no use
         arc_in_m = list(zip(*arc_in_m))
         arc_in_m.insert(0, first_column)
         arc_in_m = list(map(list, zip(*arc_in_m)))
@@ -142,11 +150,10 @@ class gspn(object):
 
         return arc_in_m, arc_out_m
 
-
     def add_tokens(self, place_name, ntokens):
-        '''
+        """
         add tokens to the current marking
-        '''
+        """
         if len(place_name) == len(ntokens):
             place_name.reverse()
             ntokens.reverse()
@@ -159,9 +166,9 @@ class gspn(object):
             return False
 
     def remove_tokens(self, place_name, ntokens):
-        '''
+        """
         add tokens to the current marking
-        '''
+        """
         if len(place_name) == len(ntokens):
             place_name.reverse()
             ntokens.reverse()
@@ -183,9 +190,9 @@ class gspn(object):
         return self.__arc_in_m, self.__arc_out_m
 
     def get_enabled_transitions(self):
-        '''
+        """
         returns a dictionary with the enabled transitions and the corresponding set of input places
-        '''
+        """
         enabled_exp_transitions = {}
         random_switch = {}
         arcs_in = list(zip(*self.__arc_in_m))
@@ -199,7 +206,8 @@ class gspn(object):
                     places_in.append(arcs_in[0][column_index])
             # print(arcs_in[row_index][0], places_in)
 
-            # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it have one or more tokens)
+            # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it
+            #  have one or more tokens)
             enabled_transition = True
             for place in places_in:
                 if current_marking.get(place) == 0:
@@ -216,52 +224,13 @@ class gspn(object):
 
         return enabled_exp_transitions, random_switch
 
-    # NOT TESTED
-    # def get_conflicting_transitions(self):
-    #     conflicting_transitions = []
-    #     enabled_transitions = self.get_enabled_transitions()
-    #
-    #     temp = enabled_transitions.copy()
-    #     # check which transitions are in conflict
-    #     for curr_transition in enabled_transitions.keys():
-    #         curr_place_list = temp.pop(curr_transition)
-    #         curr_trans_conflicts = {curr_transition}
-    #
-    #         # print('LAST CONFL: ', conflicting_transitions)
-    #         # print('CURRENT TRANS : ', curr_transition)
-    #
-    #         for tr, pl_lst in temp.items():
-    #             for pl in pl_lst:
-    #                 if pl in curr_place_list:
-    #                     curr_trans_conflicts.add(tr)
-    #
-    #         # print('CURRENT : ', curr_trans_conflicts)
-    #
-    #         # if the list is empty (i.e. there is no conflict with any other transition, just remove the dict entry
-    #         if len(curr_trans_conflicts) > 1:
-    #             inexistent_in_list = True
-    #             for conflict in conflicting_transitions:
-    #                 if curr_trans_conflicts.issubset(conflict):
-    #                     inexistent_in_list = False
-    #                     break
-    #
-    #             if inexistent_in_list:
-    #                 conflicting_transitions.append(curr_trans_conflicts)
-    #
-    #         return conflicting_transitions
-
-    def simulate(self, steps):
-        # in this case the transition firing is sampled from the temporal distribution and the method actually waits
-        # for the time to elapse before firing
-        return True
-
     def fire_transition(self, transition):
         index_transition = self.__arc_in_m[0].index(transition)
         arc_in_temp = list(zip(*self.__arc_in_m))
 
         # obtain a list with all the input places of given transition
         list_of_input_places = []
-        for i in range(1,len(arc_in_temp[index_transition])):
+        for i in range(1, len(arc_in_temp[index_transition])):
             if arc_in_temp[index_transition][i] > 0:
                 list_of_input_places.append(arc_in_temp[0][i])
 
@@ -270,7 +239,7 @@ class gspn(object):
 
         # obtain a list with all the output places of given transition
         list_of_output_places = []
-        for k in range(1,len(self.__arc_out_m[index_transition])):
+        for k in range(1, len(self.__arc_out_m[index_transition])):
             if self.__arc_out_m[index_transition][k] > 0:
                 list_of_output_places.append(self.__arc_out_m[0][k])
 
@@ -282,13 +251,12 @@ class gspn(object):
 
         return True
 
-    def execute(self, nsteps=1, reporting_step=1):
-        '''
-
-        '''
+    def simulate(self, nsteps=1, reporting_step=1, simulate_wait=False):
+        """
+        """
         markings = []
         for step in range(nsteps):
-            if (step%reporting_step == 0):
+            if step % reporting_step == 0:
                 markings.append(self.get_current_marking())
 
             enabled_exp_transitions, random_switch = self.get_enabled_transitions()
@@ -298,7 +266,7 @@ class gspn(object):
                     # normalize the associated probabilities
                     random_switch_prob = list(np.array(list(random_switch.values()), dtype='f')/sum(random_switch.values()))
                     # Draw from all enabled immediate transitions
-                    firing_transition = np.random.choice(list(random_switch.keys()), 1, random_switch_prob)
+                    firing_transition = np.random.choice(a=list(random_switch.keys()), size=None, p=random_switch_prob)
                     # Fire transition
                     self.fire_transition(firing_transition[0])
                 else:
@@ -306,14 +274,32 @@ class gspn(object):
                     self.fire_transition(random_switch.keys()[0])
             elif enabled_exp_transitions:
                 if len(enabled_exp_transitions) > 1:
-                    # normalize the associated probabilities
-                    exp_trans_prob = list(np.array(list(enabled_exp_transitions.values()), dtype='f')/sum(enabled_exp_transitions.values()))
-                    # print(exp_trans_prob)
-                    # Draw from all enabled exponential transitions
-                    firing_transition = np.random.choice(list(enabled_exp_transitions.keys()), 1, exp_trans_prob)
+                    if simulate_wait:
+                        wait_times = enabled_exp_transitions.copy()
+                        # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
+                        # in this case the beta rate parameter is used instead, where beta = 1/lambda
+                        for key, value in enabled_exp_transitions.items():
+                            wait_times[key] = np.random.exponential(1.0/value)
+
+                        # print(wait_times, )
+                        firing_transition = min(wait_times, key=wait_times.get)
+                        wait = wait_times[firing_transition]
+                        time.sleep(wait)
+
+                    else:
+                        # normalize the associated probabilities
+                        exp_trans_prob = list(np.array(list(enabled_exp_transitions.values()), dtype='f')/sum(enabled_exp_transitions.values()))
+                        # Draw from all enabled exponential transitions
+                        firing_transition = np.random.choice(a=list(enabled_exp_transitions.keys()), size=None, p=exp_trans_prob)
+                        firing_transition = firing_transition[0]
+
                     # Fire transition
-                    self.fire_transition(firing_transition[0])
+                    self.fire_transition(firing_transition)
                 else:
+                    if simulate_wait:
+                        wait = np.random.exponential(scale=(1.0 / enabled_exp_transitions.values()[0]), size=None)
+                        time.sleep(wait)
+
                     # Fire that transition
                     self.fire_transition(enabled_exp_transitions.keys()[0])
 
