@@ -263,15 +263,21 @@ class GSPN(object):
 
             if random_switch:
                 if len(random_switch) > 1:
+                    s = sum(random_switch.values())
+                    random_switch_id = []
+                    random_switch_prob = []
                     # normalize the associated probabilities
-                    random_switch_prob = list(np.array(list(random_switch.values()), dtype='f')/sum(random_switch.values()))
+                    for key, value in random_switch.items():
+                        random_switch_id.append(key)
+                        random_switch_prob.append(value/s)
+
                     # Draw from all enabled immediate transitions
-                    firing_transition = np.random.choice(a=list(random_switch.keys()), size=None, p=random_switch_prob)
+                    firing_transition = np.random.choice(a=random_switch_id, size=None, p=random_switch_prob)
                     # Fire transition
-                    self.fire_transition(firing_transition[0])
+                    self.fire_transition(firing_transition)
                 else:
                     # Fire the only immediate available transition
-                    self.fire_transition(random_switch.keys()[0])
+                    self.fire_transition(list(random_switch.keys())[0])
             elif enabled_exp_transitions:
                 if len(enabled_exp_transitions) > 1:
                     if simulate_wait:
@@ -279,29 +285,33 @@ class GSPN(object):
                         # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
                         # in this case the beta rate parameter is used instead, where beta = 1/lambda
                         for key, value in enabled_exp_transitions.items():
-                            wait_times[key] = np.random.exponential(1.0/value)
+                            wait_times[key] = np.random.exponential(scale=(1.0/value), size=None)
 
-                        # print(wait_times, )
                         firing_transition = min(wait_times, key=wait_times.get)
                         wait = wait_times[firing_transition]
                         time.sleep(wait)
 
                     else:
+                        s = sum(enabled_exp_transitions.values())
+                        exp_trans_id = []
+                        exp_trans_prob = []
                         # normalize the associated probabilities
-                        exp_trans_prob = list(np.array(list(enabled_exp_transitions.values()), dtype='f')/sum(enabled_exp_transitions.values()))
+                        for key, value in enabled_exp_transitions.items():
+                            exp_trans_id.append(key)
+                            exp_trans_prob.append(value / s)
+
                         # Draw from all enabled exponential transitions
-                        firing_transition = np.random.choice(a=list(enabled_exp_transitions.keys()), size=None, p=exp_trans_prob)
-                        firing_transition = firing_transition[0]
+                        firing_transition = np.random.choice(a=exp_trans_id, size=None, p=exp_trans_prob)
 
                     # Fire transition
                     self.fire_transition(firing_transition)
                 else:
                     if simulate_wait:
-                        wait = np.random.exponential(scale=(1.0 / enabled_exp_transitions.values()[0]), size=None)
+                        wait = np.random.exponential(scale=(1.0 / list(enabled_exp_transitions.values())[0]), size=None)
                         time.sleep(wait)
 
                     # Fire that transition
-                    self.fire_transition(enabled_exp_transitions.keys()[0])
+                    self.fire_transition(list(enabled_exp_transitions.keys())[0])
 
         return markings
 

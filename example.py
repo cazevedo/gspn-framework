@@ -12,7 +12,7 @@ mypn = nets[0]
 step = 1
 try:
     # while True:
-    for i in range(40):
+    for i in range(20):
         drawing = pntools.draw_gspn(mypn, 'mypn', show=False)
         # time.sleep(1)
         pntools.draw_enabled_transitions(mypn, drawing, 'mypn_enabled', show=True)
