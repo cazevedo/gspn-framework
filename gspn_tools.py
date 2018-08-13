@@ -23,9 +23,7 @@ class GSPNtools(object):
                 text = pl.find('./initialMarking/value').text
                 place_marking.append(int(text.split(',')[-1]))  # get place marking encoded inside 'initalMarking', as the 'text' of the key 'value'
 
-            # return place_name, place_marking
-
-            gspn.add_places(place_name, place_marking)  # add the compiled list of places to the gspn object
+            gspn.add_places(place_name, place_marking, True)  # add the compiled list of places to the gspn object
 
             transition_name = []
             transition_type = []
@@ -76,12 +74,12 @@ class GSPNtools(object):
 
         if random_switch:
             for transition in random_switch.keys():
-                gspn_draw.node(transition, shape='rectangle', style='filled', color='red', label='', xlabel=transition)
+                gspn_draw.node(transition, shape='rectangle', style='filled', color='red', label='', xlabel=transition, height='0.2', width='0.6', fixedsize='true')
 
             gspn_draw.render(file + '.gv', view=show)
         elif enabled_exp_transitions:
             for transition in enabled_exp_transitions.keys():
-                gspn_draw.node(transition, shape='rectangle', color='red', label='', xlabel=transition)
+                gspn_draw.node(transition, shape='rectangle', color='red', label='', xlabel=transition, height='0.2', width='0.6', fixedsize='true')
 
             gspn_draw.render(file + '.gv', view=show)
 
@@ -89,10 +87,7 @@ class GSPNtools(object):
 
     @staticmethod
     def draw_gspn(gspn, file='default', show=True):
-        # shape
-        # style box rect
         # ref: https://www.graphviz.org/documentation/
-        # check where to put forcelabels=true and  labelfloat='true'
 
         gspn_draw = Digraph()
 
@@ -102,18 +97,28 @@ class GSPNtools(object):
         plcs = gspn.get_current_marking()
         for place, marking in plcs.items():
             if int(marking) == 0:
-                gspn_draw.node(place, shape='circle', label='', xlabel=place)
+                gspn_draw.node(place, shape='circle', label='', xlabel=place, height='0.6', width='0.6', fixedsize='true')
             else:
-                lb = '<' + '&#9899;'*int(marking) + '>'
-                gspn_draw.node(place, shape='circle', label=lb, xlabel=place)
+                # places with more than 4 tokens cannot fit all of them inside it
+                if int(marking) < 5:
+                    lb = '<'
+                    for token_number in range(1, int(marking)+1):
+                        lb = lb + '&#9899; '
+                        if token_number % 2 == 0:
+                            lb = lb + '<br/>'
+                    lb = lb + '>'
+                else:
+                    lb = '<&#9899; x ' + str(int(marking)) + '>'
+
+                gspn_draw.node(place, shape='circle', label=lb, xlabel=place, height='0.6', width='0.6', fixedsize='true')
 
         # draw transitions
         trns = gspn.get_transitions()
         for transition, value in trns.items():
             if value[0] == 'exp':
-                gspn_draw.node(transition, shape='rectangle', color='black', label='', xlabel=transition)
+                gspn_draw.node(transition, shape='rectangle', color='black', label='', xlabel=transition, height='0.2', width='0.6', fixedsize='true')
             else:
-                gspn_draw.node(transition, shape='rectangle', style='filled', color='black', label='', xlabel=transition)
+                gspn_draw.node(transition, shape='rectangle', style='filled', color='black', label='', xlabel=transition, height='0.2', width='0.6', fixedsize='true')
 
         # draw edges
         edge_in, edge_out = gspn.get_arcs()

@@ -12,11 +12,12 @@ class GSPN(object):
 
         """
         self.__places = {}
+        self.__initial_marking = {}
         self.__transitions = {}
         self.__arc_in_m = []
         self.__arc_out_m = []
 
-    def add_places(self, name, ntokens=None):
+    def add_places(self, name, ntokens=None, set_initial_marking=True):
         """
 
         """
@@ -32,7 +33,10 @@ class GSPN(object):
             else:
                 self.__places[name.pop()] = 0
 
-        return self.__places
+        if set_initial_marking:
+            self.__initial_marking = self.__places.copy()
+
+        return self.__places.copy()
 
     def add_transitions(self, tname, tclass=None, trate=None):
         """
@@ -67,7 +71,7 @@ class GSPN(object):
             else:
                 self.__transitions[tn].append(1.0)
 
-        return self.__transitions
+        return self.__transitions.copy()
 
     def add_arcs_matrices(self, arc_in_m, arc_out_m):
         self.__arc_in_m = arc_in_m
@@ -98,7 +102,7 @@ class GSPN(object):
         arc_in_m -> two-dimentional list
         arc_out_m -> two-dimentional list
         """
-        self.__arc_in_m, self.__arc_out_m = GSPN.__create_arc_matrix(self.__places, self.__transitions)
+        self.__arc_in_m, self.__arc_out_m = GSPN.__create_arc_matrix(self.__places.copy(), self.__transitions.copy())
 
         # IN ARCS MATRIX
         # replace the zeros by ones in the positions where there is an arc connection from a place to a transition
@@ -150,9 +154,9 @@ class GSPN(object):
 
         return arc_in_m, arc_out_m
 
-    def add_tokens(self, place_name, ntokens):
+    def add_tokens(self, place_name, ntokens, set_initial_marking=False):
         """
-        add tokens to the current marking
+        add tokens to the specified places
         """
         if len(place_name) == len(ntokens):
             place_name.reverse()
@@ -161,13 +165,16 @@ class GSPN(object):
                 p = place_name.pop()
                 self.__places[p] = self.__places[p] + ntokens.pop()
 
+            if set_initial_marking:
+                self.__initial_marking = self.__places.copy()
+
             return True
         else:
             return False
 
-    def remove_tokens(self, place_name, ntokens):
+    def remove_tokens(self, place_name, ntokens, set_initial_marking=False):
         """
-        add tokens to the current marking
+        remove tokens from the specified places
         """
         if len(place_name) == len(ntokens):
             place_name.reverse()
@@ -176,15 +183,25 @@ class GSPN(object):
                 p = place_name.pop()
                 self.__places[p] = self.__places[p] - ntokens.pop()
 
+            if set_initial_marking:
+                self.__initial_marking = self.__places.copy()
+
             return True
         else:
             return False
 
     def get_current_marking(self):
-        return self.__places
+        return self.__places.copy()
+
+    def set_marking(self, places):
+        self.__places = places.copy()
+        return True
+
+    def get_initial_marking(self):
+        return self.__initial_marking.copy()
 
     def get_transitions(self):
-        return self.__transitions
+        return self.__transitions.copy()
 
     def get_arcs(self):
         return self.__arc_in_m, self.__arc_out_m
@@ -196,7 +213,7 @@ class GSPN(object):
         enabled_exp_transitions = {}
         random_switch = {}
         arcs_in = list(zip(*self.__arc_in_m))
-        current_marking = self.__places
+        current_marking = self.__places.copy()
 
         # for each transition get all the places that have an input arc connection
         for row_index in range(1, len(arcs_in)):
@@ -222,7 +239,7 @@ class GSPN(object):
                     random_switch[transition] = self.__transitions[transition][1]
                     # random_switch.add(transition)
 
-        return enabled_exp_transitions, random_switch
+        return enabled_exp_transitions.copy(), random_switch.copy()
 
     def fire_transition(self, transition):
         index_transition = self.__arc_in_m[0].index(transition)
@@ -276,7 +293,7 @@ class GSPN(object):
                     # Fire transition
                     self.fire_transition(firing_transition)
                 else:
-                    # Fire the only immediate available transition
+                    # Fire the only available immediate transition
                     self.fire_transition(list(random_switch.keys())[0])
             elif enabled_exp_transitions:
                 if len(enabled_exp_transitions) > 1:
@@ -310,10 +327,14 @@ class GSPN(object):
                         wait = np.random.exponential(scale=(1.0 / list(enabled_exp_transitions.values())[0]), size=None)
                         time.sleep(wait)
 
-                    # Fire that transition
+                    # Fire transition
                     self.fire_transition(list(enabled_exp_transitions.keys())[0])
 
         return markings
+
+    def reset_simulation(self):
+        self.__places = self.__initial_marking.copy()
+        return True
 
     # def __column(matrix, i):
     #     return [row[i] for row in matrix]
