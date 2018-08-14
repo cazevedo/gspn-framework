@@ -173,6 +173,9 @@ class GSPNtools(object):
 
         return arc_in_m, arc_out_m
 
+    @staticmethod
+    def draw_coverability_tree(gspn, file='default', show=True):
+
 if __name__ == "__main__":
     pntools = GSPNtools()
     nets = pntools.import_pnml('debug/pipediag.xml')
