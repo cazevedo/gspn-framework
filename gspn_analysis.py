@@ -91,16 +91,25 @@ class CoverabilityTree(object):
 
                 # check if the state is unbounded
                 for state_id, state in self.nodes.items():
-                    unbounded_state = True
+                    # checks if the new marking is either unbounded or equal to any of the markings previously added to the nodes
+                    unbounded_or_equal = True
                     for i in range(len(state[0])):
                         if next_marking[i][1] < state[0][i][1]:
-                            unbounded_state = False
+                            unbounded_or_equal = False
+
+                    # differentiates from equal markings from unbounded markings
+                    unbounded_state = False
+                    if unbounded_or_equal:
+                        for i in range(len(state[0])):
+                            if next_marking[i][1] > state[0][i][1]:
+                                unbounded_state = True
+
                     # Add an w to mark unbounded states
                     if unbounded_state:
                         for i in range(len(state[0])):
-                            next_marking[i][1] = 'w'
-                            # if next_marking[i][1] > state[0][i][1]:
-                            #     next_marking[i][1] = 'w'
+                            # next_marking[i][1] = 'w'
+                            if next_marking[i][1] > state[0][i][1]:
+                                next_marking[i][1] = 'w'
 
                         # add edge between the current marking and the marking that is covered by this new unbounded state
                         # self.edges.append([current_marking_id, state_id, tr])

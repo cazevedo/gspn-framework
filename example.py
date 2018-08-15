@@ -7,8 +7,8 @@ warnings.filterwarnings("ignore")
 
 pntools = gst.GSPNtools()
 # nets = pntools.import_pnml('debug/pipediag.xml')
-# nets = pntools.import_pnml('debug/performance_example.xml')
-nets = pntools.import_pnml('debug/simple_test.xml')
+nets = pntools.import_pnml('debug/performance_example.xml')
+# nets = pntools.import_pnml('debug/simple_test.xml')
 mypn = nets[0]
 
 ct_tree = gspn_analysis.CoverabilityTree(mypn)
