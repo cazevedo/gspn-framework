@@ -69,7 +69,7 @@ class GSPNtools(object):
         return True
 
     @staticmethod
-    def draw_enabled_transitions(gspn, gspn_draw, file='default', show=True):
+    def draw_enabled_transitions(gspn, gspn_draw, file='gspn_default', show=True):
         enabled_exp_transitions, random_switch = gspn.get_enabled_transitions()
 
         if random_switch:
@@ -86,7 +86,7 @@ class GSPNtools(object):
         return gspn_draw
 
     @staticmethod
-    def draw_gspn(gspn, file='default', show=True):
+    def draw_gspn(gspn, file='gspn_default', show=True):
         # ref: https://www.graphviz.org/documentation/
 
         gspn_draw = Digraph()
@@ -174,7 +174,26 @@ class GSPNtools(object):
         return arc_in_m, arc_out_m
 
     @staticmethod
-    def draw_coverability_tree(gspn, file='default', show=True):
+    def draw_coverability_tree(cov_tree, file='ct_default', show=True):
+        ct_draw = Digraph()
+        ct_draw.attr('node', forcelabels='true')
+
+        # draw coverability tree nodes
+        for node_id, node_info in cov_tree.nodes.items():
+            if node_info[1] == 'T':
+                ct_draw.node(node_id, shape='doublecircle', label=node_id, height='0.6', width='0.6', fixedsize='true')
+            elif node_info[1] == 'V':
+                ct_draw.node(node_id, shape='circle', label=node_id, height='0.6', width='0.6', fixedsize='true')
+            elif node_info[1] == 'D':
+                ct_draw.node(node_id, shape='doublecircle', label=node_id, height='0.6', width='0.6', fixedsize='true', color="red")
+
+        # draw coverability tree edges
+        for edge_source, edge_info in cov_tree.edges.items():
+            ct_draw.edge(edge_source, edge_info[0], label=edge_info[1])
+
+        ct_draw.render(file + '.gv', view=show)
+
+        return ct_draw
 
 if __name__ == "__main__":
     pntools = GSPNtools()

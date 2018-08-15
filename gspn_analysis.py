@@ -1,20 +1,23 @@
-import gspn_tools
+# import gspn_tools
 
-class AnalyseGSPN(object):
+class CoverabilityTree(object):
     def __init__(self, gspn):
         """
 
         """
         self.__gspn = gspn
-        self.__nodes = {}
-        self.__edges = {}
+        self.nodes = {}
+        self.edges = []
 
-        self.pntools = gspn_tools.GSPNtools()
+        # self.pntools = gspn_tools.GSPNtools()
 
-    def coverability_tree(self):
+    def generate(self):
+
+        # DEBUG = False
+
         marking_index = 0
         marking_stack = []
-        marking_stack.append([self.__gspn.get_initial_marking(), 'root'])
+        marking_stack.append([self.__gspn.get_initial_marking(), 'root', 'None'])
 
         while marking_stack:
             # pop a marking from the stack using a FIFO methodology
@@ -25,6 +28,7 @@ class AnalyseGSPN(object):
             # gather all the marking information in a readable manner
             current_marking_dict = marking_info[0]
             source_marking_id = marking_info[1]
+            transition_id = marking_info[2]
             current_marking_id = 'M'+str(marking_index)
             marking_index = marking_index + 1
 
@@ -52,13 +56,19 @@ class AnalyseGSPN(object):
                 marking_type = 'D'  # deadlock and tangible marking
                 print('NO transitions enabled : deadlock and tangible')
 
-            self.__nodes[current_marking_id] = [current_marking, marking_type]  # add a node where the key is the marking id and the value is a list with the marking and its type
-            self.__edges[source_marking_id] = current_marking_id  # add an edge from the source (previous marking stored when the marking was pushed to the stack) to this marking
+            self.nodes[current_marking_id] = [current_marking, marking_type]  # add a node where the key is the marking id and the value is a list with the marking and its type
+            # self.edges[source_marking_id] = [source_marking_id, current_marking_id, transition_id]  # add an edge from the source (previous marking stored when the marking was pushed to the stack) to this marking
 
-            # print(current_marking, marking_type)
-            # drawing = self.pntools.draw_gspn(self.__gspn, 'mypn', show=False)
-            # self.pntools.draw_enabled_transitions(self.__gspn, drawing, 'mypn_enabled', show=True)
-            # raw_input("")
+            # if current_marking_id == 'M14':
+            #     DEBUG = True
+            #     # print(source_marking_id)
+            #     # print(current_marking_id)
+            #     # print(transition_id)
+            # if DEBUG:
+            #     print(current_marking, marking_type)
+            #     drawing = self.pntools.draw_gspn(self.__gspn, 'mypn', show=False)
+            #     self.pntools.draw_enabled_transitions(self.__gspn, drawing, 'mypn_enabled', show=True)
+            #     raw_input("")
 
             for tr in enabled_transitions.keys():
                 # for each enabled transition of the current marking fire it to land in a new marking
@@ -75,7 +85,7 @@ class AnalyseGSPN(object):
 
                 # check if the marking was already added as a node or not
                 marking_already_exists = False
-                for state_id, state in self.__nodes.items():
+                for state_id, state in self.nodes.items():
                     if next_marking in state:
                         marking_already_exists = True
                         break
@@ -92,18 +102,24 @@ class AnalyseGSPN(object):
 
                 # if doesn't exist append it to the marking stack to be handled in the following iterations on FIFO method
                 if not marking_already_exists:
-                    marking_stack.append([next_marking_dict, current_marking_id])
+                    marking_stack.append([next_marking_dict, current_marking_id, tr])
+
+                # # add edges
+                # self.edges[source_marking_id] = [source_marking_id, current_marking_id, tr]
+                #
+                # if next_marking == self.nodes['M0'][0]:
+                #     self.edges[current_marking_id] = ['M0', tr]
 
                 # revert the current marking
                 self.__gspn.set_marking(current_marking_dict)
 
-        test_repeated = self.__nodes.copy()
-        for state_id, state in self.__nodes.items():
-            for key, value in test_repeated.items():
-                if value[0] == state[0] and key != state_id:
-                    print('REPEATED MARKING!!!')
-                    print(state_id, state)
-                    print(key, value)
-
+        # test_repeated = self.nodes.copy()
+        # for state_id, state in self.nodes.items():
+        #     for key, value in test_repeated.items():
+        #         if value[0] == state[0] and key != state_id:
+        #             print('REPEATED MARKING!!!')
+        #             print(state_id, state)
+        #             print(key, value)
+        del self.edges['root']
         self.__gspn.reset_simulation()
-        return self.__nodes.copy(), self.__edges.copy()
+        return self.nodes.copy(), self.edges.copy()

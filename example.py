@@ -1,7 +1,7 @@
 import gspn_tools as gst
 import time
 import warnings
-import gspn_analysis as analyse
+import gspn_analysis
 
 warnings.filterwarnings("ignore")
 
@@ -11,8 +11,10 @@ nets = pntools.import_pnml('debug/performance_example.xml')
 # nets = pntools.import_pnml('debug/simple_test.xml')
 mypn = nets[0]
 
-pn_al = analyse.AnalyseGSPN(mypn)
-ct_nodes, ct_edges = pn_al.coverability_tree()
+ct_tree = gspn_analysis.CoverabilityTree(mypn)
+ct_tree.generate()
+pntools.draw_coverability_tree(ct_tree)
+print(ct_tree.nodes)
 # print(tree)
 
 # print('inital : ', mypn.get_current_marking())
