@@ -1,4 +1,4 @@
-# import gspn_tools
+
 
 class CoverabilityTree(object):
     def __init__(self, gspn):
@@ -9,34 +9,46 @@ class CoverabilityTree(object):
         self.nodes = {}
         self.edges = []
 
-        # self.pntools = gspn_tools.GSPNtools()
-
     def generate(self):
+        # obtain the enabled transitions for the initial marking
+        exp_transitions_en, immediate_transitions_en = self.__gspn.get_enabled_transitions()
 
-        # DEBUG = False
+        # from the enabled transitions get information on the marking type
+        if immediate_transitions_en:
+            marking_type = 'V'  # vanishing marking
+        elif exp_transitions_en:
+            marking_type = 'T'  # tangible marking
+        else:
+            marking_type = 'D'  # deadlock and tangible marking
+            print('NO transitions enabled : deadlock and tangible')
+
+        current_marking_dict = self.__gspn.get_initial_marking()
 
         marking_index = 0
-        marking_stack = []
-        marking_stack.append([self.__gspn.get_initial_marking(), 'root', 'None'])
+        current_marking_id = 'M' + str(marking_index)
 
+        # convert marking from a dict structure into a list structure and sort it
+        current_marking = []
+        for place_id, ntokens in current_marking_dict.items():
+            current_marking.append([place_id, ntokens])
+        current_marking.sort()
+
+        # add node to the coverability tree with the initial marking
+        self.nodes[current_marking_id] = [current_marking, marking_type]
+
+        # add the current marking to the marking stack
+        marking_stack = [[current_marking_dict, current_marking_id]]
+        # marking_stack.append([current_marking_dict, current_marking_id])
+
+        # loop through the marking stack
         while marking_stack:
             # pop a marking from the stack using a FIFO methodology
             marking_stack.reverse()
             marking_info = marking_stack.pop()
             marking_stack.reverse()
 
-            # gather all the marking information in a readable manner
             current_marking_dict = marking_info[0]
-            source_marking_id = marking_info[1]
-            transition_id = marking_info[2]
-            current_marking_id = 'M'+str(marking_index)
-            marking_index = marking_index + 1
-
-            # convert marking from a dict structure into a list structure and sort it
-            current_marking = []
-            for place_id, ntokens in current_marking_dict.items():
-                current_marking.append([place_id, ntokens])
-            current_marking.sort()
+            current_marking_id = marking_info[1]
 
             # set the current marking as the marking of the GSPN
             self.__gspn.set_marking(current_marking_dict)
@@ -44,35 +56,29 @@ class CoverabilityTree(object):
             # obtain the enabled transitions for this marking
             exp_transitions_en, immediate_transitions_en = self.__gspn.get_enabled_transitions()
 
-            # from the enabled transitions get information on the marking type
             if immediate_transitions_en:
                 enabled_transitions = immediate_transitions_en.copy()
-                marking_type = 'V'  # vanishing marking
             elif exp_transitions_en:
                 enabled_transitions = exp_transitions_en.copy()
-                marking_type = 'T'  # tangible marking
             else:
                 enabled_transitions = {}
-                marking_type = 'D'  # deadlock and tangible marking
                 print('NO transitions enabled : deadlock and tangible')
-
-            self.nodes[current_marking_id] = [current_marking, marking_type]  # add a node where the key is the marking id and the value is a list with the marking and its type
-            # self.edges[source_marking_id] = [source_marking_id, current_marking_id, transition_id]  # add an edge from the source (previous marking stored when the marking was pushed to the stack) to this marking
-
-            # if current_marking_id == 'M14':
-            #     DEBUG = True
-            #     # print(source_marking_id)
-            #     # print(current_marking_id)
-            #     # print(transition_id)
-            # if DEBUG:
-            #     print(current_marking, marking_type)
-            #     drawing = self.pntools.draw_gspn(self.__gspn, 'mypn', show=False)
-            #     self.pntools.draw_enabled_transitions(self.__gspn, drawing, 'mypn_enabled', show=True)
-            #     raw_input("")
 
             for tr in enabled_transitions.keys():
                 # for each enabled transition of the current marking fire it to land in a new marking
                 self.__gspn.fire_transition(tr)
+
+                # obtain the enabled transitions for this marking
+                next_exp_trans, next_imm_trans = self.__gspn.get_enabled_transitions()
+
+                # from the enabled transitions get information on the marking type
+                if next_imm_trans:
+                    marking_type = 'V'  # vanishing marking
+                elif next_exp_trans:
+                    marking_type = 'T'  # tangible marking
+                else:
+                    marking_type = 'D'  # deadlock and tangible marking
+                    print('NO transitions enabled : deadlock and tangible')
 
                 # get the new marking where it landed
                 next_marking_dict = self.__gspn.get_current_marking()
@@ -88,38 +94,20 @@ class CoverabilityTree(object):
                 for state_id, state in self.nodes.items():
                     if next_marking in state:
                         marking_already_exists = True
+                        next_marking_id = state_id
                         break
 
-                # check if the marking is in te marking stack
-                for mrk in marking_stack:
-                    if next_marking_dict == mrk[0]:
-                        marking_already_exists = True
-                        break
-
-                    # else:
-                    #     for place_index in range(len(state)):
-                    #         if  next_marking[place_index][1] > state[place_index][1]:
-
-                # if doesn't exist append it to the marking stack to be handled in the following iterations on FIFO method
                 if not marking_already_exists:
-                    marking_stack.append([next_marking_dict, current_marking_id, tr])
+                    marking_index = marking_index + 1
+                    next_marking_id = 'M' + str(marking_index)
+                    self.nodes['M' + str(marking_index)] = [next_marking, marking_type]
+                    marking_stack.append([next_marking_dict, next_marking_id])
 
-                # # add edges
-                # self.edges[source_marking_id] = [source_marking_id, current_marking_id, tr]
-                #
-                # if next_marking == self.nodes['M0'][0]:
-                #     self.edges[current_marking_id] = ['M0', tr]
+                # add edge between the current marking and the marking to where it just transitioned
+                self.edges.append([current_marking_id, next_marking_id, tr])
 
                 # revert the current marking
                 self.__gspn.set_marking(current_marking_dict)
 
-        # test_repeated = self.nodes.copy()
-        # for state_id, state in self.nodes.items():
-        #     for key, value in test_repeated.items():
-        #         if value[0] == state[0] and key != state_id:
-        #             print('REPEATED MARKING!!!')
-        #             print(state_id, state)
-        #             print(key, value)
-        del self.edges['root']
         self.__gspn.reset_simulation()
-        return self.nodes.copy(), self.edges.copy()
+        return self.nodes.copy(), self.edges

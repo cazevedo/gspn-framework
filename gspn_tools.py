@@ -188,8 +188,8 @@ class GSPNtools(object):
                 ct_draw.node(node_id, shape='doublecircle', label=node_id, height='0.6', width='0.6', fixedsize='true', color="red")
 
         # draw coverability tree edges
-        for edge_source, edge_info in cov_tree.edges.items():
-            ct_draw.edge(edge_source, edge_info[0], label=edge_info[1])
+        for edge in cov_tree.edges:
+            ct_draw.edge(edge[0], edge[1], label=edge[2])
 
         ct_draw.render(file + '.gv', view=show)
 
