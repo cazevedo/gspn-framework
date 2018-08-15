@@ -3,7 +3,6 @@ import xml.etree.ElementTree as et  # XML parser
 from graphviz import Digraph
 import time
 
-
 class GSPNtools(object):
     @staticmethod
     def import_pnml(file):
@@ -89,7 +88,7 @@ class GSPNtools(object):
     def draw_gspn(gspn, file='gspn_default', show=True):
         # ref: https://www.graphviz.org/documentation/
 
-        gspn_draw = Digraph()
+        gspn_draw = Digraph(engine='dot')
 
         gspn_draw.attr('node', forcelabels='true')
 
@@ -175,7 +174,7 @@ class GSPNtools(object):
 
     @staticmethod
     def draw_coverability_tree(cov_tree, file='ct_default', show=True):
-        ct_draw = Digraph()
+        ct_draw = Digraph(engine='dot')
         ct_draw.attr('node', forcelabels='true')
 
         # draw coverability tree nodes

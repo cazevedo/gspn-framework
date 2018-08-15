@@ -89,6 +89,19 @@ class CoverabilityTree(object):
                     next_marking.append([place_id, ntokens])
                 next_marking.sort()
 
+                # check if the state is unbounded
+                for state_id, state in self.nodes.items():
+                    unbounded_state = True
+                    for i in range(len(state[0])):
+                        if next_marking[i][1] < state[0][i][1]:
+                            unbounded_state = False
+
+                    if unbounded_state:
+                        for i in range(len(state[0])):
+                            next_marking[i][1] = 'w'
+                            # if next_marking[i][1] > state[0][i][1]:
+                            #     next_marking[i][1] = 'w'
+
                 # check if the marking was already added as a node or not
                 marking_already_exists = False
                 for state_id, state in self.nodes.items():

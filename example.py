@@ -7,8 +7,8 @@ warnings.filterwarnings("ignore")
 
 pntools = gst.GSPNtools()
 # nets = pntools.import_pnml('debug/pipediag.xml')
-nets = pntools.import_pnml('debug/performance_example.xml')
-# nets = pntools.import_pnml('debug/simple_test.xml')
+# nets = pntools.import_pnml('debug/performance_example.xml')
+nets = pntools.import_pnml('debug/simple_test.xml')
 mypn = nets[0]
 
 ct_tree = gspn_analysis.CoverabilityTree(mypn)
@@ -23,9 +23,9 @@ step = 1
 try:
     # while True:
     for i in range(1):
-        # print('DRAWING')
-        # drawing = pntools.draw_gspn(mypn, 'mypn', show=False)
-        # pntools.draw_enabled_transitions(mypn, drawing, 'mypn_enabled', show=True)
+        print('DRAWING')
+        drawing = pntools.draw_gspn(mypn, 'mypn', show=False)
+        pntools.draw_enabled_transitions(mypn, drawing, 'mypn_enabled', show=True)
         # time.sleep(1)
         # current_marking = mypn.simulate(nsteps=1, reporting_step=1, simulate_wait=False)
         # print('Step # : ', step)
