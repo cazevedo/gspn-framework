@@ -95,12 +95,15 @@ class CoverabilityTree(object):
                     for i in range(len(state[0])):
                         if next_marking[i][1] < state[0][i][1]:
                             unbounded_state = False
-
+                    # Add an w to mark unbounded states
                     if unbounded_state:
                         for i in range(len(state[0])):
                             next_marking[i][1] = 'w'
                             # if next_marking[i][1] > state[0][i][1]:
                             #     next_marking[i][1] = 'w'
+
+                        # add edge between the current marking and the marking that is covered by this new unbounded state
+                        # self.edges.append([current_marking_id, state_id, tr])
 
                 # check if the marking was already added as a node or not
                 marking_already_exists = False
@@ -124,3 +127,35 @@ class CoverabilityTree(object):
 
         self.__gspn.reset_simulation()
         return self.nodes.copy(), self.edges
+
+    def boundness(self):
+        '''
+        The problem of boundedness is easily solved using a coverability tree. A necessary and
+        sufficient condition for a Petri net to be bounded is that the symbol ω never appears in its
+        coverability tree. Since ω represents an infinite number of tokens in some place, if ω appears
+        in place p i , then p i is unbounded. For example, in Fig. 4.14, place Q is unbounded; this is
+        to be expected, since there is no limit to the number of customers that may reside in the
+        queue at any time instant.
+        '''
+
+    def safety(self):
+        '''
+        Finally, note that if ω does not appear in place p i , then the largest value of x(p i ) for any
+        state encountered in the tree specifies a bound for the number of tokens in p i . For example,
+        x(I) ≤ 1 in Fig. 4.14. Thus, place I is 1-bounded (or safe). If the coverability (reachability)
+        tree of a Petri net contains states with 0 and 1 as the only place markings, then all places
+        are guaranteed to be safe, and the Petri net is safe
+        '''
+
+    def liveness(self):
+        '''
+        Definition B.1.2. Given a Petri net with initial state M0, a transition tj is said to be live if,
+        for all reachable states Mi, there is a firing sequence starting in Mi, such that tj is fired.
+        A Petri net is live if all its transitions are live.
+        '''
+
+    def deadlock_free(self):
+        '''
+        Given a Petri net, a deadlock state corresponds to a reachable state where none of the transitions
+        are fireable. A Petri net is deadlock-free if it contains no reachable deadlock state.
+        '''
