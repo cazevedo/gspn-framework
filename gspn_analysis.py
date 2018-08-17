@@ -1,5 +1,5 @@
 
-
+# TODO : Replace nodes by states and edges by arcs
 class CoverabilityTree(object):
     def __init__(self, gspn):
         """
@@ -58,13 +58,15 @@ class CoverabilityTree(object):
 
             if immediate_transitions_en:
                 enabled_transitions = immediate_transitions_en.copy()
+                transition_type = 'I'
             elif exp_transitions_en:
                 enabled_transitions = exp_transitions_en.copy()
+                transition_type = 'E'
             else:
                 enabled_transitions = {}
                 print('NO transitions enabled : deadlock and tangible')
 
-            for tr in enabled_transitions.keys():
+            for tr, rate in enabled_transitions.items():
                 # for each enabled transition of the current marking fire it to land in a new marking
                 self.__gspn.fire_transition(tr)
 
@@ -110,6 +112,7 @@ class CoverabilityTree(object):
                             # next_marking[i][1] = 'w'
                             if next_marking[i][1] > state[0][i][1]:
                                 next_marking[i][1] = 'w'
+                        break
 
                         # add edge between the current marking and the marking that is covered by this new unbounded state
                         # self.edges.append([current_marking_id, state_id, tr])
@@ -126,10 +129,12 @@ class CoverabilityTree(object):
                     marking_index = marking_index + 1
                     next_marking_id = 'M' + str(marking_index)
                     self.nodes['M' + str(marking_index)] = [next_marking, marking_type]
+                    # marking_stack.append([next_marking_dict, next_marking_id])
+                    # if not unbounded_state:
                     marking_stack.append([next_marking_dict, next_marking_id])
 
                 # add edge between the current marking and the marking to where it just transitioned
-                self.edges.append([current_marking_id, next_marking_id, tr])
+                self.edges.append([current_marking_id, next_marking_id, tr, rate, transition_type])
 
                 # revert the current marking
                 self.__gspn.set_marking(current_marking_dict)
@@ -138,33 +143,143 @@ class CoverabilityTree(object):
         return self.nodes.copy(), self.edges
 
     def boundness(self):
-        '''
-        The problem of boundedness is easily solved using a coverability tree. A necessary and
-        sufficient condition for a Petri net to be bounded is that the symbol ω never appears in its
-        coverability tree. Since ω represents an infinite number of tokens in some place, if ω appears
-        in place p i , then p i is unbounded. For example, in Fig. 4.14, place Q is unbounded; this is
-        to be expected, since there is no limit to the number of customers that may reside in the
-        queue at any time instant.
-        '''
+        unbounded_pn = False
+        unbounded_places = []
+        for marking_id, marking_info in self.nodes.items():
+            for marking in marking_info[0]:
+                if marking[1] == 'w' and (not marking[0] in unbounded_places):
+                    unbounded_pn = True
+                    unbounded_places.append(marking[0])
 
-    def safety(self):
-        '''
-        Finally, note that if ω does not appear in place p i , then the largest value of x(p i ) for any
-        state encountered in the tree specifies a bound for the number of tokens in p i . For example,
-        x(I) ≤ 1 in Fig. 4.14. Thus, place I is 1-bounded (or safe). If the coverability (reachability)
-        tree of a Petri net contains states with 0 and 1 as the only place markings, then all places
-        are guaranteed to be safe, and the Petri net is safe
-        '''
+        return unbounded_pn, unbounded_places
 
-    def liveness(self):
-        '''
-        Definition B.1.2. Given a Petri net with initial state M0, a transition tj is said to be live if,
-        for all reachable states Mi, there is a firing sequence starting in Mi, such that tj is fired.
-        A Petri net is live if all its transitions are live.
-        '''
+class CMTC(object):
+    def __init__(self, reachability_graph):
+        """
 
-    def deadlock_free(self):
-        '''
-        Given a Petri net, a deadlock state corresponds to a reachable state where none of the transitions
-        are fireable. A Petri net is deadlock-free if it contains no reachable deadlock state.
-        '''
+        """
+        unbound, unbound_pl = reachability_graph.boundness()
+        if unbound:
+            print("To obtain the equivalent continuous time markov chain the Petri net must be bounded, and this is not the case.")
+        else:
+            self.state = reachability_graph.nodes.copy()
+            self.transition = reachability_graph.edges
+
+    def generate(self):
+        for marking_id, marking_info in self.state.items():
+            if marking_id != 'M0':
+                marking_info.append(0)
+            else:
+                marking_info.append(1)
+
+        for marking_id, marking_info in self.state.items():
+            # get only vanishing markings
+            if marking_info[1] == 'V':
+
+                weight_sum = 0
+                # obtain the sum of the weights of the corresponding transitions of all output arcs associated with the current marking (marking_id)
+                for arc in self.transition:
+                    if arc[0] == marking_id:
+                        weight_sum = weight_sum + arc[3]
+
+                # compute the transition fire probability for each arc
+                for arc_index in range(len(self.transition)):
+                    if self.transition[arc_index][0] == marking_id:
+                        self.transition[arc_index][3] = self.transition[arc_index][3] / weight_sum
+
+        vanishing_state_list = []
+        for marking_id, marking_info in self.state.items():
+            if marking_info[1] == 'V':
+                vanishing_state_list.append([marking_id, marking_info[0], marking_info[1], marking_info[2]])
+        vanishing_state_list.sort()
+
+
+        # for marking in state_list:
+        #     print(marking)
+        #
+        # print('-----------------------------------------------')
+        # print('-----------------------------------------------')
+        # print('-----------------------------------------------')
+
+        for state in vanishing_state_list:
+            marking_id = state[0]
+            marking = state[1]
+            marking_type = state[2]
+            marking_prob = state[3]
+
+            # print(state)
+
+            # # get only vanishing markings
+            # if marking_type == 'V':
+
+            # check if the current marking has input arcs or not
+            no_input_arcs = True
+            for arc in self.transition:
+                if arc[1] == marking_id:
+                    no_input_arcs = False
+                    break
+
+            if no_input_arcs:
+                for output_arc in self.transition:
+                    output_state_id = output_arc[1]
+                    output_transition_id = output_arc[2]
+                    output_transition_prob = output_arc[3]
+
+                    if output_arc[0] == marking_id:
+                        output_state = self.state[output_state_id]
+                        output_state.insert(0, output_state_id)
+                        output_state = [output_state_id, self.state[output_state_id]]
+                        # state_list[state_list.index(output_state)][3] = state_list[state_list.index(output_state)][3] + marking_prob*output_transition_prob
+
+                        self.state[output_state_id][3] = self.state[output_state_id][3] + marking_prob*output_transition_prob
+
+                        self.transition.remove(output_arc)
+
+            else:
+                for output_arc in self.transition:
+                    output_state = output_arc[1]
+                    output_transition_id = output_arc[2]
+                    output_transition_prob = output_arc[3]
+
+                    if output_arc[0] == marking_id:  # if this condition is true then it is an output arc
+
+                        for input_arc in self.transition:
+                            input_state = input_arc[0]
+                            input_transition_id = input_arc[2]
+                            input_transition_prob = input_arc[3]
+                            input_transition_type = input_arc[4]
+
+                            if input_arc[1] == marking_id:  # if this condition is true then it is an input arc
+
+                                if input_transition_type == 'I':
+                                    if output_transition_id != input_transition_id:
+                                        new_transition_id = input_transition_id + ':' + output_transition_id
+                                    else:
+                                        new_transition_id = input_transition_id
+                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'I'])
+                                else:
+                                    if output_transition_id != input_transition_id:
+                                        new_transition_id = input_transition_id + ':' + output_transition_id
+                                    else:
+                                        new_transition_id = input_transition_id
+                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'E'])
+
+                                self.transition.remove(input_arc)
+
+                        self.transition.remove(output_arc)
+
+            del self.state[marking_id]
+            # state_list.remove(state)
+
+        for arc in self.transition:
+            print(arc)
+
+        # print('-----------------------------------------------')
+        # print('-----------------------------------------------')
+        # print('-----------------------------------------------')
+        #
+        for marking_id, marking_info in self.state.items():
+            print(marking_id)
+            print(marking_info)
+
+        return True
