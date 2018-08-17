@@ -38,7 +38,6 @@ class CoverabilityTree(object):
 
         # add the current marking to the marking stack
         marking_stack = [[current_marking_dict, current_marking_id]]
-        # marking_stack.append([current_marking_dict, current_marking_id])
 
         # loop through the marking stack
         while marking_stack:
@@ -140,7 +139,7 @@ class CoverabilityTree(object):
                 self.__gspn.set_marking(current_marking_dict)
 
         self.__gspn.reset_simulation()
-        return self.nodes.copy(), self.edges
+        return self.nodes.copy(), list(self.edges)
 
     def boundness(self):
         unbounded_pn = False
@@ -151,9 +150,9 @@ class CoverabilityTree(object):
                     unbounded_pn = True
                     unbounded_places.append(marking[0])
 
-        return unbounded_pn, unbounded_places
+        return unbounded_pn, list(unbounded_places)
 
-class CMTC(object):
+class CTMC(object):
     def __init__(self, reachability_graph):
         """
 
@@ -187,30 +186,22 @@ class CMTC(object):
                     if self.transition[arc_index][0] == marking_id:
                         self.transition[arc_index][3] = self.transition[arc_index][3] / weight_sum
 
+        # get just the vanishing states
         vanishing_state_list = []
         for marking_id, marking_info in self.state.items():
             if marking_info[1] == 'V':
                 vanishing_state_list.append([marking_id, marking_info[0], marking_info[1], marking_info[2]])
         vanishing_state_list.sort()
 
-
-        # for marking in state_list:
-        #     print(marking)
-        #
-        # print('-----------------------------------------------')
-        # print('-----------------------------------------------')
-        # print('-----------------------------------------------')
+        # add to each arc the information if it was removed or not
+        for arc in self.transition:
+            arc.append(False)
 
         for state in vanishing_state_list:
             marking_id = state[0]
             marking = state[1]
             marking_type = state[2]
             marking_prob = state[3]
-
-            # print(state)
-
-            # # get only vanishing markings
-            # if marking_type == 'V':
 
             # check if the current marking has input arcs or not
             no_input_arcs = True
@@ -224,52 +215,64 @@ class CMTC(object):
                     output_state_id = output_arc[1]
                     output_transition_id = output_arc[2]
                     output_transition_prob = output_arc[3]
+                    output_removed = output_arc[5]
 
-                    if output_arc[0] == marking_id:
-                        output_state = self.state[output_state_id]
-                        output_state.insert(0, output_state_id)
-                        output_state = [output_state_id, self.state[output_state_id]]
+                    if (output_arc[0] == marking_id) and (not output_removed):
+                        # output_state = self.state[output_state_id]
+                        # output_state.insert(0, output_state_id)
+                        # output_state = [output_state_id, self.state[output_state_id]]
                         # state_list[state_list.index(output_state)][3] = state_list[state_list.index(output_state)][3] + marking_prob*output_transition_prob
 
                         self.state[output_state_id][3] = self.state[output_state_id][3] + marking_prob*output_transition_prob
 
-                        self.transition.remove(output_arc)
+                        output_arc[5] = True  # mark it as removed
+                        # self.transition.remove(output_arc)
 
             else:
                 for output_arc in self.transition:
                     output_state = output_arc[1]
                     output_transition_id = output_arc[2]
                     output_transition_prob = output_arc[3]
+                    output_removed = output_arc[5]
 
-                    if output_arc[0] == marking_id:  # if this condition is true then it is an output arc
+                    if (output_arc[0] == marking_id) and (not output_removed):  # if this condition is true then it is an output arc
 
                         for input_arc in self.transition:
                             input_state = input_arc[0]
                             input_transition_id = input_arc[2]
                             input_transition_prob = input_arc[3]
                             input_transition_type = input_arc[4]
+                            input_removed = input_arc[5]
 
-                            if input_arc[1] == marking_id:  # if this condition is true then it is an input arc
+                            if (input_arc[1] == marking_id) and (not input_removed):  # if this condition is true then it is an input arc
 
                                 if input_transition_type == 'I':
                                     if output_transition_id != input_transition_id:
                                         new_transition_id = input_transition_id + ':' + output_transition_id
                                     else:
                                         new_transition_id = input_transition_id
-                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'I'])
+                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'I', False])
                                 else:
                                     if output_transition_id != input_transition_id:
                                         new_transition_id = input_transition_id + ':' + output_transition_id
                                     else:
                                         new_transition_id = input_transition_id
-                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'E'])
+                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'E', False])
 
-                                self.transition.remove(input_arc)
-
-                        self.transition.remove(output_arc)
+                                input_arc[5] = True  # mark it as removed
+                                # self.transition.remove(input_arc)
+                        output_arc[5] = True  # mark it as removed
+                        # self.transition.remove(output_arc)
 
             del self.state[marking_id]
             # state_list.remove(state)
+
+        temporary_transition = list(self.transition)
+        for arc in temporary_transition:
+            if arc[5]:
+                self.transition.remove(arc)
+
+
 
         for arc in self.transition:
             print(arc)

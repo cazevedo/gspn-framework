@@ -13,8 +13,15 @@ mypn = nets[0]
 
 ct_tree = gspn_analysis.CoverabilityTree(mypn)
 ct_tree.generate()
-cmtc = gspn_analysis.CMTC(ct_tree)
-st = cmtc.generate()
+ctmc = gspn_analysis.CTMC(ct_tree)
+st = ctmc.generate()
+
+# c = 0
+# lista = [[1],[2],[3]]
+# for i in lista:
+#     # print(i)
+#     i.append(c)
+# print(lista)
 
 # pntools.draw_coverability_tree(ct_tree)
 # print(ct_tree.boundness())

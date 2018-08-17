@@ -152,7 +152,7 @@ class GSPN(object):
         arc_out_m.insert(0, first_column)
         arc_out_m = list(map(list, zip(*arc_out_m)))
 
-        return arc_in_m, arc_out_m
+        return list(arc_in_m), list(arc_out_m)
 
     def add_tokens(self, place_name, ntokens, set_initial_marking=False):
         """
@@ -204,7 +204,7 @@ class GSPN(object):
         return self.__transitions.copy()
 
     def get_arcs(self):
-        return self.__arc_in_m, self.__arc_out_m
+        return list(self.__arc_in_m), list(self.__arc_out_m)
 
     def get_enabled_transitions(self):
         """
@@ -330,7 +330,7 @@ class GSPN(object):
                     # Fire transition
                     self.fire_transition(list(enabled_exp_transitions.keys())[0])
 
-        return markings
+        return list(markings)
 
     def reset_simulation(self):
         self.__places = self.__initial_marking.copy()
