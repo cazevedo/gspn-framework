@@ -14,7 +14,10 @@ mypn = nets[0]
 ct_tree = gspn_analysis.CoverabilityTree(mypn)
 ct_tree.generate()
 ctmc = gspn_analysis.CTMC(ct_tree)
-st = ctmc.generate()
+ctmc.generate()
+
+pntools.draw_coverability_tree(ct_tree)
+pntools.draw_ctmc(ctmc)
 
 # c = 0
 # lista = [[1],[2],[3]]

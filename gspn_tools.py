@@ -194,6 +194,22 @@ class GSPNtools(object):
 
         return ct_draw
 
+    @staticmethod
+    def draw_ctmc(ctmc, file='ctmc_default', show=True):
+        ctmc_draw = Digraph(engine='dot')
+        ctmc_draw.attr('node', forcelabels='true')
+
+        # draw cmtc tree nodes
+        for node_id, node_info in ctmc.state.items():
+            ctmc_draw.node(node_id, shape='doublecircle', label=node_id, height='0.6', width='0.6', fixedsize='true')
+        # draw cmtc tree edges
+        for edge in ctmc.transition:
+            ctmc_draw.edge(edge[0], edge[1], label=edge[2])
+
+        ctmc_draw.render(file + '.gv', view=show)
+
+        return ctmc_draw
+
 if __name__ == "__main__":
     pntools = GSPNtools()
     nets = pntools.import_pnml('debug/pipediag.xml')
