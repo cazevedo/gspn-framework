@@ -1,4 +1,5 @@
 
+
 # TODO : Replace nodes by states and edges by arcs
 class CoverabilityTree(object):
     def __init__(self, gspn):
@@ -65,81 +66,84 @@ class CoverabilityTree(object):
                 enabled_transitions = {}
                 print('NO transitions enabled : deadlock and tangible')
 
-            for tr, rate in enabled_transitions.items():
-                # for each enabled transition of the current marking fire it to land in a new marking
-                self.__gspn.fire_transition(tr)
+            if enabled_transitions:
+                # sum the rates from all enabled transitions, to obtain the transition probabilities between markings
+                rate_sum = sum(enabled_transitions.values())
+                for tr, rate in enabled_transitions.items():
+                    # for each enabled transition of the current marking fire it to land in a new marking
+                    self.__gspn.fire_transition(tr)
 
-                # obtain the enabled transitions for this marking
-                next_exp_trans, next_imm_trans = self.__gspn.get_enabled_transitions()
+                    # obtain the enabled transitions for this marking
+                    next_exp_trans, next_imm_trans = self.__gspn.get_enabled_transitions()
 
-                # from the enabled transitions get information on the marking type
-                if next_imm_trans:
-                    marking_type = 'V'  # vanishing marking
-                elif next_exp_trans:
-                    marking_type = 'T'  # tangible marking
-                else:
-                    marking_type = 'D'  # deadlock and tangible marking
-                    print('NO transitions enabled : deadlock and tangible')
+                    # from the enabled transitions get information on the marking type
+                    if next_imm_trans:
+                        marking_type = 'V'  # vanishing marking
+                    elif next_exp_trans:
+                        marking_type = 'T'  # tangible marking
+                    else:
+                        marking_type = 'D'  # deadlock and tangible marking
+                        print('NO transitions enabled : deadlock and tangible')
 
-                # get the new marking where it landed
-                next_marking_dict = self.__gspn.get_current_marking()
+                    # get the new marking where it landed
+                    next_marking_dict = self.__gspn.get_current_marking()
 
-                # convert marking from a dict structure into a list structure so it can be easily searchable if this already exists or no in the current directed graph
-                next_marking = []
-                for place_id, ntokens in next_marking_dict.items():
-                    next_marking.append([place_id, ntokens])
-                next_marking.sort()
+                    # convert marking from a dict structure into a list structure so it can be easily searchable if this already exists or no in the current directed graph
+                    next_marking = []
+                    for place_id, ntokens in next_marking_dict.items():
+                        next_marking.append([place_id, ntokens])
+                    next_marking.sort()
 
-                # check if the state is unbounded
-                for state_id, state in self.nodes.items():
-                    # checks if the new marking is either unbounded or equal to any of the markings previously added to the nodes
-                    unbounded_or_equal = True
-                    for i in range(len(state[0])):
-                        if next_marking[i][1] < state[0][i][1]:
-                            unbounded_or_equal = False
-
-                    # differentiates from equal markings from unbounded markings
-                    unbounded_state = False
-                    if unbounded_or_equal:
+                    # check if the state is unbounded
+                    for state_id, state in self.nodes.items():
+                        # checks if the new marking is either unbounded or equal to any of the markings previously added to the nodes
+                        unbounded_or_equal = True
                         for i in range(len(state[0])):
-                            if next_marking[i][1] > state[0][i][1]:
-                                unbounded_state = True
+                            if next_marking[i][1] < state[0][i][1]:
+                                unbounded_or_equal = False
 
-                    # Add an w to mark unbounded states
-                    if unbounded_state:
-                        for i in range(len(state[0])):
-                            # next_marking[i][1] = 'w'
-                            if next_marking[i][1] > state[0][i][1]:
-                                next_marking[i][1] = 'w'
-                        break
+                        # differentiates from equal markings from unbounded markings
+                        unbounded_state = False
+                        if unbounded_or_equal:
+                            for i in range(len(state[0])):
+                                if next_marking[i][1] > state[0][i][1]:
+                                    unbounded_state = True
 
-                        # add edge between the current marking and the marking that is covered by this new unbounded state
-                        # self.edges.append([current_marking_id, state_id, tr])
+                        # Add an w to mark unbounded states
+                        if unbounded_state:
+                            for i in range(len(state[0])):
+                                # next_marking[i][1] = 'w'
+                                if next_marking[i][1] > state[0][i][1]:
+                                    next_marking[i][1] = 'w'
+                            break
 
-                # check if the marking was already added as a node or not
-                marking_already_exists = False
-                for state_id, state in self.nodes.items():
-                    if next_marking in state:
-                        marking_already_exists = True
-                        next_marking_id = state_id
-                        break
+                            # add edge between the current marking and the marking that is covered by this new unbounded state
+                            # self.edges.append([current_marking_id, state_id, tr])
 
-                if not marking_already_exists:
-                    marking_index = marking_index + 1
-                    next_marking_id = 'M' + str(marking_index)
-                    self.nodes['M' + str(marking_index)] = [next_marking, marking_type]
-                    # marking_stack.append([next_marking_dict, next_marking_id])
-                    # if not unbounded_state:
-                    marking_stack.append([next_marking_dict, next_marking_id])
+                    # check if the marking was already added as a node or not
+                    marking_already_exists = False
+                    for state_id, state in self.nodes.items():
+                        if next_marking in state:
+                            marking_already_exists = True
+                            next_marking_id = state_id
+                            break
 
-                # add edge between the current marking and the marking to where it just transitioned
-                self.edges.append([current_marking_id, next_marking_id, tr, rate, transition_type])
+                    if not marking_already_exists:
+                        marking_index = marking_index + 1
+                        next_marking_id = 'M' + str(marking_index)
+                        self.nodes['M' + str(marking_index)] = [next_marking, marking_type]
+                        # marking_stack.append([next_marking_dict, next_marking_id])
+                        # if not unbounded_state:
+                        marking_stack.append([next_marking_dict, next_marking_id])
 
-                # revert the current marking
-                self.__gspn.set_marking(current_marking_dict)
+                    # add edge between the current marking and the marking to where it just transitioned
+                    self.edges.append([current_marking_id, next_marking_id, tr, rate/rate_sum, transition_type])
+
+                    # revert the current marking
+                    self.__gspn.set_marking(current_marking_dict)
 
         self.__gspn.reset_simulation()
-        return self.nodes.copy(), list(self.edges)
+        return True
 
     def boundness(self):
         unbounded_pn = False
@@ -179,7 +183,6 @@ class CTMC(object):
                 vanishing_state_list.append([marking_id, marking_info[0], marking_info[1], marking_info[2]])
         vanishing_state_list.sort()
 
-        # for marking_id, marking_info in self.state.items():
         for state in vanishing_state_list:
             marking_id = state[0]
             weight_sum = 0
@@ -193,14 +196,10 @@ class CTMC(object):
                 if self.transition[arc_index][0] == marking_id:
                     self.transition[arc_index][3] = self.transition[arc_index][3] / weight_sum
 
-        # add to each arc the information if it was removed or not
-        # for arc in self.transition:
-        #     arc.append(False)
-
         for state in vanishing_state_list:
             marking_id = state[0]
-            marking = state[1]
-            marking_type = state[2]
+            # marking = state[1]
+            # marking_type = state[2]
             marking_prob = state[3]
 
             # check if the current marking has input arcs or not
@@ -215,32 +214,25 @@ class CTMC(object):
 
                 for output_arc in self.transition:
                     output_state_id = output_arc[1]
-                    output_transition_id = output_arc[2]
+                    # output_transition_id = output_arc[2]
                     output_transition_prob = output_arc[3]
-                    output_removed = output_arc[5]
 
-                    # if (output_arc[0] == marking_id) and (not output_removed):
-                    if (output_arc[0] == marking_id):
+                    if output_arc[0] == marking_id:
                         self.state[output_state_id][3] = self.state[output_state_id][3] + marking_prob*output_transition_prob
                         # mark arc to be removed
                         arcs_to_remove.append(output_arc)
-                        # output_arc[5] = True
 
             else:
                 for output_arc in self.transition:
-                    # output_removed = output_arc[5]
 
-                    # if (output_arc[0] == marking_id) and (not output_removed):  # if this condition is true then it is an output arc
-                    if (output_arc[0] == marking_id):  # if this condition is true then it is an output arc
+                    if output_arc[0] == marking_id:  # if this condition is true then it is an output arc
                         output_state = output_arc[1]
                         output_transition_id = output_arc[2]
                         output_transition_prob = output_arc[3]
 
                         for input_arc in self.transition:
-                            # input_removed = input_arc[5]
 
-                            # if (input_arc[1] == marking_id) and (not input_removed):  # if this condition is true then it is an input arc
-                            if (input_arc[1] == marking_id):  # if this condition is true then it is an input arc
+                            if input_arc[1] == marking_id:  # if this condition is true then it is an input arc
                                 input_state = input_arc[0]
                                 input_transition_id = input_arc[2]
                                 input_transition_prob = input_arc[3]
@@ -251,13 +243,13 @@ class CTMC(object):
                                         new_transition_id = input_transition_id + ':' + output_transition_id
                                     else:
                                         new_transition_id = input_transition_id
-                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'I', False])
+                                    self.transition.append([input_state, output_state, new_transition_id, output_transition_prob*input_transition_prob, 'I'])
                                 else:
                                     if output_transition_id != input_transition_id:
                                         new_transition_id = input_transition_id + ':' + output_transition_id
                                     else:
                                         new_transition_id = input_transition_id
-                                    self.transition.append([input_state, output_state, new_transition_id,output_transition_prob*input_transition_prob, 'E', False])
+                                    self.transition.append([input_state, output_state, new_transition_id, output_transition_prob*input_transition_prob, 'E'])
 
                                 # mark arc to be removed
                                 if not (input_arc in arcs_to_remove):
@@ -271,22 +263,33 @@ class CTMC(object):
                 self.transition.remove(i)
 
             del self.state[marking_id]
-            # state_list.remove(state)
 
-        # temporary_transition = list(self.transition)
-        # for arc in temporary_transition:
-        #     if arc[5]:
-        #         self.transition.remove(arc)
+        temp_trans = list(self.transition)
+        duplicated_transitions = []
+        for arc1_index in range(len(temp_trans)):
+            isduplicated = False
+            for arc2_index in range(arc1_index+1, len(temp_trans)):
+                if ( (temp_trans[arc1_index][0] == temp_trans[arc2_index][0]) and
+                     (temp_trans[arc1_index][1] == temp_trans[arc2_index][1]) and
+                     (temp_trans[arc1_index] in self.transition) ):
+                    duplicated_transitions.append(temp_trans[arc2_index])
+                    isduplicated = True
 
-        for arc in self.transition:
-            print(arc)
+            if isduplicated:
+                duplicated_transitions.append(temp_trans[arc1_index])
 
-        # print('-----------------------------------------------')
-        # print('-----------------------------------------------')
-        # print('-----------------------------------------------')
-        #
-        for marking_id, marking_info in self.state.items():
-            print(marking_id)
-            print(marking_info)
+                tr = ''
+                prob = 0.0
+                while duplicated_transitions:
+                    dupl = duplicated_transitions.pop()
+                    tr = tr + dupl[2] + '/'
+                    prob = prob + dupl[3]
+                    # delete the duplicated transitions
+                    self.transition.remove(dupl)
+
+                tr = tr[0:-1]
+
+                # create a new transition to replace the duplicated where the probabilities of the duplicated are summed
+                self.transition.append([temp_trans[arc1_index][0], temp_trans[arc1_index][1], tr, prob, 'E'])
 
         return True

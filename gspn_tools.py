@@ -188,7 +188,8 @@ class GSPNtools(object):
 
         # draw coverability tree edges
         for edge in cov_tree.edges:
-            ct_draw.edge(edge[0], edge[1], label=edge[2])
+            edge_label = edge[2] + ' (' + str(round(edge[3],2)) + ')'
+            ct_draw.edge(edge[0], edge[1], label=edge_label)
 
         ct_draw.render(file + '.gv', view=show)
 
@@ -204,7 +205,7 @@ class GSPNtools(object):
             ctmc_draw.node(node_id, shape='doublecircle', label=node_id, height='0.6', width='0.6', fixedsize='true')
         # draw cmtc tree edges
         for edge in ctmc.transition:
-            ctmc_draw.edge(edge[0], edge[1], label=edge[2])
+            ctmc_draw.edge(edge[0], edge[1], label=str(round(edge[3],2)))
 
         ctmc_draw.render(file + '.gv', view=show)
 
