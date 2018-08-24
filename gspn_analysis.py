@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 # TODO : Replace nodes by states and edges by arcs
 class CoverabilityTree(object):
@@ -137,7 +137,7 @@ class CoverabilityTree(object):
                         marking_stack.append([next_marking_dict, next_marking_id])
 
                     # add edge between the current marking and the marking to where it just transitioned
-                    self.edges.append([current_marking_id, next_marking_id, tr, rate/rate_sum, transition_type])
+                    self.edges.append([current_marking_id, next_marking_id, tr, rate/rate_sum, rate, transition_type])
 
                     # revert the current marking
                     self.__gspn.set_marking(current_marking_dict)
@@ -160,7 +160,14 @@ class CoverabilityTree(object):
 class CTMC(object):
     def __init__(self, reachability_graph):
         """
-
+        A CTMC makes transitions from state to state, independent of the past, ac-
+        cording to a discrete-time Markov chain, but once entering a state remains in
+        that state, independent of the past, for an exponentially distributed amount of
+        time before changing state again.
+        Thus a CTMC can simply be described by a transition matrix P = (P ij ), describing
+        how the chain changes state step-by-step at transition epochs, together with a set of rates
+        {a i : i ∈ S}, the holding time rates. Each time state i is visited, the chain spends, on
+        average, E(H i ) = 1/a i units of time there before moving on.
         """
         unbound, unbound_pl = reachability_graph.boundness()
         if unbound:
@@ -168,6 +175,9 @@ class CTMC(object):
         else:
             self.state = reachability_graph.nodes.copy()
             self.transition = list(reachability_graph.edges)
+
+        self.__generated = False
+        self.transition_probability = []
 
     def generate(self):
         for marking_id, marking_info in self.state.items():
@@ -182,19 +192,6 @@ class CTMC(object):
             if marking_info[1] == 'V':
                 vanishing_state_list.append([marking_id, marking_info[0], marking_info[1], marking_info[2]])
         vanishing_state_list.sort()
-
-        for state in vanishing_state_list:
-            marking_id = state[0]
-            weight_sum = 0
-            # obtain the sum of the weights of the corresponding transitions of all output arcs associated with the current marking (marking_id)
-            for arc in self.transition:
-                if arc[0] == marking_id:
-                    weight_sum = weight_sum + arc[3]
-
-            # compute the transition fire probability for each arc
-            for arc_index in range(len(self.transition)):
-                if self.transition[arc_index][0] == marking_id:
-                    self.transition[arc_index][3] = self.transition[arc_index][3] / weight_sum
 
         for state in vanishing_state_list:
             marking_id = state[0]
@@ -236,20 +233,21 @@ class CTMC(object):
                                 input_state = input_arc[0]
                                 input_transition_id = input_arc[2]
                                 input_transition_prob = input_arc[3]
-                                input_transition_type = input_arc[4]
+                                input_transition_rate = input_arc[4]
+                                input_transition_type = input_arc[5]
 
                                 if input_transition_type == 'I':
                                     if output_transition_id != input_transition_id:
                                         new_transition_id = input_transition_id + ':' + output_transition_id
                                     else:
                                         new_transition_id = input_transition_id
-                                    self.transition.append([input_state, output_state, new_transition_id, output_transition_prob*input_transition_prob, 'I'])
+                                    self.transition.append([input_state, output_state, new_transition_id, output_transition_prob*input_transition_prob, None, 'I'])
                                 else:
                                     if output_transition_id != input_transition_id:
                                         new_transition_id = input_transition_id + ':' + output_transition_id
                                     else:
                                         new_transition_id = input_transition_id
-                                    self.transition.append([input_state, output_state, new_transition_id, output_transition_prob*input_transition_prob, 'E'])
+                                    self.transition.append([input_state, output_state, new_transition_id, output_transition_prob*input_transition_prob, input_transition_rate*output_transition_prob, 'E'])
 
                                 # mark arc to be removed
                                 if not (input_arc in arcs_to_remove):
@@ -280,16 +278,55 @@ class CTMC(object):
 
                 tr = ''
                 prob = 0.0
+                rate = 0.0
                 while duplicated_transitions:
                     dupl = duplicated_transitions.pop()
                     tr = tr + dupl[2] + '/'
                     prob = prob + dupl[3]
+                    rate = rate + dupl[4]
                     # delete the duplicated transitions
                     self.transition.remove(dupl)
 
                 tr = tr[0:-1]
 
                 # create a new transition to replace the duplicated where the probabilities of the duplicated are summed
-                self.transition.append([temp_trans[arc1_index][0], temp_trans[arc1_index][1], tr, prob, 'E'])
+                self.transition.append([temp_trans[arc1_index][0], temp_trans[arc1_index][1], tr, prob, rate, 'E'])
 
+        self.__generated = True
         return True
+
+    def create_transition_probability_matrix(self, time_index=0):
+        if self.__generated:
+            states_id = self.state.keys()
+            states_id.sort()
+
+            # create a zeros matrix (# of states + 1) by (# of states)
+            n_states = len(states_id)
+            for i in range(n_states + 1):
+                self.transition_probability.append([0] * n_states)
+
+            # replace the first row with all the states names
+            self.transition_probability[0] = list(states_id)
+
+            # add a first column with all the states names
+            first_column = list(states_id)
+            first_column.insert(0, '')  # put None in the element (0,0) since it has no use
+            self.transition_probability = list(zip(*self.transition_probability))
+            self.transition_probability.insert(0, first_column)
+            self.transition_probability = list(map(list, zip(*self.transition_probability)))
+
+            if time_index == 0:
+                for row_index in range(1, n_states+1):
+                    for column_index in range(1, n_states+1):
+                        if row_index == column_index:
+                            self.transition_probability[row_index][column_index] = 1
+
+
+                # for i in self.transition_probability:
+                #     print(i)
+            # else:
+
+            return self.transition_probability
+
+        # else:
+        #     return False

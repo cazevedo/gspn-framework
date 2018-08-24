@@ -7,14 +7,15 @@ warnings.filterwarnings("ignore")
 
 pntools = gst.GSPNtools()
 # nets = pntools.import_pnml('debug/pipediag.xml')
-nets = pntools.import_pnml('debug/performance_example.xml')
-# nets = pntools.import_pnml('debug/simple_test.xml')
+# nets = pntools.import_pnml('debug/performance_example.xml')
+nets = pntools.import_pnml('debug/simple_test.xml')
 mypn = nets[0]
 
 ct_tree = gspn_analysis.CoverabilityTree(mypn)
 ct_tree.generate()
 ctmc = gspn_analysis.CTMC(ct_tree)
 ctmc.generate()
+tr = ctmc.create_transition_probability_matrix()
 
 pntools.draw_coverability_tree(ct_tree)
 pntools.draw_ctmc(ctmc)
