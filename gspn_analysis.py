@@ -178,6 +178,7 @@ class CTMC(object):
             self.transition = list(reachability_graph.edges)
 
         self.__generated = False
+        self.__transition_rate = False
         self.transition_probability = []
         self.infinitesimal_generator = []
         self.sojourn_times = {}
@@ -303,16 +304,12 @@ class CTMC(object):
         self.__generated = True
         return True
 
-    def create_transition_matrices(self, time_index=1.0):
+    def compute_transition_rate(self):
         """
-        Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
-        the chain will be in state j, t time units from now, given it is in state i now.
-        :param time_index: time units that have elapsed from now
+        Qij is the rate of going from state i to state j at time t.
+        Qii represents the rate of leaving state i at time t.
         :return: True or False depending if it was successful or not
         """
-        if time_index < 0:
-            return False
-
         if self.__generated:
             states_id = self.state.keys()
             states_id.sort()
@@ -320,69 +317,110 @@ class CTMC(object):
             # create a zeros matrix (# of states + 1) by (# of states)
             n_states = len(states_id)
             for i in range(n_states + 1):
-                self.transition_probability.append([0] * n_states)
                 self.infinitesimal_generator.append([0] * n_states)
 
             # replace the first row with all the states names
-            self.transition_probability[0] = list(states_id)
             self.infinitesimal_generator[0] = list(states_id)
 
             # add a first column with all the states names
             first_column = list(states_id)
             first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-            self.transition_probability = list(zip(*self.transition_probability))
             self.infinitesimal_generator = list(zip(*self.infinitesimal_generator))
-            self.transition_probability.insert(0, first_column)
             self.infinitesimal_generator.insert(0, first_column)
-            self.transition_probability = list(map(list, zip(*self.transition_probability)))
             self.infinitesimal_generator = list(map(list, zip(*self.infinitesimal_generator)))
 
-            # in the scenario where no time has elapsed the probability of remaining in the same state is one and therefore the transition matrix is the identity matrix
-            if time_index == 0:
-                for row_index in range(1, n_states+1):
-                    for column_index in range(1, n_states+1):
-                        if row_index == column_index:
-                            self.transition_probability[row_index][column_index] = 1
 
-            pii_not_zero = False
             for row_index in range(1, n_states+1):
                 source = self.infinitesimal_generator[row_index][0]
                 for column_index in range(1, n_states+1):
                     target = self.infinitesimal_generator[column_index][0]
                     for arc in self.transition:
                         if (arc[0] == source) and (arc[1] == target):
-                            if source == target:
-                                pii_not_zero = True
-                                pii = arc[3]
-                            else:
+                            if target != source:
                                 self.infinitesimal_generator[row_index][column_index] = arc[4]
 
-                                if time_index > 0:
-                                    self.transition_probability[row_index][column_index] = arc[3]
-
-
-                if pii_not_zero:
-                    for column_index in range(1, n_states + 1):
-                        if self.infinitesimal_generator[row_index][column_index] != 0:
-                            self.infinitesimal_generator[row_index][column_index] = \
-                            self.infinitesimal_generator[row_index][column_index] * (1.0 - pii)
-                            if time_index > 0:
-                                self.transition_probability[row_index][column_index] = \
-                                self.transition_probability[row_index][column_index] / (1.0 - pii)
-
-                    pii_not_zero = False
-
-                self.sojourn_times[self.infinitesimal_generator[row_index][0]] = 1 / sum(self.infinitesimal_generator[row_index][1:])
                 self.infinitesimal_generator[row_index][row_index] = -sum(self.infinitesimal_generator[row_index][1:])
 
-            for i in self.transition_probability:
-                print(i)
+                print(sum(self.infinitesimal_generator[row_index][1:]))
 
             print('----------------------')
             for i in self.infinitesimal_generator:
                 print(i)
 
-            print('----------------------')
+            self.__transition_rate = True
+            return True
+
+        else:
+            return False
+
+    # def compute_transition_probability(self, time_interval=1.0):
+    #     """
+    #     Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
+    #     the chain will be in state j, t time units from now, given it is in state i now.
+    #     :param time_interval: time units that have elapsed from now
+    #     :return: True or False depending if it was successful or not
+    #     """
+    #     if time_interval < 0:
+    #         return False
+    #
+    #     if self.__transition_rate:
+    #         states_id = self.state.keys()
+    #         states_id.sort()
+    #
+    #         # create a zeros matrix (# of states + 1) by (# of states)
+    #         n_states = len(states_id)
+    #         for i in range(n_states + 1):
+    #             self.transition_probability.append([0] * n_states)
+    #
+    #         # replace the first row with all the states names
+    #         self.transition_probability[0] = list(states_id)
+    #
+    #         # add a first column with all the states names
+    #         first_column = list(states_id)
+    #         first_column.insert(0, '')  # put None in the element (0,0) since it has no use
+    #         self.transition_probability = list(zip(*self.transition_probability))
+    #         self.transition_probability.insert(0, first_column)
+    #         self.transition_probability = list(map(list, zip(*self.transition_probability)))
+    #
+    #         # in the scenario where no time has elapsed the probability of remaining in the same state is one and therefore the transition matrix is the identity matrix
+    #         if time_interval == 0:
+    #             for row_index in range(1, n_states+1):
+    #                 for column_index in range(1, n_states+1):
+    #                     if row_index == column_index:
+    #                         self.transition_probability[row_index][column_index] = 1
+    #         else:
+    #             for row_index in range(1, n_states+1):
+    #                 source = self.infinitesimal_generator[row_index][0]
+    #                 for column_index in range(1, n_states+1):
+    #                     target = self.infinitesimal_generator[column_index][0]
+    #                     for arc in self.transition:
+    #                         if (arc[0] == source) and (arc[1] == target):
+    #
+    #                             self.transition_probability[row_index][column_index] = arc[3]
+    #
+    #
+    #         print('----------------------')
+    #         for i in self.transition_probability:
+    #             print(i)
+    #
+    #         return True
+    #
+    #     else:
+    #         return False
+
+    def compute_sojourn_times(self):
+        if self.__generated:
+            states_id = self.state.keys()
+            states_id.sort()
+
+            for current_state in states_id:
+                state_rate = 0
+                for output_state in states_id:
+                    for arc in self.transition:
+                        if (arc[0] == current_state) and (arc[1] == output_state):
+                            state_rate = state_rate + arc[4]
+
+                self.sojourn_times[current_state] = 1 / state_rate
 
             for i,j in self.sojourn_times.items():
                 print(i,j)
@@ -392,38 +430,3 @@ class CTMC(object):
         else:
             return False
 
-    # def create_infinitesimal_generator(self):
-    #     if not self.__exists_transition_probability:
-    #         if not self.create_transition_probability_matrix(time_index=1.0):
-    #             return False
-    #
-    #     states_id = self.state.keys()
-    #     states_id.sort()
-    #
-    #     # create a zeros matrix (# of states + 1) by (# of states)
-    #     n_states = len(states_id)
-    #     for i in range(n_states + 1):
-    #         self.infinitesimal_generator.append([0] * n_states)
-    #
-    #     # replace the first row with all the states names
-    #     self.infinitesimal_generator[0] = list(states_id)
-    #
-    #     # add a first column with all the states names
-    #     first_column = list(states_id)
-    #     first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-    #     self.infinitesimal_generator = list(zip(*self.infinitesimal_generator))
-    #     self.infinitesimal_generator.insert(0, first_column)
-    #     self.infinitesimal_generator = list(map(list, zip(*self.infinitesimal_generator)))
-    #
-    #     for row_index in range(1, n_states+1):
-    #         source = self.infinitesimal_generator[row_index][0]
-    #         for column_index in range(1, n_states+1):
-    #             target = self.infinitesimal_generator[column_index][0]
-    #             for arc in self.transition:
-    #                 if (arc[0] == source) and (arc[1] == target) and (arc[0] != arc[1]):
-    #                     self.infinitesimal_generator[row_index][column_index] = arc[4]
-    #
-    #     for i in self.infinitesimal_generator:
-    #         print(i)
-    #
-    #     return True

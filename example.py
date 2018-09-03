@@ -18,7 +18,8 @@ ct_tree = gspn_analysis.CoverabilityTree(mypn)
 ct_tree.generate()
 ctmc = gspn_analysis.CTMC(ct_tree)
 ctmc.generate()
-tr = ctmc.create_transition_matrices()
+tr = ctmc.compute_transition_rate()
+# tr = ctmc.get_sojourn_times()
 # tr = ctmc.create_infinitesimal_generator()
 #
 #
