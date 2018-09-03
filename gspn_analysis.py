@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import math
 
 # TODO : Replace nodes by states and edges by arcs
 class CoverabilityTree(object):
@@ -21,7 +22,7 @@ class CoverabilityTree(object):
             marking_type = 'T'  # tangible marking
         else:
             marking_type = 'D'  # deadlock and tangible marking
-            print('NO transitions enabled : deadlock and tangible')
+            # print('NO transitions enabled : deadlock and tangible')
 
         current_marking_dict = self.__gspn.get_initial_marking()
 
@@ -64,7 +65,7 @@ class CoverabilityTree(object):
                 transition_type = 'E'
             else:
                 enabled_transitions = {}
-                print('NO transitions enabled : deadlock and tangible')
+                # print('NO transitions enabled : deadlock and tangible')
 
             if enabled_transitions:
                 # sum the rates from all enabled transitions, to obtain the transition probabilities between markings
@@ -83,7 +84,7 @@ class CoverabilityTree(object):
                         marking_type = 'T'  # tangible marking
                     else:
                         marking_type = 'D'  # deadlock and tangible marking
-                        print('NO transitions enabled : deadlock and tangible')
+                        # print('NO transitions enabled : deadlock and tangible')
 
                     # get the new marking where it landed
                     next_marking_dict = self.__gspn.get_current_marking()
@@ -178,8 +179,15 @@ class CTMC(object):
 
         self.__generated = False
         self.transition_probability = []
+        self.infinitesimal_generator = []
+        self.sojourn_times = {}
 
     def generate(self):
+        """
+        Coverts a reachability graph into a continuous time markov chain.
+        Populates the state and transition attributes with the information provided by the inputed reachability graph
+        :return: True if successful
+        """
         for marking_id, marking_info in self.state.items():
             if marking_id != 'M0':
                 marking_info.append(0)
@@ -295,7 +303,16 @@ class CTMC(object):
         self.__generated = True
         return True
 
-    def create_transition_probability_matrix(self, time_index=0):
+    def create_transition_matrices(self, time_index=1.0):
+        """
+        Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
+        the chain will be in state j, t time units from now, given it is in state i now.
+        :param time_index: time units that have elapsed from now
+        :return: True or False depending if it was successful or not
+        """
+        if time_index < 0:
+            return False
+
         if self.__generated:
             states_id = self.state.keys()
             states_id.sort()
@@ -304,29 +321,109 @@ class CTMC(object):
             n_states = len(states_id)
             for i in range(n_states + 1):
                 self.transition_probability.append([0] * n_states)
+                self.infinitesimal_generator.append([0] * n_states)
 
             # replace the first row with all the states names
             self.transition_probability[0] = list(states_id)
+            self.infinitesimal_generator[0] = list(states_id)
 
             # add a first column with all the states names
             first_column = list(states_id)
             first_column.insert(0, '')  # put None in the element (0,0) since it has no use
             self.transition_probability = list(zip(*self.transition_probability))
+            self.infinitesimal_generator = list(zip(*self.infinitesimal_generator))
             self.transition_probability.insert(0, first_column)
+            self.infinitesimal_generator.insert(0, first_column)
             self.transition_probability = list(map(list, zip(*self.transition_probability)))
+            self.infinitesimal_generator = list(map(list, zip(*self.infinitesimal_generator)))
 
+            # in the scenario where no time has elapsed the probability of remaining in the same state is one and therefore the transition matrix is the identity matrix
             if time_index == 0:
                 for row_index in range(1, n_states+1):
                     for column_index in range(1, n_states+1):
                         if row_index == column_index:
                             self.transition_probability[row_index][column_index] = 1
 
+            pii_not_zero = False
+            for row_index in range(1, n_states+1):
+                source = self.infinitesimal_generator[row_index][0]
+                for column_index in range(1, n_states+1):
+                    target = self.infinitesimal_generator[column_index][0]
+                    for arc in self.transition:
+                        if (arc[0] == source) and (arc[1] == target):
+                            if source == target:
+                                pii_not_zero = True
+                                pii = arc[3]
+                            else:
+                                self.infinitesimal_generator[row_index][column_index] = arc[4]
 
-                # for i in self.transition_probability:
-                #     print(i)
-            # else:
+                                if time_index > 0:
+                                    self.transition_probability[row_index][column_index] = arc[3]
 
-            return self.transition_probability
 
-        # else:
-        #     return False
+                if pii_not_zero:
+                    for column_index in range(1, n_states + 1):
+                        if self.infinitesimal_generator[row_index][column_index] != 0:
+                            self.infinitesimal_generator[row_index][column_index] = \
+                            self.infinitesimal_generator[row_index][column_index] * (1.0 - pii)
+                            if time_index > 0:
+                                self.transition_probability[row_index][column_index] = \
+                                self.transition_probability[row_index][column_index] / (1.0 - pii)
+
+                    pii_not_zero = False
+
+                self.sojourn_times[self.infinitesimal_generator[row_index][0]] = 1 / sum(self.infinitesimal_generator[row_index][1:])
+                self.infinitesimal_generator[row_index][row_index] = -sum(self.infinitesimal_generator[row_index][1:])
+
+            for i in self.transition_probability:
+                print(i)
+
+            print('----------------------')
+            for i in self.infinitesimal_generator:
+                print(i)
+
+            print('----------------------')
+
+            for i,j in self.sojourn_times.items():
+                print(i,j)
+
+            return True
+
+        else:
+            return False
+
+    # def create_infinitesimal_generator(self):
+    #     if not self.__exists_transition_probability:
+    #         if not self.create_transition_probability_matrix(time_index=1.0):
+    #             return False
+    #
+    #     states_id = self.state.keys()
+    #     states_id.sort()
+    #
+    #     # create a zeros matrix (# of states + 1) by (# of states)
+    #     n_states = len(states_id)
+    #     for i in range(n_states + 1):
+    #         self.infinitesimal_generator.append([0] * n_states)
+    #
+    #     # replace the first row with all the states names
+    #     self.infinitesimal_generator[0] = list(states_id)
+    #
+    #     # add a first column with all the states names
+    #     first_column = list(states_id)
+    #     first_column.insert(0, '')  # put None in the element (0,0) since it has no use
+    #     self.infinitesimal_generator = list(zip(*self.infinitesimal_generator))
+    #     self.infinitesimal_generator.insert(0, first_column)
+    #     self.infinitesimal_generator = list(map(list, zip(*self.infinitesimal_generator)))
+    #
+    #     for row_index in range(1, n_states+1):
+    #         source = self.infinitesimal_generator[row_index][0]
+    #         for column_index in range(1, n_states+1):
+    #             target = self.infinitesimal_generator[column_index][0]
+    #             for arc in self.transition:
+    #                 if (arc[0] == source) and (arc[1] == target) and (arc[0] != arc[1]):
+    #                     self.infinitesimal_generator[row_index][column_index] = arc[4]
+    #
+    #     for i in self.infinitesimal_generator:
+    #         print(i)
+    #
+    #     return True
