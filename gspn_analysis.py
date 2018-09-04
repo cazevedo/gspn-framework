@@ -329,7 +329,6 @@ class CTMC(object):
             self.infinitesimal_generator.insert(0, first_column)
             self.infinitesimal_generator = list(map(list, zip(*self.infinitesimal_generator)))
 
-
             for row_index in range(1, n_states+1):
                 source = self.infinitesimal_generator[row_index][0]
                 for column_index in range(1, n_states+1):
@@ -346,6 +345,8 @@ class CTMC(object):
             # print('----------------------')
             # for i in self.infinitesimal_generator:
             #     print(i)
+            self.infinitesimal_generator = np.matrix(self.infinitesimal_generator)
+            # print(self.infinitesimal_generator)
 
             self.__transition_rate = True
             return True
@@ -353,7 +354,7 @@ class CTMC(object):
         else:
             return False
 
-    def compute_transition_probability(self, time_interval=0.0):
+    def compute_transition_probability(self, time_interval):
         """
         Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
         the chain will be in state j, t time units from now, given it is in state i now.
@@ -372,16 +373,18 @@ class CTMC(object):
 
             n_states = len(states_id)
 
-            inf_gen_matrix = list(self.infinitesimal_generator)
+            inf_gen_matrix = self.infinitesimal_generator.copy()
             inf_gen_matrix = np.array(inf_gen_matrix)
-            inf_gen_matrix = np.delete(inf_gen_matrix,0,0)  # remove first row
-            inf_gen_matrix = np.delete(inf_gen_matrix,0,1)  # remove first column
+            inf_gen_matrix = np.delete(inf_gen_matrix, 0, 0)  # remove first row
+            inf_gen_matrix = np.delete(inf_gen_matrix, 0, 1)  # remove first column
             inf_gen_matrix = np.matrix(inf_gen_matrix, dtype='float64')
 
             error = 1.0
             k = 60
             sum_list = [2]*n_states
-            while (error > 0.001) or (round(sum(sum_list),4) != n_states):
+            timeout = 2**35
+            count_timeout = 0
+            while (error > 0.001) or (round(sum(sum_list), 4) != n_states):
                 large_n = 2 ** k
                 self.transition_probability = np.matrix(np.identity(n_states) + (inf_gen_matrix * time_interval / large_n), dtype='float64')
                 self.transition_probability = self.transition_probability**large_n
@@ -394,23 +397,62 @@ class CTMC(object):
 
                 k = k - 1
 
+                # timeout to leave infinite loop
+                count_timeout = count_timeout + 1
+                if count_timeout > timeout:
+                    return False
+
             # print(' K : ', k)
             # print(' Error : ', error)
             # print(' SUM : ', sum_list)
             # print(' SUM : ', round(sum(sum_list),3))
             # print(self.transition_probability)
+            # print(self.transition_probability)
 
             # add headers (row and column) to identify the transitioning states
-            self.transition_probability = np.vstack((states_id,self.transition_probability))
-            states_id.insert(0,'')
+            self.transition_probability = np.vstack((states_id, self.transition_probability))
+            states_id.insert(0, '')
             for i in range(len(states_id)):
                 states_id[i] = [states_id[i]]
             self.transition_probability = np.hstack((states_id, self.transition_probability))
+
+            # print(self.transition_probability)
 
             return True
 
         else:
             return False
+
+    def get_prob_reach_states(self, initial_states_prob, time_interval):
+        '''
+        Computes the probability of reaching all states after a certain amount of time have elapsed.
+        :param initial_states_prob: dictionary where each key is a state and the value corresponds to the probability
+        of initially being in that state. Can also be interpreted as the probability mass function of the random variable X at the beginning of time.
+        :param time_interval: float encoding the time elapsed after the inputed initial state.
+        :return: dictionary where each key is a state and the value corresponds to the probability
+        of reaching that state after the inputed time has elapsed.
+        '''
+
+        if not self.compute_transition_probability(time_interval):
+            raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
+
+        states_id = self.state.keys()
+        states_id.sort()
+
+        print(self.transition_probability)
+
+        final_state_probability = {}
+        for column_index in range(1, len(self.transition_probability)):
+            prob_sum = 0
+            for row_index in range(1, len(self.transition_probability)):
+                state_id = self.transition_probability[row_index, 0]
+                state_prob = float(self.transition_probability[row_index, column_index])
+                prob_sum = prob_sum + initial_states_prob[state_id] * state_prob
+
+            current_state = self.transition_probability[0, column_index] # state where to append the computed probability
+            final_state_probability[current_state] = prob_sum
+
+        return final_state_probability.copy()
 
     def compute_sojourn_times(self):
         if self.__generated:
@@ -425,9 +467,6 @@ class CTMC(object):
                             state_rate = state_rate + arc[4]
 
                 self.sojourn_times[current_state] = 1 / state_rate
-
-            for i,j in self.sojourn_times.items():
-                print(i,j)
 
             return True
 
