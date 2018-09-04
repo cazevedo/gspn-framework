@@ -19,6 +19,7 @@ ct_tree.generate()
 ctmc = gspn_analysis.CTMC(ct_tree)
 ctmc.generate()
 tr = ctmc.compute_transition_rate()
+tr = ctmc.compute_transition_probability()
 # tr = ctmc.get_sojourn_times()
 # tr = ctmc.create_infinitesimal_generator()
 #

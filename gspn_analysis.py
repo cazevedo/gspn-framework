@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import math
+import numpy as np
 
 # TODO : Replace nodes by states and edges by arcs
 class CoverabilityTree(object):
@@ -341,11 +341,11 @@ class CTMC(object):
 
                 self.infinitesimal_generator[row_index][row_index] = -sum(self.infinitesimal_generator[row_index][1:])
 
-                print(sum(self.infinitesimal_generator[row_index][1:]))
+                # print(sum(self.infinitesimal_generator[row_index][1:]))
 
-            print('----------------------')
-            for i in self.infinitesimal_generator:
-                print(i)
+            # print('----------------------')
+            # for i in self.infinitesimal_generator:
+            #     print(i)
 
             self.__transition_rate = True
             return True
@@ -353,60 +353,64 @@ class CTMC(object):
         else:
             return False
 
-    # def compute_transition_probability(self, time_interval=1.0):
-    #     """
-    #     Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
-    #     the chain will be in state j, t time units from now, given it is in state i now.
-    #     :param time_interval: time units that have elapsed from now
-    #     :return: True or False depending if it was successful or not
-    #     """
-    #     if time_interval < 0:
-    #         return False
-    #
-    #     if self.__transition_rate:
-    #         states_id = self.state.keys()
-    #         states_id.sort()
-    #
-    #         # create a zeros matrix (# of states + 1) by (# of states)
-    #         n_states = len(states_id)
-    #         for i in range(n_states + 1):
-    #             self.transition_probability.append([0] * n_states)
-    #
-    #         # replace the first row with all the states names
-    #         self.transition_probability[0] = list(states_id)
-    #
-    #         # add a first column with all the states names
-    #         first_column = list(states_id)
-    #         first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-    #         self.transition_probability = list(zip(*self.transition_probability))
-    #         self.transition_probability.insert(0, first_column)
-    #         self.transition_probability = list(map(list, zip(*self.transition_probability)))
-    #
-    #         # in the scenario where no time has elapsed the probability of remaining in the same state is one and therefore the transition matrix is the identity matrix
-    #         if time_interval == 0:
-    #             for row_index in range(1, n_states+1):
-    #                 for column_index in range(1, n_states+1):
-    #                     if row_index == column_index:
-    #                         self.transition_probability[row_index][column_index] = 1
-    #         else:
-    #             for row_index in range(1, n_states+1):
-    #                 source = self.infinitesimal_generator[row_index][0]
-    #                 for column_index in range(1, n_states+1):
-    #                     target = self.infinitesimal_generator[column_index][0]
-    #                     for arc in self.transition:
-    #                         if (arc[0] == source) and (arc[1] == target):
-    #
-    #                             self.transition_probability[row_index][column_index] = arc[3]
-    #
-    #
-    #         print('----------------------')
-    #         for i in self.transition_probability:
-    #             print(i)
-    #
-    #         return True
-    #
-    #     else:
-    #         return False
+    def compute_transition_probability(self, time_interval=0.0):
+        """
+        Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
+        the chain will be in state j, t time units from now, given it is in state i now.
+        The transition probability matrix (P(t)) is computed from the infinitesimal generator (Q) through the formula:
+        P(t) = exp(Q*t)
+        The computed transition probability can be accessed through the CTMC attribute transition_probability.
+        :param time_interval: time units that have elapsed from now
+        :return: True or False depending if it was successful or not
+        """
+        if time_interval < 0:
+            return False
+
+        if self.__transition_rate:
+            states_id = self.state.keys()
+            states_id.sort()
+
+            n_states = len(states_id)
+
+            inf_gen_matrix = list(self.infinitesimal_generator)
+            inf_gen_matrix = np.array(inf_gen_matrix)
+            inf_gen_matrix = np.delete(inf_gen_matrix,0,0)  # remove first row
+            inf_gen_matrix = np.delete(inf_gen_matrix,0,1)  # remove first column
+            inf_gen_matrix = np.matrix(inf_gen_matrix, dtype='float64')
+
+            error = 1.0
+            k = 60
+            sum_list = [2]*n_states
+            while (error > 0.001) or (round(sum(sum_list),4) != n_states):
+                large_n = 2 ** k
+                self.transition_probability = np.matrix(np.identity(n_states) + (inf_gen_matrix * time_interval / large_n), dtype='float64')
+                self.transition_probability = self.transition_probability**large_n
+
+                sum_list = []
+                for row in self.transition_probability:
+                    sum_list.append(np.sum(row))
+
+                error = np.std(sum_list)
+
+                k = k - 1
+
+            # print(' K : ', k)
+            # print(' Error : ', error)
+            # print(' SUM : ', sum_list)
+            # print(' SUM : ', round(sum(sum_list),3))
+            # print(self.transition_probability)
+
+            # add headers (row and column) to identify the transitioning states
+            self.transition_probability = np.vstack((states_id,self.transition_probability))
+            states_id.insert(0,'')
+            for i in range(len(states_id)):
+                states_id[i] = [states_id[i]]
+            self.transition_probability = np.hstack((states_id, self.transition_probability))
+
+            return True
+
+        else:
+            return False
 
     def compute_sojourn_times(self):
         if self.__generated:
