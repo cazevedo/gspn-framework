@@ -19,20 +19,22 @@ ct_tree.generate()
 ctmc = gspn_analysis.CTMC(ct_tree)
 ctmc.generate()
 tr = ctmc.compute_transition_rate()
-arc_in = {}
-arc_in['M0'] = 0.5
-arc_in['M11'] = 0.1
-arc_in['M3'] = 0.1
-arc_in['M4'] = 0.1
-arc_in['M6'] = 0.1
-arc_in['M9'] = 0.1
-tr = ctmc.get_prob_reach_states(arc_in,10)
-print(tr)
+# arc_in = {}
+# arc_in['M0'] = 0.5
+# arc_in['M11'] = 0.1
+# arc_in['M3'] = 0.1
+# arc_in['M4'] = 0.1
+# arc_in['M6'] = 0.1
+# arc_in['M9'] = 0.1
+# tr = ctmc.get_prob_reach_states(arc_in,10)
+
+ctmc.get_steady_state()
+# print(tr)
 
 # tr = ctmc.compute_transition_probability(10)
 # print(ctmc.transition_probability)
-# tr = ctmc.compute_sojourn_times()
-# print(ctmc.sojourn_times)
+# tr = ctmc.get_sojourn_times()
+# print(tr)
 # tr = ctmc.create_infinitesimal_generator()
 #
 #
