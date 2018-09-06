@@ -10,8 +10,16 @@ pntools = gst.GSPNtools()
 nets = pntools.import_pnml('debug/performance_example.xml')
 # nets = pntools.import_pnml('debug/simple_test.xml')
 mypn = nets[0]
-tr = mypn.prob_of_n_tokens('P1', 0)
-print(tr)
+mypn.init_analysis()
+pl = mypn.get_current_marking()
+pl2 = []
+for k,v in pl.items():
+    pl2.append(k)
+pl2.sort()
+
+for i in pl2:
+    print(i, mypn.expected_number_of_tokens(i))
+
 
 # print(mypn.transition_throughput_rate('T2'))
 

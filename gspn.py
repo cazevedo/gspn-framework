@@ -17,6 +17,10 @@ class GSPN(object):
         self.__transitions = {}
         self.__arc_in_m = []
         self.__arc_out_m = []
+        self.__ct_tree = None
+        self.__ctmc = None
+        self.__ctmc_steady_state = None
+        self.__ct_ctmc_generated = False
 
     def add_places(self, name, ntokens=None, set_initial_marking=True):
         """
@@ -345,52 +349,75 @@ class GSPN(object):
     #     :return:
     #     '''
 
+    def init_analysis(self):
+        self.__ct_tree = gspn_analysis.CoverabilityTree(self)
+        self.__ct_tree.generate()
+        self.__ctmc = gspn_analysis.CTMC(self.__ct_tree)
+        self.__ctmc.generate()
+        self.__ctmc.compute_transition_rate()
+        self.__ctmc_steady_state = self.__ctmc.get_steady_state()
+
+        self.__ct_ctmc_generated = True
+
+        return True
+
     # TODO: add throughput for immediate transitions as well
     def transition_throughput_rate(self, exp_transition):
         if self.__transitions[exp_transition][0] != 'exp':
             raise Exception('Transition is not exponential, throughput rate only available for exponential transitions.')
 
-        ct_tree = gspn_analysis.CoverabilityTree(self)
-        ct_tree.generate()
-        ctmc = gspn_analysis.CTMC(ct_tree)
-        ctmc.generate()
-        ctmc.compute_transition_rate()
-        ctmc_steady_state = ctmc.get_steady_state()
+        if not self.__ct_ctmc_generated:
+            raise Exception('Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
 
         transition_rate = self.__transitions[exp_transition]
         transition_rate = transition_rate[1]
         states_already_considered = []
         throughput_rate = 0
-        for tr in ctmc.transition:
+        for tr in self.__ctmc.transition:
             state = tr[0]
             transitons_id = tr[2]
             transitons_id = transitons_id.replace('/',':')
             transition_id = transitons_id.split(':')
             if (exp_transition in transition_id) and not (state in states_already_considered):
-                throughput_rate = throughput_rate + ctmc_steady_state[state] * transition_rate
+                throughput_rate = throughput_rate + self.__ctmc_steady_state[state] * transition_rate
 
                 states_already_considered.append(state)
 
         return throughput_rate
 
-    # def expected_number_of_tokens(self, place):
-
     def prob_of_n_tokens(self, place, ntokens):
-        ct_tree = gspn_analysis.CoverabilityTree(self)
-        ct_tree.generate()
-        ctmc = gspn_analysis.CTMC(ct_tree)
-        ctmc.generate()
-        ctmc.compute_transition_rate()
-        ctmc_steady_state = ctmc.get_steady_state()
+        if not self.__ct_ctmc_generated:
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
 
         prob_of_n_tokens = 0
-        for state_id, marking in ctmc.state.items():
+        for state_id, marking in self.__ctmc.state.items():
             marking = marking[0]
             for pl in marking:
                 if (place == pl[0]) and (ntokens == pl[1]):
-                    prob_of_n_tokens = prob_of_n_tokens + ctmc_steady_state[state_id]
+                    prob_of_n_tokens = prob_of_n_tokens + self.__ctmc_steady_state[state_id]
 
         return prob_of_n_tokens
+
+    def expected_number_of_tokens(self, place):
+        if not self.__ct_ctmc_generated:
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+
+        # compute the maximum possible number of tokens in the inputed place
+        maximum_n_tokens = 0
+        for state_id, marking in self.__ctmc.state.items():
+            marking = marking[0]
+            for pl in marking:
+                if (pl[0] == place) and (pl[1] > maximum_n_tokens):
+                    maximum_n_tokens = pl[1]
+
+        # sum all the probabilities of having exactly n tokens in the given place
+        expected_number_of_tokens = 0
+        for ntokens in range(maximum_n_tokens):
+            expected_number_of_tokens = expected_number_of_tokens + self.prob_of_n_tokens(place,ntokens+1)
+
+        return expected_number_of_tokens
 
 # if __name__ == "__main__":
     # create a generalized stochastic petri net structure
