@@ -373,6 +373,25 @@ class GSPN(object):
 
         return throughput_rate
 
+    # def expected_number_of_tokens(self, place):
+
+    def prob_of_n_tokens(self, place, ntokens):
+        ct_tree = gspn_analysis.CoverabilityTree(self)
+        ct_tree.generate()
+        ctmc = gspn_analysis.CTMC(ct_tree)
+        ctmc.generate()
+        ctmc.compute_transition_rate()
+        ctmc_steady_state = ctmc.get_steady_state()
+
+        prob_of_n_tokens = 0
+        for state_id, marking in ctmc.state.items():
+            marking = marking[0]
+            for pl in marking:
+                if (place == pl[0]) and (ntokens == pl[1]):
+                    prob_of_n_tokens = prob_of_n_tokens + ctmc_steady_state[state_id]
+
+        return prob_of_n_tokens
+
 # if __name__ == "__main__":
     # create a generalized stochastic petri net structure
     # my_pn = gspn()
