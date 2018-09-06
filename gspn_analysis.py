@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import gspn
 
 # TODO : Replace nodes by states and edges by arcs
+# TODO : Fix unbounded places verification
 class CoverabilityTree(object):
     def __init__(self, gspn):
         """
@@ -504,3 +506,14 @@ class CTMC(object):
         else:
             raise Exception('Continuous time Markov chain is not created. Please use the method generate to obtain the CTMC.')
 
+
+# class GSPNAnalysis(gspn.GSPN):
+#     def __init__(self):
+#         self.gspn = gspn.GSPN
+#
+#     def transition_throughput_rate(self, transition):
+#         ct_tree = CoverabilityTree(self.gspn)
+#         ct_tree.generate()
+#         ctmc = CTMC(ct_tree)
+#         ctmc.generate()
+#         print(ctmc.transition)

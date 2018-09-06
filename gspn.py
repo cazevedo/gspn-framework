@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import gspn_analysis
 
 
 # TODO : add methods to remove arcs, places and transitions (removing places and trans should remove the corresponding input and output arcs as well)
@@ -336,8 +337,41 @@ class GSPN(object):
         self.__places = self.__initial_marking.copy()
         return True
 
-    # def __column(matrix, i):
-    #     return [row[i] for row in matrix]
+    # def prob_having_n_tokens(self, place_id, ntokens):
+    #     '''
+    #     Computes the probability of having exactly k tokens in a place pi.
+    #     :param place_id: identifier of the place for which the probability
+    #     :param ntokens: number of tokens
+    #     :return:
+    #     '''
+
+    # TODO: add throughput for immediate transitions as well
+    def transition_throughput_rate(self, exp_transition):
+        if self.__transitions[exp_transition][0] != 'exp':
+            raise Exception('Transition is not exponential, throughput rate only available for exponential transitions.')
+
+        ct_tree = gspn_analysis.CoverabilityTree(self)
+        ct_tree.generate()
+        ctmc = gspn_analysis.CTMC(ct_tree)
+        ctmc.generate()
+        ctmc.compute_transition_rate()
+        ctmc_steady_state = ctmc.get_steady_state()
+
+        transition_rate = self.__transitions[exp_transition]
+        transition_rate = transition_rate[1]
+        states_already_considered = []
+        throughput_rate = 0
+        for tr in ctmc.transition:
+            state = tr[0]
+            transitons_id = tr[2]
+            transitons_id = transitons_id.replace('/',':')
+            transition_id = transitons_id.split(':')
+            if (exp_transition in transition_id) and not (state in states_already_considered):
+                throughput_rate = throughput_rate + ctmc_steady_state[state] * transition_rate
+
+                states_already_considered.append(state)
+
+        return throughput_rate
 
 # if __name__ == "__main__":
     # create a generalized stochastic petri net structure
