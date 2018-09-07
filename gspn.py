@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import gspn_analysis
+import gspn_tools
 
 
 # TODO : add methods to remove arcs, places and transitions (removing places and trans should remove the corresponding input and output arcs as well)
@@ -361,27 +362,74 @@ class GSPN(object):
 
         return True
 
-    # TODO: add throughput for immediate transitions as well
-    def transition_throughput_rate(self, exp_transition):
-        if self.__transitions[exp_transition][0] != 'exp':
-            raise Exception('Transition is not exponential, throughput rate only available for exponential transitions.')
+    def transition_throughput_rate(self, transition):
+        '''
+        The throughput of an exponential transition tj is computed by considering its firing rate over the probability
+        of all states where tj is enabled. The throughput of an immediate transition tj can be computed by considering
+        the throughput of all exponential transitions which lead immediately to the firing of transition tj, i.e.,
+        without crossing any tangible state, together with the probability of firing transition tj among all the
+        enabled immediate transitions.
+        :param transition: (string) with the transition id for which the throughput rate will be computed
+        :return: (float) with the computed throughput rate
+        '''
 
         if not self.__ct_ctmc_generated:
             raise Exception('Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
 
-        transition_rate = self.__transitions[exp_transition]
-        transition_rate = transition_rate[1]
-        states_already_considered = []
-        throughput_rate = 0
-        for tr in self.__ctmc.transition:
-            state = tr[0]
-            transitons_id = tr[2]
-            transitons_id = transitons_id.replace('/',':')
-            transition_id = transitons_id.split(':')
-            if (exp_transition in transition_id) and not (state in states_already_considered):
-                throughput_rate = throughput_rate + self.__ctmc_steady_state[state] * transition_rate
+        if self.__transitions[transition][0] == 'exp':
+            transition_rate = self.__transitions[transition]
+            transition_rate = transition_rate[1]
+            states_already_considered = []
+            throughput_rate = 0
+            for tr in self.__ctmc.transition:
+                state = tr[0]
+                transiton_id = tr[2]
+                transiton_id = transiton_id.replace('/',':')
+                transiton_id = transiton_id.split(':')
+                if (transition in transiton_id) and not (state in states_already_considered):
+                    throughput_rate = throughput_rate + self.__ctmc_steady_state[state] * transition_rate
 
-                states_already_considered.append(state)
+                    states_already_considered.append(state)
+        else:
+            throughput_rate = 0
+            states_already_considered = []
+            for tr in self.__ctmc.transition:
+                add_state = False
+                tangible_init_state = tr[0]
+
+                transitons_id = tr[2]
+                transition_id_set = transitons_id.split('/')
+                for tr in transition_id_set:
+
+                    # check if transition exists in the current transition
+                    exists_transition = False
+                    transitioning_list = tr.split(':')
+                    for trn in transitioning_list:
+                        if transition == trn:
+                            exists_transition = True
+                            add_state = True
+                            break
+
+                    # if the given transition is part of this ctmc edge, multiply the throughput rate of the exponential transition by the prob of immediate transition
+                    if exists_transition and not(tangible_init_state in states_already_considered):
+                        exp_transition = transitioning_list[0]
+                        current_state = tangible_init_state
+                        for trans in transitioning_list:
+                            current_transition = trans
+                            for edge in self.__ct_tree.edges:
+                                if (edge[0] == current_state) and (edge[2] == current_transition):
+                                    current_state = edge[1]
+                                    break
+
+                            if current_transition == transition:
+                                transition_prob = edge[3]
+                                exp_transition_rate = self.__transitions[exp_transition]
+                                exp_transition_rate = exp_transition_rate[1]
+
+                                throughput_rate = throughput_rate + self.__ctmc_steady_state[tangible_init_state] * exp_transition_rate * transition_prob
+
+                if add_state:
+                    states_already_considered.append(tangible_init_state)
 
         return throughput_rate
 

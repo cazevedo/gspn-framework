@@ -1,32 +1,35 @@
 import gspn_tools as gst
 import time
 import warnings
-import gspn_analysis
+# import gspn_analysis
 
 warnings.filterwarnings("ignore")
 
 pntools = gst.GSPNtools()
 # nets = pntools.import_pnml('debug/pipediag.xml')
 nets = pntools.import_pnml('debug/performance_example.xml')
+# nets = pntools.import_pnml('debug/parallel.xml')
 # nets = pntools.import_pnml('debug/simple_test.xml')
 mypn = nets[0]
 mypn.init_analysis()
-pl = mypn.get_current_marking()
-pl2 = []
-for k,v in pl.items():
-    pl2.append(k)
-pl2.sort()
+# pl = mypn.get_current_marking()
+# pl2 = []
+# for k,v in pl.items():
+#     pl2.append(k)
+# pl2.sort()
+#
+# for i in pl2:
+#     print(i, mypn.expected_number_of_tokens(i))
 
-for i in pl2:
-    print(i, mypn.expected_number_of_tokens(i))
+mypn.transition_throughput_rate('T3')
 
 
 # print(mypn.transition_throughput_rate('T2'))
 
 
-
+#
 # drawing = pntools.draw_gspn(mypn, 'mypn', show=True)
-# # pntools.draw_enabled_transitions(mypn, drawing, 'mypn_enabled', show=True)
+# pntools.draw_enabled_transitions(mypn, drawing, 'mypn_enabled', show=True)
 #
 # ct_tree = gspn_analysis.CoverabilityTree(mypn)
 # ct_tree.generate()
