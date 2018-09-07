@@ -22,6 +22,8 @@ mypn.init_analysis()
 #     print(i, mypn.expected_number_of_tokens(i))
 
 mypn.transition_throughput_rate('T3')
+a = mypn.mean_wait_time('P9')
+print(a)
 
 
 # print(mypn.transition_throughput_rate('T2'))

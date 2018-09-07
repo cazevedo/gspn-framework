@@ -467,6 +467,49 @@ class GSPN(object):
 
         return expected_number_of_tokens
 
+    # def mean_wait_time(self, place):
+    #     if not self.__ct_ctmc_generated:
+    #         raise Exception(
+    #             'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+    #
+    #     in_tr_m, out_tr_m = self.get_arcs()
+    #     place_column = out_tr_m[0].index(place)
+    #     out_tr_m = np.array(out_tr_m)
+    #
+    #     set_output_transitions = []
+    #     for index in range(1,len(out_tr_m)):
+    #         if int(out_tr_m[index,place_column]) > 0:
+    #             set_output_transitions.append(out_tr_m[index,0])
+    #
+    #     sum = 0
+    #     for transition in set_output_transitions:
+    #         print(transition, self.transition_throughput_rate(transition))
+    #         sum = sum + self.transition_throughput_rate(transition)
+    #
+    #     print(self.expected_number_of_tokens(place) / sum)
+
+
+    def mean_wait_time(self, place):
+        if not self.__ct_ctmc_generated:
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+
+        in_tr_m, out_tr_m = self.get_arcs()
+        in_tr_m = np.array(in_tr_m)
+        place_row = list(in_tr_m[:,0]).index(place)
+
+        set_output_transitions = []
+        for index in range(1,len(in_tr_m)-1):
+            if int(in_tr_m[place_row,index]) > 0:
+                set_output_transitions.append(in_tr_m[0,index])
+
+        sum = 0
+        for transition in set_output_transitions:
+            # print(transition, self.transition_throughput_rate(transition))
+            sum = sum + self.transition_throughput_rate(transition)
+
+        return self.expected_number_of_tokens(place) / sum
+
 # if __name__ == "__main__":
     # create a generalized stochastic petri net structure
     # my_pn = gspn()
