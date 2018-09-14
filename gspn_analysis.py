@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import gspn
 
-# TODO : Replace nodes by states and edges by arcs
 # TODO : Fix unbounded places verification
+# TODO : Extend analysis methods to matrix equation and reduction decomposition approaches (take a look at Murata)
 class CoverabilityTree(object):
     def __init__(self, gspn):
         """
@@ -149,15 +148,15 @@ class CoverabilityTree(object):
         return True
 
     def boundness(self):
-        unbounded_pn = False
+        bounded_pn = True
         unbounded_places = []
         for marking_id, marking_info in self.nodes.items():
             for marking in marking_info[0]:
                 if marking[1] == 'w' and (not marking[0] in unbounded_places):
-                    unbounded_pn = True
+                    bounded_pn = False
                     unbounded_places.append(marking[0])
 
-        return unbounded_pn, list(unbounded_places)
+        return bounded_pn, list(unbounded_places)
 
 
 class CTMC(object):
@@ -172,9 +171,9 @@ class CTMC(object):
         {a i : i ∈ S}, the holding time rates. Each time state i is visited, the chain spends, on
         average, E(H i ) = 1/a i units of time there before moving on.
         """
-        unbound, unbound_pl = reachability_graph.boundness()
-        if unbound:
-            print("To obtain the equivalent continuous time markov chain the Petri net must be bounded, and this is not the case.")
+        bounded, unbound_pl = reachability_graph.boundness()
+        if not bounded:
+            raise Exception('To obtain the equivalent continuous time markov chain the Petri net must be bounded, and this is not the case.')
         else:
             self.state = reachability_graph.nodes.copy()
             self.transition = list(reachability_graph.edges)

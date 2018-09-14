@@ -467,6 +467,27 @@ class GSPN(object):
 
         return expected_number_of_tokens
 
+    def transition_probability_evolution(self, period, step, initial_states_prob, state):
+        if not self.__ct_ctmc_generated:
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+
+        prob_evo = []
+        for time_interval in self.__frange(0, period, step):
+            prob_all_states = self.__ctmc.get_prob_reach_states(initial_states_prob, time_interval)
+            prob_evo.append(prob_all_states[state])
+            # self.__ctmc.compute_transition_probability(step)
+            # print(np.array(self.__ctmc.transition_probability))
+            # prob_evo.append()
+
+        return list(prob_evo)
+
+    def __frange(self, start, stop, step):
+        i = start
+        while i < stop:
+            yield i
+            i += step
+
     # def mean_wait_time(self, place):
     #     if not self.__ct_ctmc_generated:
     #         raise Exception(
