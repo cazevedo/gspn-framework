@@ -9,15 +9,28 @@ import numpy as np
 warnings.filterwarnings("ignore")
 
 pntools = gst.GSPNtools()
-nets = pntools.import_pnml('debug/escort_visitor4.xml')
+nets = pntools.import_pnml('debug/escort_visitor3.xml')
+# nets = pntools.import_pnml('debug/simple_test.xml')
 mypn = nets[0]
 
 ct_tree = gspn_analysis.CoverabilityTree(mypn)
 ct_tree.generate()
-# ctmc = gspn_analysis.CTMC(ct_tree)
-# ctmc.generate()
-print(len(ct_tree.nodes))
-print(len(ct_tree.edges))
+for k,v in ct_tree.nodes.items():
+    print(k,v)
+
+print(len(ct_tree.nodes), len(ct_tree.edges))
+print(ct_tree.boundness())
+ctmc = gspn_analysis.CTMC(ct_tree)
+ctmc.generate()
+
+# print(ctmc.state)
+
+drawing = pntools.draw_gspn(mypn)
+pntools.draw_coverability_tree(ct_tree)
+pntools.draw_ctmc(ctmc)
+
+# print(len(ct_tree.nodes))
+# print(len(ct_tree.edges))
 
 # print(ct_tree.boundness())
 

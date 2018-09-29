@@ -169,7 +169,12 @@ class GSPN(object):
             ntokens.reverse()
             while place_name:
                 p = place_name.pop()
-                self.__places[p] = self.__places[p] + ntokens.pop()
+                tokens_to_add = ntokens.pop()
+                if self.__places[p] != 'w':
+                    if tokens_to_add == 'w':
+                        self.__places[p] = 'w'
+                    else:
+                        self.__places[p] = self.__places[p] + tokens_to_add
 
             if set_initial_marking:
                 self.__initial_marking = self.__places.copy()
@@ -187,7 +192,12 @@ class GSPN(object):
             ntokens.reverse()
             while place_name:
                 p = place_name.pop()
-                self.__places[p] = self.__places[p] - ntokens.pop()
+                tokens_to_remove = ntokens.pop()
+                if tokens_to_remove == 'w':
+                    self.__places[p] = 0
+                else:
+                    if self.__places[p] != 'w':
+                        self.__places[p] = self.__places[p] - tokens_to_remove
 
             if set_initial_marking:
                 self.__initial_marking = self.__places.copy()
@@ -260,7 +270,7 @@ class GSPN(object):
         arc_out_temp = list(zip(*self.__arc_out_m))
         index_transition = arc_out_temp[0].index(transition)
 
-        # obtain a list with all the output places of given transition
+        # obtain a list with all the output places of the given transition
         list_of_output_places = []
         for k in range(1, len(self.__arc_out_m[index_transition])):
             if self.__arc_out_m[index_transition][k] > 0:

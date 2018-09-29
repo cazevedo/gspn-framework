@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-# TODO : Fix unbounded places verification
 # TODO : Extend analysis methods to matrix equation and reduction decomposition approaches (take a look at Murata)
 class CoverabilityTree(object):
     def __init__(self, gspn):
@@ -98,29 +97,17 @@ class CoverabilityTree(object):
 
                     # check if the state is unbounded
                     for state_id, state in self.nodes.items():
-                        # checks if the new marking is either unbounded or equal to any of the markings previously added to the nodes
-                        unbounded_or_equal = True
+                        # checks if the new marking is unbounded
+                        unbounded_state = True
                         for i in range(len(state[0])):
                             if next_marking[i][1] < state[0][i][1]:
-                                unbounded_or_equal = False
-
-                        # differentiates from equal markings from unbounded markings
-                        unbounded_state = False
-                        if unbounded_or_equal:
-                            for i in range(len(state[0])):
-                                if next_marking[i][1] > state[0][i][1]:
-                                    unbounded_state = True
+                                unbounded_state = False
 
                         # Add an w to mark unbounded states
                         if unbounded_state:
                             for i in range(len(state[0])):
-                                # next_marking[i][1] = 'w'
                                 if next_marking[i][1] > state[0][i][1]:
                                     next_marking[i][1] = 'w'
-                            break
-
-                            # add edge between the current marking and the marking that is covered by this new unbounded state
-                            # self.edges.append([current_marking_id, state_id, tr])
 
                     # check if the marking was already added as a node or not
                     marking_already_exists = False
