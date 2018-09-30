@@ -22,6 +22,8 @@ class GSPN(object):
         self.__ctmc = None
         self.__ctmc_steady_state = None
         self.__ct_ctmc_generated = False
+        self.__nsamples = {}
+        self.__sum_samples = {}
 
     def add_places(self, name, ntokens=None, set_initial_marking=True):
         """
@@ -352,6 +354,12 @@ class GSPN(object):
         self.__places = self.__initial_marking.copy()
         return True
 
+    def reset(self):
+        self.__places = self.__initial_marking.copy()
+        self.__nsamples = {}
+        self.__sum_samples = {}
+        return True
+
     # def prob_having_n_tokens(self, place_id, ntokens):
     #     '''
     #     Computes the probability of having exactly k tokens in a place pi.
@@ -541,35 +549,53 @@ class GSPN(object):
 
         return self.expected_number_of_tokens(place) / sum
 
-# if __name__ == "__main__":
-    # create a generalized stochastic petri net structure
-    # my_pn = gspn()
-    # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
-    # # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'])
-    # trans = my_pn.add_transitions(['t1', 't2', 't3', 't4'], ['exp', 'exp', 'exp', 'exp'], [1, 1, 0.5, 0.5])
-    #
-    # arc_in = {}
-    # arc_in['p1'] = ['t1']
-    # arc_in['p2'] = ['t2']
-    # arc_in['p3'] = ['t3']
-    # arc_in['p4'] = ['t4']
-    # arc_in['p5'] = ['t1', 't3']
-    #
-    # arc_out = {}
-    # arc_out['t1'] = ['p2']
-    # arc_out['t2'] = ['p5', 'p1']
-    # arc_out['t3'] = ['p4']
-    # arc_out['t4'] = ['p3', 'p5']
-    # a, b = my_pn.add_arcs(arc_in ,arc_out)
-    #
-    # print(my_pn.get_enabled_transitions())
-    # a = my_pn.get_enabled_transitions()
+    def maximum_likelihood_transition(self, transiton, sample):
+        '''
+        Use maximum likelihood to iteratively estimate the lambda parameter of the exponential distribution that models the inputed transition
+        :param transiton: (string) id of the transition that will be updated
+        :param sample: (float) sample obtained from a exponential distribution
+        :return: the estimated lambda parameter
+        '''
+        self.__nsamples[transiton] = self.__nsamples + 1
+        self.__sum_samples[transiton] = self.__sum_samples[transiton] + sample
+        lb = self.__nsamples[transiton] / self.__sum_samples[transiton]
 
-    # print('Places: ' , my_pn.get_current_marking(), '\n')
-    # print('Trans: ' , my_pn.get_transitions(), '\n')
-    # print('Arcs IN: ' , my_pn.get_in_arcs(), '\n')
-    # print('Arcs OUT: ' , my_pn.get_out_arcs(), '\n')z
-    #
-    # print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
-    #
-    # print('Places: ', my_pn.get_current_marking(), '\n')
+        tr_info = self.__transitions[transiton]
+        tr_info[1] = lb
+        self.__transitions[transiton] = tr_info
+
+        return lb
+
+if __name__ == "__main__":
+    # create a generalized stochastic petri net structure
+    my_pn = GSPN()
+    places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
+    # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'])
+    trans = my_pn.add_transitions(['t1', 't2', 't3', 't4'], ['exp', 'exp', 'exp', 'exp'], [1, 1, 0.5, 0.5])
+
+    arc_in = {}
+    arc_in['p1'] = ['t1']
+    arc_in['p2'] = ['t2']
+    arc_in['p3'] = ['t3']
+    arc_in['p4'] = ['t4']
+    arc_in['p5'] = ['t1', 't3']
+
+    arc_out = {}
+    arc_out['t1'] = ['p2']
+    arc_out['t2'] = ['p5', 'p1']
+    arc_out['t3'] = ['p4']
+    arc_out['t4'] = ['p3', 'p5']
+    a, b = my_pn.add_arcs(arc_in ,arc_out)
+
+    print(my_pn.get_enabled_transitions())
+    a = my_pn.get_enabled_transitions()
+
+    print('Places: ' , my_pn.get_current_marking(), '\n')
+    print('Trans: ' , my_pn.get_transitions(), '\n')
+    arcs_in , arcs_out = my_pn.get_arcs()
+    print('Arcs IN: ' , arcs_in, '\n')
+    print('Arcs OUT: ' , arcs_out, '\n')
+
+    print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
+
+    print('Places: ', my_pn.get_current_marking(), '\n')

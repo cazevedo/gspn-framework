@@ -2,10 +2,46 @@ import gspn_tools as gst
 import time
 import warnings
 import gspn_analysis
-# import matplotlib.pyplot as plt
-import pylab as plt
+import matplotlib.pyplot as plt
+# import pylab as plt
 import numpy as np
 
+
+'''
+count = 0
+soma = 0
+
+def ml_update(sample):
+    global count
+    global soma
+    count = count + 1
+    soma = soma + sample
+
+    return count/soma
+
+def rv_exp(lb):
+    return np.random.exponential(scale=(1.0 / lb), size=None)
+
+lb_ground = 77
+lb_emp = []
+n = 1000
+for i in range(n):
+    lb_emp.append( ml_update(rv_exp(lb_ground)) )
+
+horiz_line_data = np.array([lb_ground for i in xrange(n)])
+plt.plot(lb_emp)
+plt.plot(horiz_line_data)
+plt.show()
+
+# x = np.linspace(-1, 2, 100)
+# y = lb_tst*np.exp(-lb_tst*x)
+
+# plt.plot(range(len(exp_sp)), exp_sp)
+# plt.plot(x, y)
+# plt.show()
+'''
+
+'''
 warnings.filterwarnings("ignore")
 
 pntools = gst.GSPNtools()
@@ -50,7 +86,7 @@ pntools.draw_ctmc(ctmc)
 # drawing = pntools.draw_gspn(mypn, 'escort_visitor_multi_gspn', show=True)
 # pntools.draw_coverability_tree(ct_tree, 'escort_visitor_multi_ct_tree',show=True)
 # pntools.draw_ctmc(ctmc, 'escort_visitor_multi_ctmc',show=True)
-
+'''
 
 '''
 count = 1
