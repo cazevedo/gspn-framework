@@ -39,7 +39,7 @@ if throughput:
     print('CTMC States:\n')
 
     _, ss = ct_tree.convert_states_to_latex()
-    print(ss)
+    # print(ss)
 
     if draw:
         pntools.draw_ctmc(ctmc)

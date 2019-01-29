@@ -496,7 +496,7 @@ class GSPN(object):
         # sum all the probabilities of having exactly n tokens in the given place
         expected_number_of_tokens = 0
         for ntokens in range(maximum_n_tokens):
-            expected_number_of_tokens = expected_number_of_tokens + self.prob_of_n_tokens(place,ntokens+1)
+            expected_number_of_tokens = expected_number_of_tokens + (ntokens+1)*self.prob_of_n_tokens(place,ntokens+1)
 
         return expected_number_of_tokens
 
