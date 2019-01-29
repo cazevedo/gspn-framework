@@ -96,11 +96,6 @@ class GSPN(object):
         self.__transitions.update(transitions_dict.copy())
         return self.__transitions.copy()
 
-    def add_arcs_matrices_old(self, arc_in_m, arc_out_m):
-        self.__arc_in_m = arc_in_m
-        self.__arc_out_m = arc_out_m
-        return True
-
     def add_arcs_matrices(self, new_arc_in, new_arc_out):
         self.__new_arc_in_m = new_arc_in
         self.__new_arc_out_m = new_arc_out
@@ -170,82 +165,6 @@ class GSPN(object):
 
         return self.__new_arc_in_m.copy(), self.__new_arc_out_m.copy()
 
-    def add_arcs_old(self, arc_in, arc_out):
-        """
-        Input:
-        arc_in -> dictionary mapping the arc connections from places to transitions
-        arc_out -> dictionary mapping the arc connections from transitions to places
-
-        example:
-        arc_in = {}
-        arc_in['p1'] = ['t1']
-        arc_in['p2'] = ['t2']
-        arc_in['p3'] = ['t3']
-        arc_in['p4'] = ['t4']
-        arc_in['p5'] = ['t1', 't3']
-
-        arc_out = {}
-        arc_out['t1'] = ['p2']
-        arc_out['t2'] = ['p5', 'p1']
-        arc_out['t3'] = ['p4']
-        arc_out['t4'] = ['p3', 'p5']
-
-        Output:
-        arc_in_m -> two-dimentional list
-        arc_out_m -> two-dimentional list
-        """
-        self.__arc_in_m, self.__arc_out_m = GSPN.__create_arc_matrix(self.__places.copy(), self.__transitions.copy())
-
-        # IN ARCS MATRIX
-        # replace the zeros by ones in the positions where there is an arc connection from a place to a transition
-        temp = list(zip(*self.__arc_in_m))
-        for place, target in arc_in.items():
-            for transition in target:
-                self.__arc_in_m[temp[0].index(place)][self.__arc_in_m[0].index(transition)] = 1
-
-        # OUT ARCS MATRIX
-        # replace the zeros by ones in the positions where there is an arc connection from a transition to a place
-        temp = list(zip(*self.__arc_out_m))
-        for transition, target in arc_out.items():
-            for place in target:
-                self.__arc_out_m[temp[0].index(transition)][self.__arc_out_m[0].index(place)] = 1
-
-        return self.__arc_in_m, self.__arc_out_m
-
-    @staticmethod
-    def __create_arc_matrix(places, transitions):
-        # create a zeros matrix (# of places + 1) by (# of transitions)
-        arc_in_m = []
-        for i in range(len(places.keys())+1):
-            arc_in_m.append([0]*(len(transitions.keys())))
-
-        # replace the first row with all the transitions names
-        arc_in_m[0] = list(transitions.keys())
-
-        # add a first column with all the places names
-        first_column = list(places.keys())
-        first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-        arc_in_m = list(zip(*arc_in_m))
-        arc_in_m.insert(0, first_column)
-        arc_in_m = list(map(list, zip(*arc_in_m)))
-
-        # create a zeros matrix (# of transitions + 1) by (# of places)
-        arc_out_m = []
-        for i in range(len(transitions.keys())+1):
-            arc_out_m.append([0]*(len(places.keys())))
-
-        # replace the first row with all the places names
-        arc_out_m[0] = list(places.keys())
-
-        # add a first column with all the transitions names
-        first_column = list(transitions.keys())
-        first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-        arc_out_m = list(zip(*arc_out_m))
-        arc_out_m.insert(0, first_column)
-        arc_out_m = list(map(list, zip(*arc_out_m)))
-
-        return list(arc_in_m), list(arc_out_m)
-
     def add_tokens(self, place_name, ntokens, set_initial_marking=False):
         """
         add tokens to the specified places
@@ -305,9 +224,6 @@ class GSPN(object):
     def get_transitions(self):
         return self.__transitions.copy()
 
-    def get_arcs_old(self):
-        return list(self.__arc_in_m), list(self.__arc_out_m)
-
     def get_arcs(self):
         return self.__new_arc_in_m.copy(), self.__new_arc_out_m.copy()
 
@@ -366,42 +282,6 @@ class GSPN(object):
 
         return enabled_exp_transitions.copy(), random_switch.copy()
 
-    def get_enabled_transitions_old(self):
-        """
-        returns a dictionary with the enabled transitions and the corresponding set of input places
-        """
-        enabled_exp_transitions = {}
-        random_switch = {}
-        arcs_in = list(zip(*self.__arc_in_m))
-        current_marking = self.__places.copy()
-
-        # for each transition get all the places that have an input arc connection
-        for row_index in range(1, len(arcs_in)):
-            places_in = []
-            for column_index in range(1, len(arcs_in[row_index])):
-                if arcs_in[row_index][column_index] > 0:
-                    # print(arcs_in[0][column_index])
-                    places_in.append(arcs_in[0][column_index])
-            # print(arcs_in[row_index][0], places_in)
-
-            # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it
-            #  have one or more tokens)
-            enabled_transition = True
-            for place in places_in:
-                if current_marking.get(place) == 0:
-                    enabled_transition = False
-
-            if enabled_transition:
-                transition = arcs_in[row_index][0]
-                if self.__transitions[transition][0] == 'exp':
-                    enabled_exp_transitions[transition] = self.__transitions[transition][1]
-                    # enabled_exp_transitions.add(transition)
-                else:
-                    random_switch[transition] = self.__transitions[transition][1]
-                    # random_switch.add(transition)
-
-        return enabled_exp_transitions.copy(), random_switch.copy()
-
     def fire_transition(self, transition):
         # true/false list stating if there is an input connection or not
         idd = self.__new_arc_in_m.loc[:][transition].values > 0
@@ -412,33 +292,6 @@ class GSPN(object):
         idd = self.__new_arc_out_m.loc[transition][:].values > 0
         # list with all the output places of the given transition
         list_of_output_places = list(self.__new_arc_out_m.columns[idd].values)
-
-        # remove tokens from input places
-        self.remove_tokens(list_of_input_places, [1]*len(list_of_input_places))
-
-        # add tokens to output places
-        self.add_tokens(list_of_output_places, [1]*len(list_of_output_places))
-
-        return True
-
-    def fire_transition_old(self, transition):
-        index_transition = self.__arc_in_m[0].index(transition)
-        arc_in_temp = list(zip(*self.__arc_in_m))
-
-        # obtain a list with all the input places of given transition
-        list_of_input_places = []
-        for i in range(1, len(arc_in_temp[index_transition])):
-            if arc_in_temp[index_transition][i] > 0:
-                list_of_input_places.append(arc_in_temp[0][i])
-
-        arc_out_temp = list(zip(*self.__arc_out_m))
-        index_transition = arc_out_temp[0].index(transition)
-
-        # obtain a list with all the output places of the given transition
-        list_of_output_places = []
-        for k in range(1, len(self.__arc_out_m[index_transition])):
-            if self.__arc_out_m[index_transition][k] > 0:
-                list_of_output_places.append(self.__arc_out_m[0][k])
 
         # remove tokens from input places
         self.remove_tokens(list_of_input_places, [1]*len(list_of_input_places))
@@ -703,27 +556,6 @@ class GSPN(object):
 
         sum = 0
         for transition in set_output_transitions:
-            sum = sum + self.transition_throughput_rate(transition)
-
-        return self.expected_number_of_tokens(place) / sum
-
-    def mean_wait_time_old(self, place):
-        if not self.__ct_ctmc_generated:
-            raise Exception(
-                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
-
-        in_tr_m, out_tr_m = self.get_arcs_old()
-        in_tr_m = np.array(in_tr_m)
-        place_row = list(in_tr_m[:,0]).index(place)
-
-        set_output_transitions = []
-        for index in range(1,len(in_tr_m)-1):
-            if int(in_tr_m[place_row,index]) > 0:
-                set_output_transitions.append(in_tr_m[0,index])
-
-        sum = 0
-        for transition in set_output_transitions:
-            # print(transition, self.transition_throughput_rate(transition))
             sum = sum + self.transition_throughput_rate(transition)
 
         return self.expected_number_of_tokens(place) / sum
