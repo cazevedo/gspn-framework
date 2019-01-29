@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import pandas as pd
 
 # TODO : Extend analysis methods to matrix equation and reduction decomposition approaches (take a look at Murata)
 class CoverabilityTree(object):
@@ -134,7 +135,30 @@ class CoverabilityTree(object):
         self.__gspn.reset_simulation()
         return True
 
-    def boundness(self):
+    def convert_states_to_latex(self):
+        states = self.nodes.keys()
+        states.sort()
+
+        (l, w) = len(states), len(self.nodes[states[0]][0]) + 1
+        df = pd.DataFrame(np.zeros((l, w), dtype=np.dtype(object)))
+
+        dataframe_header = ['State/Place']
+        for row, state_name in enumerate(states):
+            df.at[row, 0] = state_name
+
+            marking = self.nodes[state_name][0]
+            for column, place in enumerate(marking):
+                place_name = place[0]
+                token = place[1]
+                df.at[row, column + 1] = token
+
+                if row == 0:
+                    dataframe_header.append(place_name)
+
+        df.columns = dataframe_header
+        return df.to_latex(header=True, index=False), df
+
+    def boundedness(self):
         bounded_pn = True
         unbounded_places = []
         for marking_id, marking_info in self.nodes.items():
@@ -158,7 +182,7 @@ class CTMC(object):
         {a i : i ∈ S}, the holding time rates. Each time state i is visited, the chain spends, on
         average, E(H i ) = 1/a i units of time there before moving on.
         """
-        bounded, unbound_pl = reachability_graph.boundness()
+        bounded, unbound_pl = reachability_graph.boundedness()
         if not bounded:
             raise Exception('To obtain the equivalent continuous time markov chain the Petri net must be bounded, and this is not the case.')
         else:
@@ -341,6 +365,29 @@ class CTMC(object):
         else:
             return False
 
+    def convert_states_to_latex(self):
+        states = self.state.keys()
+        states.sort()
+
+        (l, w) = len(states), len(self.state[states[0]][0]) + 1
+        df = pd.DataFrame(np.zeros((l, w), dtype=np.dtype(object)))
+
+        dataframe_header = ['State/Place']
+        for row, state_name in enumerate(states):
+            df.at[row, 0] = state_name
+
+            marking = self.state[state_name][0]
+            for column, place in enumerate(marking):
+                place_name = place[0]
+                token = place[1]
+                df.at[row, column + 1] = token
+
+                if row == 0:
+                    dataframe_header.append(place_name)
+
+        df.columns = dataframe_header
+        return df.to_latex(header=True, index=False), df
+
     def compute_transition_probability(self, time_interval, precision=5):
         """
         Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
@@ -457,7 +504,7 @@ class CTMC(object):
             old_steady_state = self.get_prob_reach_states(states_prob, time_interval, precision)
 
             while not prob_steady:
-                time_interval = time_interval + 1000
+                time_interval = time_interval + 1
                 steady_state = self.get_prob_reach_states(states_prob, time_interval, precision)
 
                 prob_steady = True
