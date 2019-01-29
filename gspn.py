@@ -2,6 +2,7 @@ import time
 import numpy as np
 import gspn_analysis
 import gspn_tools
+import pandas as pd
 
 
 # TODO : add methods to remove arcs, places and transitions (removing places and trans should remove the corresponding input and output arcs as well)
@@ -18,6 +19,8 @@ class GSPN(object):
         self.__transitions = {}
         self.__arc_in_m = []
         self.__arc_out_m = []
+        self.__new_arc_in_m = pd.DataFrame()
+        self.__new_arc_out_m = pd.DataFrame()
         self.__ct_tree = None
         self.__ctmc = None
         self.__ctmc_steady_state = None
@@ -46,12 +49,20 @@ class GSPN(object):
 
         return self.__places.copy()
 
+    def add_places_dict(self, places_dict, set_initial_marking=True):
+        self.__places.update(places_dict.copy())
+
+        if set_initial_marking:
+            self.__initial_marking = self.__places.copy()
+
+        return self.__places.copy()
+
     def add_transitions(self, tname, tclass=None, trate=None):
         """
         Input
         tname: list of strings, denoting the name of the transition
-        type: list of strings, indicating if the corresponding transition is either immediate ('imm') or exponential ('exp')
-        rate: list of floats, representing a static firing rate in an exponential transition and
+        tclass: list of strings, indicating if the corresponding transition is either immediate ('imm') or exponential ('exp')
+        trate: list of floats, representing a static firing rate in an exponential transition and
                 a static (non marking dependent) weight in a immediate transition
         Output
         dictionary of transitions
@@ -70,7 +81,7 @@ class GSPN(object):
         while tname:
             tn = tname.pop()
             self.__transitions[tn] = []
-            if type:
+            if tclass:
                 self.__transitions[tn].append(tclass.pop())
             else:
                 self.__transitions[tn].append('imm')
@@ -81,12 +92,85 @@ class GSPN(object):
 
         return self.__transitions.copy()
 
-    def add_arcs_matrices(self, arc_in_m, arc_out_m):
+    def add_transitions_dict(self, transitions_dict):
+        self.__transitions.update(transitions_dict.copy())
+        return self.__transitions.copy()
+
+    def add_arcs_matrices_old(self, arc_in_m, arc_out_m):
         self.__arc_in_m = arc_in_m
         self.__arc_out_m = arc_out_m
         return True
 
+    def add_arcs_matrices(self, new_arc_in, new_arc_out):
+        self.__new_arc_in_m = new_arc_in
+        self.__new_arc_out_m = new_arc_out
+        return True
+
     def add_arcs(self, arc_in, arc_out):
+        """
+        Input:
+        arc_in -> dictionary mapping the arc connections from places to transitions
+        arc_out -> dictionary mapping the arc connections from transitions to places
+
+        example:
+        arc_in = {}
+        arc_in['p1'] = ['t1']
+        arc_in['p2'] = ['t2']
+        arc_in['p3'] = ['t3']
+        arc_in['p4'] = ['t4']
+        arc_in['p5'] = ['t1', 't3']
+
+        arc_out = {}
+        arc_out['t1'] = ['p2']
+        arc_out['t2'] = ['p5', 'p1']
+        arc_out['t3'] = ['p4']
+        arc_out['t4'] = ['p3', 'p5']
+
+        Output:
+        arc_in_m -> Pandas DataFrame where the columns hold the transition names and the index the place names
+        arc_out_m -> Pandas DataFrame where the columns hold the place names and the index the transition names
+        Each element of the DataFrame preserves the information regarding if there is a connecting arc (value equal to 1)
+        or if there is no connecting arc (value equal to 0)
+        """
+
+        # store existing arc dataframes
+        old_arc_in, old_arc_out = self.__new_arc_in_m, self.__new_arc_out_m
+
+        # create new empty (no arc connections) dataframe with existing places and transitions
+        pl_len, tr_len = len(self.__places.keys()), len(self.__transitions.keys())
+        new_arc_in = pd.DataFrame(np.zeros((pl_len, tr_len)))
+        new_arc_out = pd.DataFrame(np.zeros((tr_len, pl_len)))
+
+        new_arc_in.columns, new_arc_in.index = self.__transitions.keys(), self.__places.keys()
+        new_arc_out.columns, new_arc_out.index = self.__places.keys(), self.__transitions.keys()
+
+        # add to the new dataframe the connections in the old dataframe
+        for old_place in old_arc_in.index:
+            for old_transition in old_arc_in.columns:
+                if old_arc_in.loc[old_place][old_transition] > 0:
+                    if (old_place in new_arc_in.index) and (old_transition in new_arc_in.columns):
+                        new_arc_in.loc[old_place][old_transition] = 1
+
+        for old_place in old_arc_out.columns:
+            for old_transition in old_arc_out.index:
+                if old_arc_out.loc[old_transition][old_place] > 0:
+                    if (old_place in new_arc_in.index) and (old_transition in new_arc_in.columns):
+                        new_arc_out.loc[old_transition][old_place] = 1
+
+        for place, target in arc_in.items():
+            for transition in target:
+                new_arc_in.loc[place][transition] = 1
+
+        for transition, target in arc_out.items():
+            for place in target:
+                new_arc_out.loc[transition][place] = 1
+
+        self.__new_arc_in_m = new_arc_in
+        self.__new_arc_out_m = new_arc_out
+
+        return self.__new_arc_in_m.copy(), self.__new_arc_out_m.copy()
+
+    def add_arcs_old(self, arc_in, arc_out):
         """
         Input:
         arc_in -> dictionary mapping the arc connections from places to transitions
@@ -221,10 +305,68 @@ class GSPN(object):
     def get_transitions(self):
         return self.__transitions.copy()
 
-    def get_arcs(self):
+    def get_arcs_old(self):
         return list(self.__arc_in_m), list(self.__arc_out_m)
 
+    def get_arcs(self):
+        return self.__new_arc_in_m.copy(), self.__new_arc_out_m.copy()
+
+    def get_arcs_dict(self):
+        '''
+        Converts the arcs DataFrames to dicts and outputs them.
+        :return: arcs in dict form
+        '''
+        arcs_in = {}
+        for place in self.__new_arc_in_m.index:
+            for transition in self.__new_arc_in_m.columns:
+                if self.__new_arc_in_m.loc[place][transition] > 0:
+                    if place in arcs_in:
+                        arcs_in[place].append(transition)
+                    else:
+                        arcs_in[place] = [transition]
+
+        arcs_out = {}
+        for place in self.__new_arc_out_m.columns:
+            for transition in self.__new_arc_out_m.index:
+                if self.__new_arc_out_m.loc[transition][place] > 0:
+                    if transition in arcs_out:
+                        arcs_out[transition].append(place)
+                    else:
+                        arcs_out[transition] = [place]
+
+        return arcs_in, arcs_out
+
     def get_enabled_transitions(self):
+        """
+        returns a dictionary with the enabled transitions and the corresponding set of input places
+        """
+        enabled_exp_transitions = {}
+        random_switch = {}
+        current_marking = self.__places.copy()
+
+        # for each transition get all the places that have an input arc connection
+        for transition in self.__new_arc_in_m.columns:
+            idd = self.__new_arc_in_m.loc[:][transition].values > 0 # true/false list stating if there is a connection or not
+            places_in = self.__new_arc_in_m.index[idd].values # list of input places of the transition in question
+
+            # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it
+            #  have one or more tokens)
+            enabled_transition = True
+            for place in places_in:
+                if current_marking.get(place) == 0:
+                    enabled_transition = False
+
+            if enabled_transition:
+                if self.__transitions[transition][0] == 'exp':
+                    enabled_exp_transitions[transition] = self.__transitions[transition][1]
+                    # enabled_exp_transitions.add(transition)
+                else:
+                    random_switch[transition] = self.__transitions[transition][1]
+                    # random_switch.add(transition)
+
+        return enabled_exp_transitions.copy(), random_switch.copy()
+
+    def get_enabled_transitions_old(self):
         """
         returns a dictionary with the enabled transitions and the corresponding set of input places
         """
@@ -238,6 +380,7 @@ class GSPN(object):
             places_in = []
             for column_index in range(1, len(arcs_in[row_index])):
                 if arcs_in[row_index][column_index] > 0:
+                    # print(arcs_in[0][column_index])
                     places_in.append(arcs_in[0][column_index])
             # print(arcs_in[row_index][0], places_in)
 
@@ -260,6 +403,25 @@ class GSPN(object):
         return enabled_exp_transitions.copy(), random_switch.copy()
 
     def fire_transition(self, transition):
+        # true/false list stating if there is an input connection or not
+        idd = self.__new_arc_in_m.loc[:][transition].values > 0
+        # list with all the input places of the given transition
+        list_of_input_places = list(self.__new_arc_in_m.index[idd].values)
+
+        # true/false list stating if there is an output connection or not
+        idd = self.__new_arc_out_m.loc[transition][:].values > 0
+        # list with all the output places of the given transition
+        list_of_output_places = list(self.__new_arc_out_m.columns[idd].values)
+
+        # remove tokens from input places
+        self.remove_tokens(list_of_input_places, [1]*len(list_of_input_places))
+
+        # add tokens to output places
+        self.add_tokens(list_of_output_places, [1]*len(list_of_output_places))
+
+        return True
+
+    def fire_transition_old(self, transition):
         index_transition = self.__arc_in_m[0].index(transition)
         arc_in_temp = list(zip(*self.__arc_in_m))
 
@@ -527,13 +689,30 @@ class GSPN(object):
     #
     #     print(self.expected_number_of_tokens(place) / sum)
 
-
     def mean_wait_time(self, place):
         if not self.__ct_ctmc_generated:
             raise Exception(
                 'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
 
-        in_tr_m, out_tr_m = self.get_arcs()
+        in_tr_m, _ = self.get_arcs()
+
+        # true/false list stating if there is an input connection or not between the given place and any transition
+        idd = self.__new_arc_in_m.loc[place][:].values > 0
+        # list with all the output transitions of the given place
+        set_output_transitions = list(self.__new_arc_in_m.columns[idd].values)
+
+        sum = 0
+        for transition in set_output_transitions:
+            sum = sum + self.transition_throughput_rate(transition)
+
+        return self.expected_number_of_tokens(place) / sum
+
+    def mean_wait_time_old(self, place):
+        if not self.__ct_ctmc_generated:
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+
+        in_tr_m, out_tr_m = self.get_arcs_old()
         in_tr_m = np.array(in_tr_m)
         place_row = list(in_tr_m[:,0]).index(place)
 
