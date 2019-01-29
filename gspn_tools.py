@@ -186,9 +186,8 @@ class GSPNtools(object):
 if __name__ == "__main__":
     import time
     pntools = GSPNtools()
-    nets = pntools.import_pnml('debug/pipediag.xml')
-    mypn = nets[0]
+    mypn = pntools.import_pnml('rvary_escort_run.xml')[0]
 
-    drawing = pntools.draw_gspn(mypn, 'pipediag', show=True)
+    drawing = pntools.draw_gspn(mypn, 'run_rvary', show=True)
     time.sleep(2)
-    pntools.draw_enabled_transitions(mypn, drawing, 'pipediag', show=True)
+    pntools.draw_enabled_transitions(mypn, drawing, 'run_rvary', show=True)
