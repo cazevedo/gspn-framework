@@ -1,7 +1,6 @@
 import gspn as pn
 import xml.etree.ElementTree as et  # XML parser
 from graphviz import Digraph
-import time
 
 class GSPNtools(object):
     @staticmethod
@@ -39,24 +38,31 @@ class GSPNtools(object):
 
             gspn.add_transitions(transition_name, transition_type, transition_rate)  # add the compiled list of transitions to the gspn object
 
-            arc_in_m, arc_out_m = GSPNtools.__create_arc_matrix(gspn.get_current_marking(), gspn.get_transitions())
-            temp_arc_in_m = list(zip(*arc_in_m))  # easy way to get the column of a list
-            temp_arc_out_m = list(zip(*arc_out_m))  # easy way to get the column of a list
             place_name = gspn.get_current_marking()
             place_name = place_name.keys()
             transition_name = gspn.get_transitions()
             transition_name = transition_name.keys()
+
+            arcs_in = {}
+            arcs_out = {}
+
             for arc in petrinet.iter('arc'):  # iterate over all arcs of the petri net
                 src = arc.get('source')
                 trg = arc.get('target')
-                if src in place_name:  # IN arc connection (from place to transition)
-                    arc_in_m[temp_arc_in_m[0].index(src)][arc_in_m[0].index(trg)] = 1
-                elif src in transition_name:  # OUT arc connection (from transition to place)
-                    arc_out_m[temp_arc_out_m[0].index(src)][arc_out_m[0].index(trg)] = 1
-                else:
-                    return False
 
-            gspn.add_arcs_matrices(arc_in_m, arc_out_m)
+                if src in place_name:  # IN arc connection (from place to transition)
+                    if src in arcs_in:
+                        arcs_in[src].append(trg)
+                    else:
+                        arcs_in[src] = [trg]
+
+                elif src in transition_name:  # OUT arc connection (from transition to place)
+                    if src in arcs_out:
+                        arcs_out[src].append(trg)
+                    else:
+                        arcs_out[src] = [trg]
+
+            gspn.add_arcs(arcs_in, arcs_out)
 
             list_gspn.append(gspn)
 
@@ -122,55 +128,19 @@ class GSPNtools(object):
         # draw edges
         edge_in, edge_out = gspn.get_arcs()
 
-        # draw arcs in connections from place to transition
-        for row_index in range(1, len(edge_in)):
-            for column_index in range(1, len(edge_in[row_index])):
-                if edge_in[row_index][column_index] == 1:
-                    gspn_draw.edge(edge_in[row_index][0], edge_in[0][column_index])
+        for place in edge_in.index:
+            for transition in edge_in.columns:
+                if edge_in.loc[place][transition] > 0:
+                    gspn_draw.edge(place, transition)
 
-        # draw arcs out connections from transition to place
-        for row_index in range(1, len(edge_out)):
-            for column_index in range(1, len(edge_out[row_index])):
-                if edge_out[row_index][column_index] == 1:
-                    gspn_draw.edge(edge_out[row_index][0], edge_out[0][column_index])
+        for place in edge_out.columns:
+            for transition in edge_out.index:
+                if edge_out.loc[transition][place] > 0:
+                    gspn_draw.edge(transition, place)
 
         gspn_draw.render(file+'.gv', view=show)
 
         return gspn_draw
-
-    @staticmethod
-    def __create_arc_matrix(places, transitions):
-        # create a zeros matrix (# of places + 1) by (# of transitions)
-        arc_in_m = []
-        for i in range(len(places.keys())+1):
-            arc_in_m.append([0]*(len(transitions.keys())))
-
-        # replace the first row with all the transitions names
-        arc_in_m[0] = list(transitions.keys())
-
-        # add a first column with all the places names
-        first_column = list(places.keys())
-        first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-        arc_in_m = list(zip(*arc_in_m))
-        arc_in_m.insert(0, first_column)
-        arc_in_m = list(map(list, zip(*arc_in_m)))
-
-        # create a zeros matrix (# of transitions + 1) by (# of places)
-        arc_out_m = []
-        for i in range(len(transitions.keys())+1):
-            arc_out_m.append([0]*(len(places.keys())))
-
-        # replace the first row with all the places names
-        arc_out_m[0] = list(places.keys())
-
-        # add a first column with all the transitions names
-        first_column = list(transitions.keys())
-        first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-        arc_out_m = list(zip(*arc_out_m))
-        arc_out_m.insert(0, first_column)
-        arc_out_m = list(map(list, zip(*arc_out_m)))
-
-        return arc_in_m, arc_out_m
 
     @staticmethod
     def draw_coverability_tree(cov_tree, file='ct_default', show=True):
@@ -191,6 +161,7 @@ class GSPNtools(object):
             edge_label = edge[2] + ' (' + str(round(edge[3],2)) + ')'
             ct_draw.edge(edge[0], edge[1], label=edge_label)
 
+        print('rendering CT')
         ct_draw.render(file + '.gv', view=show)
 
         return ct_draw
@@ -213,6 +184,7 @@ class GSPNtools(object):
         return ctmc_draw
 
 if __name__ == "__main__":
+    import time
     pntools = GSPNtools()
     nets = pntools.import_pnml('debug/pipediag.xml')
     mypn = nets[0]
