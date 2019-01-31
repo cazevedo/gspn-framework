@@ -21,7 +21,7 @@ pip install -r requirements.txt --upgrade
 ```
 
 ## Running the example
-Modify the code flags to enable/disable which section of the example to run.
+Modify the code flags to enable/disable a specific section of the example to be run.
 ```bash
 python example.py
 ```
