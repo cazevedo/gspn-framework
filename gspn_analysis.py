@@ -137,7 +137,7 @@ class CoverabilityTree(object):
 
     def convert_states_to_latex(self):
         states = self.nodes.keys()
-        states.sort()
+        states = sorted(states)
 
         (l, w) = len(states), len(self.nodes[states[0]][0]) + 1
         df = pd.DataFrame(np.zeros((l, w), dtype=np.dtype(object)))
@@ -183,6 +183,7 @@ class CTMC(object):
         average, E(H i ) = 1/a i units of time there before moving on.
         """
         bounded, unbound_pl = reachability_graph.boundedness()
+
         if not bounded:
             raise Exception('To obtain the equivalent continuous time markov chain the Petri net must be bounded, and this is not the case.')
         else:
@@ -323,7 +324,7 @@ class CTMC(object):
         """
         if self.__generated:
             states_id = self.state.keys()
-            states_id.sort()
+            states_id = sorted(states_id)
 
             # create a zeros matrix (# of states + 1) by (# of states)
             n_states = len(states_id)
@@ -403,7 +404,7 @@ class CTMC(object):
 
         if self.__transition_rate:
             states_id = self.state.keys()
-            states_id.sort()
+            states_id = sorted(states_id)
 
             n_states = len(states_id)
 
@@ -466,7 +467,7 @@ class CTMC(object):
         self.compute_transition_probability(time_interval, precision)
 
         states_id = self.state.keys()
-        states_id.sort()
+        states_id = sorted(states_id)
 
         # print(self.transition_probability)
 
@@ -492,7 +493,7 @@ class CTMC(object):
     def get_steady_state(self, precision=5):
         if self.__transition_rate:
             states_id = self.state.keys()
-            states_id.sort()
+            states_id = sorted(states_id)
 
             # steady state prob are independent from the initial probability, so for simplicity we use an uniform distribution as initial prob distribution
             states_prob = {}
