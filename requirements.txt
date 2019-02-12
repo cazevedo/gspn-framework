@@ -3,5 +3,4 @@ numpy
 graphviz
 pandas
 seaborn
-pickle
 tqdm
