@@ -10,6 +10,7 @@ from tqdm import tqdm
 import pickle
 
 draw = False
+drawing_path = '/home/cazevedo/gspn-framework/'
 pntools = gst.GSPNtools()
 
 throughput = False
@@ -22,7 +23,7 @@ if throughput:
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, 'mypn', show=True)
+        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
 
     print('Generating CT')
     ct_tree = gspn_analysis.CoverabilityTree(mypn)
@@ -30,7 +31,7 @@ if throughput:
     print('Bounded? : ', ct_tree.boundedness())
 
     if draw:
-        pntools.draw_coverability_tree(ct_tree, show=True)
+        pntools.draw_coverability_tree(ct_tree, file=drawing_path+'cv_tree', show=False)
 
     print('Generating CTMC')
     ctmc = gspn_analysis.CTMC(ct_tree)
@@ -42,7 +43,7 @@ if throughput:
     # print(ss)
 
     if draw:
-        pntools.draw_ctmc(ctmc)
+        pntools.draw_ctmc(ctmc, file=drawing_path+'ctmc', show=False)
 
     print('Computing Steady State and Transition Rate ...')
     mypn.init_analysis()
@@ -76,7 +77,7 @@ if mean_wt_flag:
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, 'mypn', show=True)
+        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
 
     min_escort_rate = 0.1
     max_escort_rate = 10
@@ -109,13 +110,14 @@ if mean_wt_flag:
 
     X, Y = np.meshgrid(escort_rates, bat_trans_rates)
 
-    ax.plot_surface(X, Y, mean_wait_time)
+    ax.plot_surface(X, Y, np.array([mean_wait_time]))
 
     ax.set_xlabel('T7 Firing Rate')
     ax.set_ylabel('T9 Firing Rate')
     ax.set_zlabel('Mean Wait Time Visitor \n (p.AppointmentRequest)')
 
     plt.show()
+    # fig.savefig('/home/cazevedo/gspn-framework/mean_wait_time_new2.pdf')
 
 transient_evol = False
 if transient_evol:
@@ -130,14 +132,29 @@ if transient_evol:
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, 'mypn', show=True)
+        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
+
+    print('Generating CT')
+    ct_tree = gspn_analysis.CoverabilityTree(mypn)
+    ct_tree.generate()
+    print('Bounded? : ', ct_tree.boundedness())
+
+    if draw:
+        pntools.draw_coverability_tree(ct_tree, file=drawing_path+'cv_tree', show=False)
+
+    print('Generating CTMC')
+    ctmc = gspn_analysis.CTMC(ct_tree)
+    ctmc.generate()
+
+    if draw:
+        pntools.draw_ctmc(ctmc, file=drawing_path+'ctmc', show=False)
 
     uni_dist = {}
     for state in ctmc.state.keys():
         uni_dist[state] = 1.0 / len(ctmc.state)
 
     states = ctmc.state.keys()
-    states.sort()
+    states = sorted(states)
 
     # get the states where the place 'p.R1Available' has 1 token
     # means that robot R1 is available
@@ -169,7 +186,7 @@ if transient_evol:
     sns.set()
     fig = plt.figure()
 
-    t = np.np.arange(0, time_window, step)
+    t = np.arange(0, time_window, step)
     plt_pt1 = plt.plot(t, prob_sum, label='Quick battery charging/Slow discharge')
 
     # Slow battery charging/Quick discharge
@@ -209,7 +226,7 @@ if random_switch_tune:
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, 'mypn', show=True)
+        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
 
     list_probs = np.arange(0.1, 1.0, 0.1)
     visitors_rates = np.arange(0.1, 20, 0.1)
@@ -244,14 +261,14 @@ if random_switch_tune:
                 print('R1 Prob: ', prob_R1, ' R2 Prob: ', prob_R2)
                 print('Mean Wait Time: ', mwt)
 
-    pickle.dump((plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time), open("mean_wait_time.p", "wb" ))
+    pickle.dump((plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time), open(drawing_path+"mean_wait_time.p", "wb" ))
 
 plot_random_switch_tune = False
 if plot_random_switch_tune:
     '''
     Plot a surface graph with the data obtained in the random_switch_tune section above.
     '''
-    (plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time) = pickle.load(open("mean_wait_time.p", "rb"))
+    (plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time) = pickle.load(open(drawing_path+"mean_wait_time.p", "rb"))
 
     nsubplots = 9
     plot_r_speeds = np.split(np.array(plot_r_speeds), nsubplots)
@@ -359,9 +376,7 @@ if check_wait_time:
         n_robots.append(robot_i+2)
         mean_wt.append(mwt)
 
-    pickle.dump((n_robots, mean_wt), open("wait_n_robots.p", "wb"))
-
-    # drawing = pntools.draw_gspn(mypn, 'run_example', show=True)
+    pickle.dump((n_robots, mean_wt), open(drawing_path+"wait_n_robots.p", "wb"))
 
 plot_check_wait_time = False
 if plot_check_wait_time:
@@ -369,7 +384,7 @@ if plot_check_wait_time:
     Plot the data obtained above, in the check_wait_time section.
     '''
 
-    (n_robots, mean_wt) = pickle.load(open("wait_n_robots.p", "rb"))
+    (n_robots, mean_wt) = pickle.load(open(drawing_path+"wait_n_robots.p", "rb"))
 
     sns.set()
     fig = plt.figure()
