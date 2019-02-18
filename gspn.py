@@ -17,10 +17,8 @@ class GSPN(object):
         self.__places = {}
         self.__initial_marking = {}
         self.__transitions = {}
-        self.__arc_in_m = []
-        self.__arc_out_m = []
-        self.__new_arc_in_m = pd.DataFrame()
-        self.__new_arc_out_m = pd.DataFrame()
+        self.__arc_in_m = pd.DataFrame()
+        self.__arc_out_m = pd.DataFrame()
         self.__ct_tree = None
         self.__ctmc = None
         self.__ctmc_steady_state = None
@@ -97,8 +95,8 @@ class GSPN(object):
         return self.__transitions.copy()
 
     def add_arcs_matrices(self, new_arc_in, new_arc_out):
-        self.__new_arc_in_m = new_arc_in
-        self.__new_arc_out_m = new_arc_out
+        self.__arc_in_m = new_arc_in
+        self.__arc_out_m = new_arc_out
         return True
 
     def add_arcs(self, arc_in, arc_out):
@@ -129,7 +127,7 @@ class GSPN(object):
         """
 
         # store existing arc dataframes
-        old_arc_in, old_arc_out = self.__new_arc_in_m, self.__new_arc_out_m
+        old_arc_in, old_arc_out = self.__arc_in_m, self.__arc_out_m
 
         # create new empty (no arc connections) dataframe with existing places and transitions
         pl_len, tr_len = len(self.__places.keys()), len(self.__transitions.keys())
@@ -160,10 +158,10 @@ class GSPN(object):
             for place in target:
                 new_arc_out.loc[transition][place] = 1
 
-        self.__new_arc_in_m = new_arc_in
-        self.__new_arc_out_m = new_arc_out
+        self.__arc_in_m = new_arc_in
+        self.__arc_out_m = new_arc_out
 
-        return self.__new_arc_in_m.copy(), self.__new_arc_out_m.copy()
+        return self.__arc_in_m.copy(), self.__arc_out_m.copy()
 
     def add_tokens(self, place_name, ntokens, set_initial_marking=False):
         """
@@ -225,7 +223,7 @@ class GSPN(object):
         return self.__transitions.copy()
 
     def get_arcs(self):
-        return self.__new_arc_in_m.copy(), self.__new_arc_out_m.copy()
+        return self.__arc_in_m.copy(), self.__arc_out_m.copy()
 
     def get_arcs_dict(self):
         '''
@@ -233,18 +231,18 @@ class GSPN(object):
         :return: arcs in dict form
         '''
         arcs_in = {}
-        for place in self.__new_arc_in_m.index:
-            for transition in self.__new_arc_in_m.columns:
-                if self.__new_arc_in_m.loc[place][transition] > 0:
+        for place in self.__arc_in_m.index:
+            for transition in self.__arc_in_m.columns:
+                if self.__arc_in_m.loc[place][transition] > 0:
                     if place in arcs_in:
                         arcs_in[place].append(transition)
                     else:
                         arcs_in[place] = [transition]
 
         arcs_out = {}
-        for place in self.__new_arc_out_m.columns:
-            for transition in self.__new_arc_out_m.index:
-                if self.__new_arc_out_m.loc[transition][place] > 0:
+        for place in self.__arc_out_m.columns:
+            for transition in self.__arc_out_m.index:
+                if self.__arc_out_m.loc[transition][place] > 0:
                     if transition in arcs_out:
                         arcs_out[transition].append(place)
                     else:
@@ -261,9 +259,9 @@ class GSPN(object):
         current_marking = self.__places.copy()
 
         # for each transition get all the places that have an input arc connection
-        for transition in self.__new_arc_in_m.columns:
-            idd = self.__new_arc_in_m.loc[:][transition].values > 0 # true/false list stating if there is a connection or not
-            places_in = self.__new_arc_in_m.index[idd].values # list of input places of the transition in question
+        for transition in self.__arc_in_m.columns:
+            idd = self.__arc_in_m.loc[:][transition].values > 0 # true/false list stating if there is a connection or not
+            places_in = self.__arc_in_m.index[idd].values # list of input places of the transition in question
 
             # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it
             #  have one or more tokens)
@@ -284,14 +282,14 @@ class GSPN(object):
 
     def fire_transition(self, transition):
         # true/false list stating if there is an input connection or not
-        idd = self.__new_arc_in_m.loc[:][transition].values > 0
+        idd = self.__arc_in_m.loc[:][transition].values > 0
         # list with all the input places of the given transition
-        list_of_input_places = list(self.__new_arc_in_m.index[idd].values)
+        list_of_input_places = list(self.__arc_in_m.index[idd].values)
 
         # true/false list stating if there is an output connection or not
-        idd = self.__new_arc_out_m.loc[transition][:].values > 0
+        idd = self.__arc_out_m.loc[transition][:].values > 0
         # list with all the output places of the given transition
-        list_of_output_places = list(self.__new_arc_out_m.columns[idd].values)
+        list_of_output_places = list(self.__arc_out_m.columns[idd].values)
 
         # remove tokens from input places
         self.remove_tokens(list_of_input_places, [1]*len(list_of_input_places))
@@ -544,9 +542,9 @@ class GSPN(object):
         in_tr_m, _ = self.get_arcs()
 
         # true/false list stating if there is an input connection or not between the given place and any transition
-        idd = self.__new_arc_in_m.loc[place][:].values > 0
+        idd = self.__arc_in_m.loc[place][:].values > 0
         # list with all the output transitions of the given place
-        set_output_transitions = list(self.__new_arc_in_m.columns[idd].values)
+        set_output_transitions = list(self.__arc_in_m.columns[idd].values)
 
         sum = 0
         for transition in set_output_transitions:
