@@ -389,6 +389,9 @@ class GSPN(object):
         self.__ctmc.compute_transition_rate()
         self.__ctmc_steady_state = self.__ctmc.get_steady_state()
 
+        # self.__ctmc.compute_transition_rate_old()
+        # self.__ctmc_steady_state = self.__ctmc.get_steady_state_old()
+
         self.__ct_ctmc_generated = True
 
         return True
@@ -418,7 +421,7 @@ class GSPN(object):
                 transiton_id = transiton_id.replace('/',':')
                 transiton_id = transiton_id.split(':')
                 if (transition in transiton_id) and not (state in states_already_considered):
-                    throughput_rate = throughput_rate + self.__ctmc_steady_state[state] * transition_rate
+                    throughput_rate = throughput_rate + self.__ctmc_steady_state.loc[state] * transition_rate
 
                     states_already_considered.append(state)
         else:
@@ -457,7 +460,7 @@ class GSPN(object):
                                 exp_transition_rate = self.__transitions[exp_transition]
                                 exp_transition_rate = exp_transition_rate[1]
 
-                                throughput_rate = throughput_rate + self.__ctmc_steady_state[tangible_init_state] * exp_transition_rate * transition_prob
+                                throughput_rate = throughput_rate + self.__ctmc_steady_state.loc[tangible_init_state] * exp_transition_rate * transition_prob
 
                 if add_state:
                     states_already_considered.append(tangible_init_state)
@@ -474,7 +477,7 @@ class GSPN(object):
             marking = marking[0]
             for pl in marking:
                 if (place == pl[0]) and (ntokens == pl[1]):
-                    prob_of_n_tokens = prob_of_n_tokens + self.__ctmc_steady_state[state_id]
+                    prob_of_n_tokens = prob_of_n_tokens + self.__ctmc_steady_state.loc[state_id]
 
         return prob_of_n_tokens
 
@@ -549,6 +552,24 @@ class GSPN(object):
         sum = 0
         for transition in set_output_transitions:
             sum = sum + self.transition_throughput_rate(transition)
+
+        return self.expected_number_of_tokens(place) / sum
+
+    def mean_wait_time_old(self, place):
+        if not self.__ct_ctmc_generated:
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+
+        in_tr_m, _ = self.get_arcs()
+
+        # true/false list stating if there is an input connection or not between the given place and any transition
+        idd = self.__arc_in_m.loc[place][:].values > 0
+        # list with all the output transitions of the given place
+        set_output_transitions = list(self.__arc_in_m.columns[idd].values)
+
+        sum = 0
+        for transition in set_output_transitions:
+            sum = sum + self.transition_throughput_rate_old(transition)
 
         return self.expected_number_of_tokens(place) / sum
 
