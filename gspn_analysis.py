@@ -192,10 +192,8 @@ class CTMC(object):
 
         self.__generated = False
         self.__transition_rate = False
-        self.transition_probability = []
-        self.infinitesimal_generator = []
-        self.transition_probability_old = []
-        self.infinitesimal_generator_old = []
+        self.transition_probability = pd.DataFrame()
+        self.infinitesimal_generator = pd.DataFrame()
 
     def generate(self):
         """
@@ -353,57 +351,6 @@ class CTMC(object):
         else:
             return False
 
-    def compute_transition_rate_old(self):
-        """
-        Qij is the rate of going from state i to state j at time t.
-        Qii represents the rate of leaving state i at time t.
-        :return: True or False depending if it was successful or not
-        """
-
-        if self.__generated:
-            states_id = self.state.keys()
-            states_id = sorted(states_id)
-
-            # create a zeros matrix (# of states + 1) by (# of states)
-            n_states = len(states_id)
-            for i in range(n_states + 1):
-                self.infinitesimal_generator_old.append([0] * n_states)
-
-            # replace the first row with all the states names
-            self.infinitesimal_generator_old[0] = list(states_id)
-
-            # add a first column with all the states names
-            first_column = list(states_id)
-            first_column.insert(0, '')  # put None in the element (0,0) since it has no use
-            self.infinitesimal_generator_old = list(zip(*self.infinitesimal_generator_old))
-            self.infinitesimal_generator_old.insert(0, first_column)
-            self.infinitesimal_generator_old = list(map(list, zip(*self.infinitesimal_generator_old)))
-
-            for row_index in range(1, n_states+1):
-                source = self.infinitesimal_generator_old[row_index][0]
-                for column_index in range(1, n_states+1):
-                    target = self.infinitesimal_generator_old[column_index][0]
-                    for arc in self.transition:
-                        if (arc[0] == source) and (arc[1] == target):
-                            if target != source:
-                                self.infinitesimal_generator_old[row_index][column_index] = arc[4]
-
-                self.infinitesimal_generator_old[row_index][row_index] = -sum(self.infinitesimal_generator_old[row_index][1:])
-
-                # print(sum(self.infinitesimal_generator[row_index][1:]))
-
-            # print('----------------------')
-            # for i in self.infinitesimal_generator:
-            #     print(i)
-            self.infinitesimal_generator_old = np.matrix(self.infinitesimal_generator_old)
-            # print(self.infinitesimal_generator)
-
-            self.__transition_rate = True
-            return True
-
-        else:
-            return False
-
     def convert_states_to_latex(self):
         states = self.state.keys()
         states.sort()
@@ -432,7 +379,7 @@ class CTMC(object):
         Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
         the chain will be in state j, t time units from now, given it is in state i now.
         The transition probability matrix (P(t)) is computed from the infinitesimal generator (Q) through the formula:
-        P(t) = exp(Q*t)
+        P(t) = exp(Q*t), by approximating it to P(t) ~= (1+Q*t/large_n)^large_n
         The computed transition probability can be accessed through the CTMC attribute transition_probability.
         :param time_interval: time units that have elapsed from now
         :return: True if it was successful
@@ -469,84 +416,13 @@ class CTMC(object):
         else:
             raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
 
-    def compute_transition_probability_old(self, time_interval, precision=5):
-        """
-        Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
-        the chain will be in state j, t time units from now, given it is in state i now.
-        The transition probability matrix (P(t)) is computed from the infinitesimal generator (Q) through the formula:
-        P(t) = exp(Q*t)
-        The computed transition probability can be accessed through the CTMC attribute transition_probability.
-        :param time_interval: time units that have elapsed from now
-        :return: True if it was successful
-        """
-
-        # self.compute_transition_probability_new(time_interval)
-
-        if time_interval < 0:
-            raise Exception('Time interval must be greater or equal to zero.')
-
-        if self.__transition_rate:
-            states_id = self.state.keys()
-            states_id = sorted(states_id)
-
-            n_states = len(states_id)
-
-            inf_gen_matrix = self.infinitesimal_generator_old.copy()
-            inf_gen_matrix = np.array(inf_gen_matrix)
-            inf_gen_matrix = np.delete(inf_gen_matrix, 0, 0)  # remove first row
-            inf_gen_matrix = np.delete(inf_gen_matrix, 0, 1)  # remove first column
-            inf_gen_matrix = np.matrix(inf_gen_matrix, dtype='float64')
-
-            error = 1.0 / (10**precision)
-            delta = 1.0
-            k = 100
-            sum_list = [2]*n_states
-
-            while (delta > error) or (round(sum(sum_list), precision) != n_states):
-                large_n = 2 ** k
-
-                self.transition_probability_old = np.matrix(np.identity(n_states) + (inf_gen_matrix * time_interval / large_n), dtype='float64')
-                self.transition_probability_old = self.transition_probability_old**large_n
-                print(self.transition_probability_old)
-                break
-
-                sum_list = []
-                for row in self.transition_probability_old:
-                    sum_list.append(np.sum(row))
-
-                delta = np.std(sum_list)
-
-                k = k - 1
-
-                if k == 0:
-                    raise Exception('Algorithm was not able to compute the transition probabilities for the given time and precision. Please consider lowering the precision.')
-
-            # print(' K : ', k)
-            # print(' Error : ', error)
-            # print(' SUM : ', sum_list)
-            # print(' SUM : ', round(sum(sum_list),3))
-
-            # add headers (row and column) to identify the transitioning states
-            self.transition_probability_old = np.vstack((states_id, self.transition_probability_old))
-            states_id.insert(0, '')
-            for i in range(len(states_id)):
-                states_id[i] = [states_id[i]]
-            self.transition_probability_old = np.hstack((states_id, self.transition_probability_old))
-
-            # print(self.transition_probability)
-
-            return True
-
-        else:
-            raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
-
     def get_prob_reach_states(self, initial_states_prob, time_interval, precision=5):
         '''
         Computes the probability of reaching all states after a certain amount of time have elapsed.
         :param initial_states_prob: dictionary where each key is a state and the value corresponds to the probability
         of initially being in that state. Can also be interpreted as the probability mass function of the random variable X at the beginning of time.
         :param time_interval: float encoding the time elapsed after the inputed initial state.
-        :return: dictionary where each key is a state and the value corresponds to the probability
+        :return: pandas dataframe where each row is a different state and the value of that row corresponds to the probability
         of reaching that state after the inputed time has elapsed.
         '''
 
@@ -562,43 +438,13 @@ class CTMC(object):
 
         return final_state_probability.sum(axis=1)
 
-    def get_prob_reach_states_old(self, initial_states_prob, time_interval, precision=5):
-        '''
-        Computes the probability of reaching all states after a certain amount of time have elapsed.
-        :param initial_states_prob: dictionary where each key is a state and the value corresponds to the probability
-        of initially being in that state. Can also be interpreted as the probability mass function of the random variable X at the beginning of time.
-        :param time_interval: float encoding the time elapsed after the inputed initial state.
-        :return: dictionary where each key is a state and the value corresponds to the probability
-        of reaching that state after the inputed time has elapsed.
-        '''
-
-        self.compute_transition_probability_old(time_interval, precision)
-
-        final_state_probability = {}
-        for column_index in range(1, len(self.transition_probability_old)):
-            prob_sum = 0
-            for row_index in range(1, len(self.transition_probability_old)):
-                state_id = self.transition_probability_old[row_index, 0]
-                state_prob = float(self.transition_probability_old[row_index, column_index])
-                prob_sum = prob_sum + initial_states_prob[state_id] * state_prob
-
-            current_state = self.transition_probability_old[0, column_index] # state where to append the computed probability
-            final_state_probability[current_state] = prob_sum
-
-        # s = 0
-        # for k, v in final_state_probability.items():
-        #     s = s + v
-
-        # print(s)
-
-        return final_state_probability.copy()
-
     def get_steady_state(self, precision=5):
         if self.__transition_rate:
             states_id = self.state.keys()
             states_id = sorted(states_id)
 
-            # steady state prob are independent from the initial probability, so for simplicity we use an uniform distribution as initial prob distribution
+            # steady state prob are independent from the initial probability
+            # so for simplicity we use an uniform distribution as initial prob distribution
             states_prob = {}
             for id in states_id:
                 states_prob[id] = 1.0/len(states_id)
@@ -615,37 +461,6 @@ class CTMC(object):
                     break
                 else:
                     old_steady_state = steady_state.copy()
-
-            return steady_state.copy()
-
-        else:
-            raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
-
-
-    def get_steady_state_old(self, precision=5):
-        if self.__transition_rate:
-            states_id = self.state.keys()
-            states_id = sorted(states_id)
-
-            # steady state prob are independent from the initial probability, so for simplicity we use an uniform distribution as initial prob distribution
-            states_prob = {}
-            for id in states_id:
-                states_prob[id] = 1.0/len(states_id)
-
-            prob_steady = False
-            time_interval = 0.001
-            old_steady_state = self.get_prob_reach_states_old(states_prob, time_interval, precision)
-
-            while not prob_steady:
-                time_interval = time_interval + 1
-                steady_state = self.get_prob_reach_states_old(states_prob, time_interval, precision)
-
-                prob_steady = True
-                for state, prob in steady_state.items():
-                    if round(prob,precision) != round(old_steady_state[state], precision):
-                        prob_steady = False
-
-                old_steady_state = steady_state.copy()
 
             return steady_state.copy()
 
