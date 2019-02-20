@@ -7,7 +7,10 @@ from scipy import linalg
 class CoverabilityTree(object):
     def __init__(self, gspn):
         """
-
+        The coverability tree of a GSPN is a two tuple (V; E), where V (nodes) represents the set of all reachable
+        markings and E (edges) the set of all possible state changes.
+        The coverability tree allows to perform a logical analysis, providing qualitative information on the GSPN, such as
+        reachability, boundedness, safety and deadlocks.
         """
         self.__gspn = gspn
         self.nodes = {}
@@ -174,8 +177,13 @@ class CoverabilityTree(object):
 class CTMC(object):
     def __init__(self, reachability_graph):
         """
-        A CTMC makes transitions from state to state, independent of the past, ac-
-        cording to a discrete-time Markov chain, but once entering a state remains in
+        Due to the memoryless property of the exponential transitions, it has been shown that the coverability tree of
+        a bounded GSPN is isomorphic to a finite Markov Chain. Therefore in this case, we can obtain the equivalent
+        continuous time Markov chain (CTMC), that comprises only tangible states.
+        This mainly consists in removing all vanishing states, redirecting the arcs and computing the new stochastic
+        transition rates from the weights of removed vanishing states.
+        A CTMC makes transitions from state to state, independent of the past, according
+        to a discrete-time Markov chain, but once entering a state remains in
         that state, independent of the past, for an exponentially distributed amount of
         time before changing state again.
         Thus a CTMC can simply be described by a transition matrix P = (P ij ), describing
@@ -319,8 +327,9 @@ class CTMC(object):
 
     def compute_transition_rate(self):
         """
-        Qij is the rate of going from state i to state j at time t.
-        Qii represents the rate of leaving state i at time t.
+        Computes the transition rate matrix, also called, infinitesimal generator Q.
+        Where Qij is the rate of going from state i to state j at time t,
+        and Qii represents the rate of leaving state i at time t.
         :return: True or False depending if it was successful or not
         """
         if self.__generated:
@@ -377,13 +386,13 @@ class CTMC(object):
 
     def compute_transition_probability(self, time_interval):
         """
-        Populates the matrix Hij(t) (encoded here as the attribute transition_probability), i.e. the probability that
+        Populates the square matrix Hij(t) (encoded here as the attribute transition_probability), i.e. the probability that
         the chain will be in state j, t time units from now, given it is in state i now.
         The transition probability matrix (H(t)) is computed from the infinitesimal generator (Q) through the formula:
         H(t) = exp(Q*t), using Pade approximation to solve it
         The computed transition probability can be accessed through the CTMC attribute transition_probability.
         :param time_interval: time units that have elapsed from now
-        :return: True if it was successful
+        :return: True if it was successful, raises an exception otherwise
         """
         if time_interval < 0:
             raise Exception('Time interval must be greater or equal to zero.')
@@ -446,10 +455,10 @@ class CTMC(object):
     def get_prob_reach_states(self, initial_states_prob, time_interval):
         '''
         Computes the probability of reaching all states after a certain amount of time have elapsed.
-        :param initial_states_prob: dictionary where each key is a state and the value corresponds to the probability
+        :param initial_states_prob: pandas DataFrame where each row is a state and the value corresponds to the probability
         of initially being in that state. Can also be interpreted as the probability mass function of the random variable X at the beginning of time.
-        :param time_interval: float encoding the time elapsed after the inputed initial state.
-        :return: pandas dataframe where each row is a different state and the value of that row corresponds to the probability
+        :param time_interval: float representing the time elapsed after the inputed initial state.
+        :return: pandas DataFrame where each row is a different state and the value of that row corresponds to the probability
         of reaching that state after the inputed time has elapsed.
         '''
 
@@ -460,6 +469,13 @@ class CTMC(object):
         return final_state_probability.T
 
     def get_steady_state(self):
+        '''
+        Computes the steady-state probability distribution PI by solving the linear system: PI*Q = 0, sum(PI_j) = 1
+        Where PI_j is the probability of reaching the state j and PI = [PI_0, PI_1, ...]
+        :return: pandas DataFrame where each row represents a different state and the value of that row corresponds to
+        the steady-state probability of that state
+        '''
+
         if self.__transition_rate:
             a = np.concatenate((self.infinitesimal_generator.values.T, [[1] * len(self.infinitesimal_generator)]))
             b = np.zeros(len(self.infinitesimal_generator))
@@ -476,6 +492,13 @@ class CTMC(object):
             raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
 
     def get_steady_state_iteratively(self, precision=6):
+        '''
+        Computes the steady-state probability distribution PI by iteratively increasing the time interval t until PI(t) converges.
+        Where PI_j is the probability of reaching the state j and PI = [PI_0, PI_1, ...]
+        :return: pandas DataFrame where each row represents a different state and the value of that row corresponds to
+        the steady-state probability of that state
+        '''
+
         if self.__transition_rate:
             states_id = self.state.keys()
             states_id = sorted(states_id)
@@ -507,8 +530,7 @@ class CTMC(object):
 
     def get_sojourn_times(self):
         if self.__generated:
-            states_id = self.state.keys()
-            states_id.sort()
+            states_id = sorted(self.state.keys())
 
             sojourn_times = {}
             for current_state in states_id:
