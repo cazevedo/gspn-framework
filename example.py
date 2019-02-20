@@ -8,22 +8,21 @@ import math
 import seaborn as sns
 from tqdm import tqdm
 import pickle
+import pandas as pd
 
-draw = False
-drawing_path = '/home/cazevedo/gspn-framework/'
-pntools = gst.GSPNtools()
-
-throughput = False
-if throughput:
+def throughput(draw=False):
     '''
     Throughput and expected number of tokens metrics obtained for some relevant transitions and places.
     '''
+    print('\n\n---- Running throughput example ----')
+
+    pntools = gst.GSPNtools()
 
     print('Importing GSPN Model')
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
+        drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
 
     print('Generating CT')
     ct_tree = gspn_analysis.CoverabilityTree(mypn)
@@ -31,7 +30,7 @@ if throughput:
     print('Bounded? : ', ct_tree.boundedness())
 
     if draw:
-        pntools.draw_coverability_tree(ct_tree, file=drawing_path+'cv_tree', show=False)
+        pntools.draw_coverability_tree(ct_tree, file=save_path+'cv_tree', show=False)
 
     print('Generating CTMC')
     ctmc = gspn_analysis.CTMC(ct_tree)
@@ -43,41 +42,43 @@ if throughput:
     # print(ss)
 
     if draw:
-        pntools.draw_ctmc(ctmc, file=drawing_path+'ctmc', show=False)
+        pntools.draw_ctmc(ctmc, file=save_path+'ctmc', show=False)
 
     print('Computing Steady State and Transition Rate ...')
     mypn.init_analysis()
 
     print('Throughput of R1 appointment attend: ')
-    print(mypn.transition_throughput_rate('T6'))
+    print(mypn.transition_throughput_rate('T6').iloc[0])
     print('Throughput of R2 appointment attend: ')
-    print(mypn.transition_throughput_rate('T12'))
+    print(mypn.transition_throughput_rate('T12').iloc[0])
 
     print('Expected # tokens Appointment Request')
-    print(mypn.expected_number_of_tokens('p.AppointmentRequest'))
+    print(mypn.expected_number_of_tokens('p.AppointmentRequest').iloc[0])
     print('Expected # tokens No Appointment')
-    print(mypn.expected_number_of_tokens('p.NOT_AppointmentRequest'))
+    print(mypn.expected_number_of_tokens('p.NOT_AppointmentRequest').iloc[0])
     print('Expected # tokens R1 Escorting')
-    print(mypn.expected_number_of_tokens('t.R1EscortVisitor'))
+    print(mypn.expected_number_of_tokens('t.R1EscortVisitor').iloc[0])
     print('Expected # tokens R1 Charging')
-    print(mypn.expected_number_of_tokens('t.R1Charging'))
+    print(mypn.expected_number_of_tokens('t.R1Charging').iloc[0])
     print('Expected # tokens R2 Escorting')
-    print(mypn.expected_number_of_tokens('t.R2EscortVisitor'))
+    print(mypn.expected_number_of_tokens('t.R2EscortVisitor').iloc[0])
     print('Expected # tokens R2 Charging')
-    print(mypn.expected_number_of_tokens('t.R2Charging'))
+    print(mypn.expected_number_of_tokens('t.R2Charging').iloc[0])
 
-mean_wt_flag = False
-if mean_wt_flag:
+def mean_wt_flag(save_path, draw=False):
     '''
     Mean wait time of place p.AppointmentRequest as a
     function of the firing rates of transitions T7 and T9.
     '''
+    print('\n\n---- Running mean wait time example ----')
+
+    pntools = gst.GSPNtools()
 
     print('Importing GSPN Model')
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
+        drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
 
     min_escort_rate = 0.1
     max_escort_rate = 10
@@ -86,6 +87,7 @@ if mean_wt_flag:
     bat_trans_rates = []
 
     for escort_trans_rate in escort_rates:
+        # function that defines how the battery discharge rate ('T9') varies as a function of the robot speed ('T7')
         bat_trans_rate = math.pow(escort_trans_rate-5,2)
         bat_trans_rates.append(bat_trans_rate)
 
@@ -95,6 +97,7 @@ if mean_wt_flag:
         mypn.init_analysis()
 
         mwt = mypn.mean_wait_time('p.AppointmentRequest')
+        mwt = mwt.iloc[0]
         mean_wait_time.append(mwt)
         print('Mean Wait Time: ', mwt)
 
@@ -114,13 +117,12 @@ if mean_wt_flag:
 
     ax.set_xlabel('T7 Firing Rate')
     ax.set_ylabel('T9 Firing Rate')
-    ax.set_zlabel('Mean Wait Time Visitor \n (p.AppointmentRequest)')
+    ax.set_zlabel('\nMean Wait Time Visitor \n (p.AppointmentRequest)')
 
-    plt.show()
-    # fig.savefig('/home/cazevedo/gspn-framework/mean_wait_time_new2.pdf')
+    # plt.show()
+    fig.savefig(save_path+'mean_wait_time.pdf')
 
-transient_evol = False
-if transient_evol:
+def transient_evol(save_path, draw=False):
     '''
     Transient evolution of the probability of the robot being
     available as a function of time, obtained for two scenarios:
@@ -128,11 +130,15 @@ if transient_evol:
     2) a set of batteries more expensive with higher performance (quick charge, slow discharge);
     '''
 
+    print('\n\n---- Running transient evolution example ----')
+
+    pntools = gst.GSPNtools()
+
     print('Importing GSPN Model')
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
+        drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
 
     print('Generating CT')
     ct_tree = gspn_analysis.CoverabilityTree(mypn)
@@ -140,18 +146,17 @@ if transient_evol:
     print('Bounded? : ', ct_tree.boundedness())
 
     if draw:
-        pntools.draw_coverability_tree(ct_tree, file=drawing_path+'cv_tree', show=False)
+        pntools.draw_coverability_tree(ct_tree, file=save_path+'cv_tree', show=False)
 
     print('Generating CTMC')
     ctmc = gspn_analysis.CTMC(ct_tree)
     ctmc.generate()
 
     if draw:
-        pntools.draw_ctmc(ctmc, file=drawing_path+'ctmc', show=False)
+        pntools.draw_ctmc(ctmc, file=save_path+'ctmc', show=False)
 
-    uni_dist = {}
-    for state in ctmc.state.keys():
-        uni_dist[state] = 1.0 / len(ctmc.state)
+    uni_dist = pd.DataFrame(1.0 / len(ctmc.state) * np.ones(len(ctmc.state)))
+    uni_dist.index = ctmc.state
 
     states = ctmc.state.keys()
     states = sorted(states)
@@ -212,25 +217,30 @@ if transient_evol:
     plt.ylabel("Probability of robot 1 being available")
     plt.legend(loc='lower right')
 
-    plt.show()
+    # plt.show()
+    plt_pt1.savefig(save_path+'prob_available_new.pdf')
 
-random_switch_tune = False
-if random_switch_tune:
+def random_switch_tune(save_path, draw=False):
     '''
     Visitor mean wait time as a function of the robot R1
     escort speed, the visitors rate and the probability of robot R1 being
     assigned, instead of R2, to the escort task.
     '''
+    print('\n\n---- Running random switch tunning example ----')
+
+    pntools = gst.GSPNtools()
+
+    print('Running Random Switch Tune...')
 
     print('Importing GSPN Model')
     mypn = pntools.import_pnml('multi_escort_run.xml')[0]
 
     if draw:
-        drawing = pntools.draw_gspn(mypn, file=drawing_path+'petri_net', show=False)
+        drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
 
     list_probs = np.arange(0.1, 1.0, 0.1)
-    visitors_rates = np.arange(0.1, 20, 0.1)
-    robot_speeds = np.arange(0.1, 20, 0.1)
+    visitors_rates = np.arange(0.1, 20, 0.5)
+    robot_speeds = np.arange(0.1, 20, 0.5)
     mean_wait_time = []
 
     plot_visitors = []
@@ -252,6 +262,7 @@ if random_switch_tune:
                 mypn.init_analysis()
 
                 mwt = mypn.mean_wait_time('p.AppointmentRequest')
+                mwt = mwt.iloc[0]
                 mean_wait_time.append(mwt)
                 plot_visitors.append(visitor_r)
                 plot_list_probs.append(prob_R1)
@@ -261,16 +272,22 @@ if random_switch_tune:
                 print('R1 Prob: ', prob_R1, ' R2 Prob: ', prob_R2)
                 print('Mean Wait Time: ', mwt)
 
-    pickle.dump((plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time), open(drawing_path+"mean_wait_time.p", "wb" ))
+    pickle.dump((plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time), open(save_path+"mean_wait_time.p", "wb" ))
 
-plot_random_switch_tune = False
-if plot_random_switch_tune:
+def plot_random_switch_tune(save_path):
     '''
-    Plot a surface graph with the data obtained in the random_switch_tune section above.
+    Plot a surface graph with the data obtained in the random_switch_tune function above.
     '''
-    (plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time) = pickle.load(open(drawing_path+"mean_wait_time.p", "rb"))
 
-    nsubplots = 9
+    print('\n\n---- Plotting random switch data ----')
+
+    print('Plotting Random Switch Tune...')
+
+    (plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time) = pickle.load(open(save_path+"mean_wait_time.p", "rb"))
+
+    nsubplots = 9 # should be len(list_probs)
+    print(np.shape(plot_r_speeds))
+    print(np.shape(mean_wait_time))
     plot_r_speeds = np.split(np.array(plot_r_speeds), nsubplots)
     plot_visitors = np.split(np.array(plot_visitors), nsubplots)
     plot_list_probs = np.split(np.array(plot_list_probs), nsubplots)
@@ -289,14 +306,14 @@ if plot_random_switch_tune:
         color_dimension = Z # change to desired fourth dimension
         minn, maxx = color_dimension.min(), color_dimension.max()
         print(minn, maxx)
-        maxx = 0.05
+        maxx = 0.01
         norm = colors.Normalize(minn, maxx)
         m = cm.ScalarMappable(norm=norm, cmap=cm.coolwarm)
         m.set_array([])
         fcolors = m.to_rgba(color_dimension)
 
         print('Plotting surface...', index)
-        surf = ax.plot_surface(X, Y, plot_list_probs[index],
+        surf = ax.plot_surface(X, Y, np.array([plot_list_probs[index]]),
                         facecolors=fcolors, rstride=1, cstride=1,
                         vmin=minn, vmax=maxx)
 
@@ -307,14 +324,18 @@ if plot_random_switch_tune:
     cbar = plt.colorbar(m)
     cbar.set_label('Visitor Mean Wait Time (p.AppointmentRequest)', rotation=270, labelpad=25)
 
-    plt.show()
+    # plt.show()
+    fig.savefig(save_path+'prob_select_wait_all.pdf')
 
-check_wait_time = False
-if check_wait_time:
+def check_wait_time(save_path):
     '''
     The mean wait time of the place p.AppointmentRequest
     as a function of the number of robots.
     '''
+
+    print('\n\n---- Running mean wait time as a function of number of robots example ----')
+
+    pntools = gst.GSPNtools()
 
     print('Importing GSPN Model')
     mypn = pntools.import_pnml('rvary_escort_run.xml')[0]
@@ -344,6 +365,7 @@ if check_wait_time:
 
     mypn.init_analysis()
     mwt = mypn.mean_wait_time('p.AppointmentRequest')
+    mwt = mwt.iloc[0]
     print('--------------------------------------------')
     print('# Robots: ', 1)
     print('Mean Wait Time: ', mwt)
@@ -369,6 +391,7 @@ if check_wait_time:
 
         mypn.init_analysis()
         mwt = mypn.mean_wait_time('p.AppointmentRequest')
+        mwt = mwt.iloc[0]
         print('--------------------------------------------')
         print('# Robots: ', robot_i+2)
         print('Mean Wait Time: ', mwt)
@@ -376,15 +399,16 @@ if check_wait_time:
         n_robots.append(robot_i+2)
         mean_wt.append(mwt)
 
-    pickle.dump((n_robots, mean_wt), open(drawing_path+"wait_n_robots.p", "wb"))
+    pickle.dump((n_robots, mean_wt), open(save_path+"wait_n_robots.p", "wb"))
 
-plot_check_wait_time = False
-if plot_check_wait_time:
+def plot_check_wait_time(save_path):
     '''
-    Plot the data obtained above, in the check_wait_time section.
+    Plot the data obtained above, in the check_wait_time function.
     '''
 
-    (n_robots, mean_wt) = pickle.load(open(drawing_path+"wait_n_robots.p", "rb"))
+    print('\n\n---- Plotting mean wait time as a function of number of robots data ----')
+
+    (n_robots, mean_wt) = pickle.load(open(save_path+"wait_n_robots.p", "rb"))
 
     sns.set()
     fig = plt.figure()
@@ -394,6 +418,46 @@ if plot_check_wait_time:
     plt.plot(n_robots, mean_wt, '-o')
 
     plt.xlabel("Number of Robots")
-    plt.ylabel("Mean Wait Time of the Visitors (p.AppointmentRequest)")
+    plt.ylabel("Mean Wait Time of the Visitors \n (p.AppointmentRequest)")
 
-    plt.show()
+    # plt.show()
+    fig.savefig(save_path+'n_robots_wait.pdf')
+
+
+
+if __name__ == "__main__":
+    save_path = '/home/cazevedo/gspn-framework/'
+
+    '''
+    Obtain the throughput and expected number of tokens metrics obtained for some relevant transitions and places.
+    '''
+    throughput(draw=True)
+
+    '''
+    Obtain the mean wait time of place p.AppointmentRequest as a
+    function of the firing rates of transitions T7 and T9.
+    '''
+    mean_wt_flag(save_path, draw=False)
+
+    '''
+    Obtain the transient evolution of the probability of the robot being
+    available as a function of time, obtained for two scenarios:
+    1) a set of batteries cheaper with low performance (slow charge, quick discharge);
+    2) a set of batteries more expensive with higher performance (quick charge, slow discharge);
+    '''
+    transient_evol(save_path, draw=False)
+
+    '''
+    Obtain the visitor mean wait time as a function of the robot R1
+    escort speed, the visitors rate and the probability of robot R1 being
+    assigned, instead of R2, to the escort task.
+    '''
+    random_switch_tune(save_path, draw=False)
+    plot_random_switch_tune(save_path)
+
+    '''
+    Obtain the mean wait time of the place p.AppointmentRequest
+    as a function of the number of robots.
+    '''
+    check_wait_time(save_path)
+    plot_check_wait_time(save_path)
