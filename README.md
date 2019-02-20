@@ -24,3 +24,4 @@ pip install -r requirements.txt --upgrade
 ```bash
 python example.py
 ```
+Both gspn_tools.py and gspn.py have small examples that you can check by running each one of these files individually.
