@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
+from scipy import linalg
 
 # TODO : Extend analysis methods to matrix equation and reduction decomposition approaches (take a look at Murata)
 class CoverabilityTree(object):
@@ -374,7 +375,32 @@ class CTMC(object):
         df.columns = dataframe_header
         return df.to_latex(header=True, index=False), df
 
-    def compute_transition_probability(self, time_interval, precision=5):
+    def compute_transition_probability(self, time_interval):
+        """
+        Populates the matrix Hij(t) (encoded here as the attribute transition_probability), i.e. the probability that
+        the chain will be in state j, t time units from now, given it is in state i now.
+        The transition probability matrix (H(t)) is computed from the infinitesimal generator (Q) through the formula:
+        H(t) = exp(Q*t), using Pade approximation to solve it
+        The computed transition probability can be accessed through the CTMC attribute transition_probability.
+        :param time_interval: time units that have elapsed from now
+        :return: True if it was successful
+        """
+        if time_interval < 0:
+            raise Exception('Time interval must be greater or equal to zero.')
+
+        if self.__transition_rate:
+            self.transition_probability = linalg.expm(self.infinitesimal_generator.values * time_interval)
+
+            self.transition_probability = pd.DataFrame(self.transition_probability)
+            self.transition_probability.columns = self.state.keys()
+            self.transition_probability.index = self.state.keys()
+
+            return True
+
+        else:
+            raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
+
+    def compute_transition_probability_old(self, time_interval, precision=6):
         """
         Populates the matrix Hij(t) (encoded here as the attribute transition_probability), i.e. the probability that
         the chain will be in state j, t time units from now, given it is in state i now.
@@ -390,13 +416,11 @@ class CTMC(object):
         if self.__transition_rate:
             n_states = len(self.state.keys())
 
-            inf_gen_matrix = self.infinitesimal_generator.copy()
-
             error = 1.0 / (10**precision)
             k = 100
             while True:
                 large_n = 2 ** k
-                self.transition_probability = np.identity(n_states) + (inf_gen_matrix * time_interval / large_n)
+                self.transition_probability = np.identity(n_states) + (self.infinitesimal_generator * time_interval / large_n)
                 self.transition_probability = np.linalg.matrix_power(self.transition_probability.values, large_n)
 
                 row_sum = self.transition_probability.sum(axis=1)
@@ -419,7 +443,7 @@ class CTMC(object):
         else:
             raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
 
-    def get_prob_reach_states(self, initial_states_prob, time_interval, precision=5):
+    def get_prob_reach_states(self, initial_states_prob, time_interval):
         '''
         Computes the probability of reaching all states after a certain amount of time have elapsed.
         :param initial_states_prob: dictionary where each key is a state and the value corresponds to the probability
@@ -429,16 +453,11 @@ class CTMC(object):
         of reaching that state after the inputed time has elapsed.
         '''
 
-        self.compute_transition_probability(time_interval, precision)
+        self.compute_transition_probability(time_interval)
 
-        states_id = sorted(self.state.keys())
+        final_state_probability = initial_states_prob.T.dot(self.transition_probability)
 
-        final_state_probability = self.transition_probability.copy()
-
-        for st in states_id:
-            final_state_probability.loc[st] = self.transition_probability.loc[st].mul(initial_states_prob[st])
-
-        return final_state_probability.sum(axis=1)
+        return final_state_probability.T
 
     def get_steady_state(self):
         if self.__transition_rate:
@@ -451,40 +470,35 @@ class CTMC(object):
             steady_state = pd.DataFrame(x)
             steady_state.index = self.infinitesimal_generator.index
 
-            # print('equation system')
-            # print(steady_state)
-
             return steady_state.copy()
 
         else:
             raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
 
-    def get_steady_state_iteratively(self, precision=5):
+    def get_steady_state_iteratively(self, precision=6):
         if self.__transition_rate:
             states_id = self.state.keys()
             states_id = sorted(states_id)
 
             # steady state prob are independent from the initial probability
             # so for simplicity we use an uniform distribution as initial prob distribution
-            states_prob = {}
-            for id in states_id:
-                states_prob[id] = 1.0/len(states_id)
+            states_prob = pd.DataFrame(1.0/len(states_id)*np.ones(len(states_id)))
+            states_prob.index = states_id
 
             time_interval = 0.001
-            old_steady_state = self.get_prob_reach_states(states_prob, time_interval, precision)
+            old_steady_state = self.get_prob_reach_states(states_prob, time_interval)
 
+            convergence_std = 1.0 / 10 ** precision
             while True:
                 time_interval = time_interval + 1
-                steady_state = self.get_prob_reach_states(states_prob, time_interval, precision)
+                steady_state = self.get_prob_reach_states(states_prob, time_interval)
 
                 diff = steady_state-old_steady_state
-                if diff.std() < precision:
+
+                if diff.std().values < convergence_std:
                     break
                 else:
                     old_steady_state = steady_state.copy()
-
-            # print('iterations')
-            # print(steady_state)
 
             return steady_state.copy()
 
