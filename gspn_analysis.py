@@ -376,10 +376,10 @@ class CTMC(object):
 
     def compute_transition_probability(self, time_interval, precision=5):
         """
-        Populates the matrix Pij(t) (encoded here as the attribute transition_probability), i.e. the probability that
+        Populates the matrix Hij(t) (encoded here as the attribute transition_probability), i.e. the probability that
         the chain will be in state j, t time units from now, given it is in state i now.
-        The transition probability matrix (P(t)) is computed from the infinitesimal generator (Q) through the formula:
-        P(t) = exp(Q*t), by approximating it to P(t) ~= (1+Q*t/large_n)^large_n
+        The transition probability matrix (H(t)) is computed from the infinitesimal generator (Q) through the formula:
+        H(t) = exp(Q*t), by approximating it to H(t) ~= (1+Q*t/large_n)^large_n
         The computed transition probability can be accessed through the CTMC attribute transition_probability.
         :param time_interval: time units that have elapsed from now
         :return: True if it was successful
@@ -397,7 +397,7 @@ class CTMC(object):
             while True:
                 large_n = 2 ** k
                 self.transition_probability = np.identity(n_states) + (inf_gen_matrix * time_interval / large_n)
-                self.transition_probability = self.transition_probability.pow(large_n)
+                self.transition_probability = np.linalg.matrix_power(self.transition_probability.values, large_n)
 
                 row_sum = self.transition_probability.sum(axis=1)
 
@@ -410,7 +410,10 @@ class CTMC(object):
                 elif k == 0:
                     raise Exception('Algorithm was not able to compute the transition probabilities for the given time and precision. Please consider lowering the precision.')
 
-            # print(self.transition_probability)
+            self.transition_probability = pd.DataFrame(self.transition_probability)
+            self.transition_probability.columns = self.state.keys()
+            self.transition_probability.index = self.state.keys()
+
             return True
 
         else:
@@ -428,8 +431,7 @@ class CTMC(object):
 
         self.compute_transition_probability(time_interval, precision)
 
-        states_id = self.state.keys()
-        states_id = sorted(states_id)
+        states_id = sorted(self.state.keys())
 
         final_state_probability = self.transition_probability.copy()
 
@@ -438,7 +440,26 @@ class CTMC(object):
 
         return final_state_probability.sum(axis=1)
 
-    def get_steady_state(self, precision=5):
+    def get_steady_state(self):
+        if self.__transition_rate:
+            a = np.concatenate((self.infinitesimal_generator.values.T, [[1] * len(self.infinitesimal_generator)]))
+            b = np.zeros(len(self.infinitesimal_generator))
+            b = np.append(b, 1)
+
+            x, residuals, rank, s = np.linalg.lstsq(a, b, rcond=None)
+
+            steady_state = pd.DataFrame(x)
+            steady_state.index = self.infinitesimal_generator.index
+
+            # print('equation system')
+            # print(steady_state)
+
+            return steady_state.copy()
+
+        else:
+            raise Exception('Transition rates are not computed, please use the method compute_transition_rate')
+
+    def get_steady_state_iteratively(self, precision=5):
         if self.__transition_rate:
             states_id = self.state.keys()
             states_id = sorted(states_id)
@@ -461,6 +482,9 @@ class CTMC(object):
                     break
                 else:
                     old_steady_state = steady_state.copy()
+
+            # print('iterations')
+            # print(steady_state)
 
             return steady_state.copy()
 
