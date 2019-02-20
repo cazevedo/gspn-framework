@@ -389,9 +389,6 @@ class GSPN(object):
         self.__ctmc.compute_transition_rate()
         self.__ctmc_steady_state = self.__ctmc.get_steady_state()
 
-        # self.__ctmc.compute_transition_rate_old()
-        # self.__ctmc_steady_state = self.__ctmc.get_steady_state_old()
-
         self.__ct_ctmc_generated = True
 
         return True
@@ -506,15 +503,14 @@ class GSPN(object):
             raise Exception(
                 'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
 
-        prob_evo = []
-        for time_interval in np.arange(0, period, step):
-            prob_all_states = self.__ctmc.get_prob_reach_states(initial_states_prob, time_interval)
-            prob_evo.append(prob_all_states[state])
-            # self.__ctmc.compute_transition_probability(step)
-            # print(np.array(self.__ctmc.transition_probability))
-            # prob_evo.append()
+        time_series = np.arange(0, period, step)
+        prob_evo = np.zeros(len(time_series))
 
-        return list(prob_evo)
+        for i, time_interval in enumerate(time_series):
+            prob_all_states = self.__ctmc.get_prob_reach_states(initial_states_prob, time_interval)
+            prob_evo[i] = prob_all_states.loc[state]
+
+        return prob_evo.copy()
 
     # def mean_wait_time(self, place):
     #     if not self.__ct_ctmc_generated:
@@ -552,24 +548,6 @@ class GSPN(object):
         sum = 0
         for transition in set_output_transitions:
             sum = sum + self.transition_throughput_rate(transition)
-
-        return self.expected_number_of_tokens(place) / sum
-
-    def mean_wait_time_old(self, place):
-        if not self.__ct_ctmc_generated:
-            raise Exception(
-                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
-
-        in_tr_m, _ = self.get_arcs()
-
-        # true/false list stating if there is an input connection or not between the given place and any transition
-        idd = self.__arc_in_m.loc[place][:].values > 0
-        # list with all the output transitions of the given place
-        set_output_transitions = list(self.__arc_in_m.columns[idd].values)
-
-        sum = 0
-        for transition in set_output_transitions:
-            sum = sum + self.transition_throughput_rate_old(transition)
 
         return self.expected_number_of_tokens(place) / sum
 
