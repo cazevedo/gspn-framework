@@ -238,41 +238,36 @@ def random_switch_tune(save_path, draw=False):
     if draw:
         drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
 
-    list_probs = np.arange(0.1, 1.0, 0.1)
-    visitors_rates = np.arange(0.1, 20, 0.5)
-    robot_speeds = np.arange(0.1, 20, 0.5)
+    list_probs = np.arange(0.1, 1.0, 0.4)
+    visitors_rates = np.arange(0.1, 10, 1)
+    robot_speeds = np.arange(0.1, 10, 1)
     mean_wait_time = []
 
-    plot_visitors = []
-    plot_r_speeds = []
-    plot_list_probs = []
-
     for it in tqdm(range(len(list_probs))):
+        mean_wait_time.append( np.zeros((len(visitors_rates), len(robot_speeds))) )
+
         prob_R1 = list_probs[it]
         prob_R2 = 1 - prob_R1
 
-        mypn.add_transitions(['T6', 'T12'], tclass=['imm', 'imm'], trate=[prob_R1, prob_R2])
+        mypn.add_transitions(['T6', 'T12'], tclass=['exp', 'exp'], trate=[prob_R1, prob_R2])
 
-        for visitor_r in visitors_rates:
+        for row_i, visitor_r in enumerate(visitors_rates):
             mypn.add_transitions(['T13'], tclass=['exp'], trate=[visitor_r])
 
-            for r1_speed in robot_speeds:
-                mypn.add_transitions(['T1'], tclass=['exp'], trate=[r1_speed])
+            for column_i, r1_speed in enumerate(robot_speeds):
+                mypn.add_transitions(['T7'], tclass=['exp'], trate=[r1_speed])
 
                 mypn.init_analysis()
 
                 mwt = mypn.mean_wait_time('p.AppointmentRequest')
                 mwt = mwt.iloc[0]
-                mean_wait_time.append(mwt)
-                plot_visitors.append(visitor_r)
-                plot_list_probs.append(prob_R1)
-                plot_r_speeds.append(r1_speed)
+                mean_wait_time[it][row_i][column_i] = mwt
 
                 print('--------------------------------------------')
                 print('R1 Prob: ', prob_R1, ' R2 Prob: ', prob_R2)
                 print('Mean Wait Time: ', mwt)
 
-    pickle.dump((plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time), open(save_path+"mean_wait_time.p", "wb" ))
+    pickle.dump((visitors_rates, robot_speeds, list_probs, mean_wait_time), open(save_path+"mean_wait_time.p", "wb" ))
 
 def plot_random_switch_tune(save_path):
     '''
@@ -281,51 +276,43 @@ def plot_random_switch_tune(save_path):
 
     print('\n\n---- Plotting random switch data ----')
 
-    print('Plotting Random Switch Tune...')
+    (visitors_rates, robot_speeds, list_probs, mean_wait_time) = pickle.load(open(save_path+"mean_wait_time.p", "rb"))
 
-    (plot_r_speeds, plot_visitors, plot_list_probs, mean_wait_time) = pickle.load(open(save_path+"mean_wait_time.p", "rb"))
+    nsubplots = len(list_probs)
 
-    nsubplots = 9 # should be len(list_probs)
-    print(np.shape(plot_r_speeds))
-    print(np.shape(mean_wait_time))
-    plot_r_speeds = np.split(np.array(plot_r_speeds), nsubplots)
-    plot_visitors = np.split(np.array(plot_visitors), nsubplots)
-    plot_list_probs = np.split(np.array(plot_list_probs), nsubplots)
-    mean_wait_time = np.split(np.array(mean_wait_time), nsubplots)
-
-    # plot data
     sns.set()
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
     for index in range(nsubplots):
         print('Getting mesh grid...')
-        X, Y = np.meshgrid(plot_r_speeds[index], plot_visitors[index])
-        Z = np.outer(mean_wait_time[index].T, mean_wait_time[index])
 
-        color_dimension = Z # change to desired fourth dimension
+        X, Y = np.meshgrid(robot_speeds, visitors_rates)
+
+        Z = np.ones_like(X) * list_probs[index]
+
+        F = mean_wait_time[index]
+        color_dimension = np.array(F) # change to desired fourth dimension
         minn, maxx = color_dimension.min(), color_dimension.max()
-        print(minn, maxx)
-        maxx = 0.01
         norm = colors.Normalize(minn, maxx)
         m = cm.ScalarMappable(norm=norm, cmap=cm.coolwarm)
         m.set_array([])
         fcolors = m.to_rgba(color_dimension)
 
         print('Plotting surface...', index)
-        surf = ax.plot_surface(X, Y, np.array([plot_list_probs[index]]),
-                        facecolors=fcolors, rstride=1, cstride=1,
-                        vmin=minn, vmax=maxx)
+        surf = ax.plot_surface(X, Y, Z,
+                        facecolors=fcolors, shade=False,
+                        rstride=1, cstride=1)
 
     ax.set_xlabel('R1 Escort Speed (T1)')
     ax.set_ylabel('Visitors Rate (T13)')
     ax.set_zlabel('Probability of R1 being assigned (T6)')
 
     cbar = plt.colorbar(m)
-    cbar.set_label('Visitor Mean Wait Time (p.AppointmentRequest)', rotation=270, labelpad=25)
+    cbar.set_label('Visitor Mean Wait Time \n (p.AppointmentRequest)', rotation=270, labelpad=25)
 
     # plt.show()
-    fig.savefig(save_path+'prob_select_wait_all.pdf')
+    fig.savefig(save_path+'prob_select_wait.pdf')
 
 def check_wait_time(save_path):
     '''
@@ -372,7 +359,7 @@ def check_wait_time(save_path):
     n_robots.append(1)
     mean_wt.append(mwt)
 
-    n_extra_robots = 10
+    n_extra_robots = 4
     for robot_i in tqdm(range(n_extra_robots)):
         new_tr = {k + str(robot_i): v for k, v in base_tr.items()}
         new_pl = {k + str(robot_i): v for k, v in base_pl.items()}
@@ -409,6 +396,15 @@ def plot_check_wait_time(save_path):
     print('\n\n---- Plotting mean wait time as a function of number of robots data ----')
 
     (n_robots, mean_wt) = pickle.load(open(save_path+"wait_n_robots.p", "rb"))
+
+    # n_robots = [1,2,3,4,5,6,7]
+    # mean_wt = [1.4084022038567503,
+    #            0.6577021777334127,
+    #            0.40774902102982863,
+    #            0.28301730812930426,
+    #            0.20840737442629714,
+    #            0.1588914057248218,
+    #            0.12374869549075418]
 
     sns.set()
     fig = plt.figure()
