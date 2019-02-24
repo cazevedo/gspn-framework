@@ -124,6 +124,7 @@ class GSPN(object):
         arc_out_m -> Pandas DataFrame where the columns hold the place names and the index the transition names
         Each element of the DataFrame preserves the information regarding if there is a connecting arc (value equal to 1)
         or if there is no connecting arc (value equal to 0)
+        teste
         """
 
         # store existing arc dataframes
