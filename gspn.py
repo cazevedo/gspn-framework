@@ -56,15 +56,15 @@ class GSPN(object):
         return self.__places.copy()
 
     def add_transitions(self, tname, tclass=None, trate=None):
-        """
-        Input
-        tname: list of strings, denoting the name of the transition
-        tclass: list of strings, indicating if the corresponding transition is either immediate ('imm') or exponential ('exp')
-        trate: list of floats, representing a static firing rate in an exponential transition and
-                a static (non marking dependent) weight in a immediate transition
-        Output
-        dictionary of transitions
-        """
+        '''
+        Adds new transitions to the existing ones in the GSPN object. Replaces the ones with the same name.
+
+        :param tname: (list str) denoting the name of the transition
+        :param tclass: (list str) indicating if the corresponding transition is either immediate ('imm') or exponential ('exp')
+        :param trate: (list float) representing a static firing rate in an exponential transition and a static (non marking dependent) weight in a immediate transition
+        :return: (dict) all the transitions of the GSPN object
+        '''
+
         if tclass is None:
             tclass = []
         else:
@@ -100,11 +100,7 @@ class GSPN(object):
         return True
 
     def add_arcs(self, arc_in, arc_out):
-        """
-        Input:
-        arc_in -> dictionary mapping the arc connections from places to transitions
-        arc_out -> dictionary mapping the arc connections from transitions to places
-
+        '''
         example:
         arc_in = {}
         arc_in['p1'] = ['t1']
@@ -119,13 +115,14 @@ class GSPN(object):
         arc_out['t3'] = ['p4']
         arc_out['t4'] = ['p3', 'p5']
 
-        Output:
+        :param arc_in: (dict) mapping the arc connections from places to transitions
+        :param arc_out: (dict) mapping the arc connections from transitions to places
+        :return: (pandas DataFrame, pandas DataFrame)
         arc_in_m -> Pandas DataFrame where the columns hold the transition names and the index the place names
         arc_out_m -> Pandas DataFrame where the columns hold the place names and the index the transition names
         Each element of the DataFrame preserves the information regarding if there is a connecting arc (value equal to 1)
         or if there is no connecting arc (value equal to 0)
-        teste
-        """
+        '''
 
         # store existing arc dataframes
         old_arc_in, old_arc_out = self.__arc_in_m, self.__arc_out_m
@@ -253,7 +250,7 @@ class GSPN(object):
 
     def get_enabled_transitions(self):
         """
-        returns a dictionary with the enabled transitions and the corresponding set of input places
+        :return: (dict) with the enabled transitions and the corresponding set of input places
         """
         enabled_exp_transitions = {}
         random_switch = {}
@@ -301,8 +298,6 @@ class GSPN(object):
         return True
 
     def simulate(self, nsteps=1, reporting_step=1, simulate_wait=False):
-        """
-        """
         markings = []
         for step in range(nsteps):
             if step % reporting_step == 0:
@@ -398,7 +393,7 @@ class GSPN(object):
         '''
         Checks the liveness of a GSPN. If the GSPN is live means that is deadlock free and therefore is able
         to fire some transition no matter what marking has been reached.
-        :return: True if is deadlock free and False otherwise.
+        :return: (bool) True if is deadlock free and False otherwise.
         '''
         if not self.__ct_ctmc_generated:
             raise Exception('Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
@@ -569,7 +564,7 @@ class GSPN(object):
         Use maximum likelihood to iteratively estimate the lambda parameter of the exponential distribution that models the inputed transition
         :param transiton: (string) id of the transition that will be updated
         :param sample: (float) sample obtained from a exponential distribution
-        :return: the estimated lambda parameter
+        :return: (float) the estimated lambda parameter
         '''
         self.__nsamples[transiton] = self.__nsamples + 1
         self.__sum_samples[transiton] = self.__sum_samples[transiton] + sample
