@@ -90,10 +90,10 @@ class GSPNtools(object):
 
         return list_gspn
 
-    @staticmethod
-    def export_pnml(gspn):
-        # TODO: EXPORT PNML FROM GSPN
-        return True
+    # @staticmethod
+    # def export_pnml(gspn, path):
+    #     # TODO: EXPORT PNML FROM GSPN
+    #     return True
 
     @staticmethod
     def draw_enabled_transitions(gspn, gspn_draw, file='gspn_default', show=True):
