@@ -394,6 +394,18 @@ class GSPN(object):
 
         return True
 
+    def liveness(self):
+        '''
+        Checks the liveness of a GSPN. If the GSPN is live means that is deadlock free and therefore is able
+        to fire some transition no matter what marking has been reached.
+        :return: True if is deadlock free and False otherwise.
+        '''
+        if not self.__ct_ctmc_generated:
+            raise Exception('Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+
+        return self.__ct_tree.deadlock_free
+
+
     def transition_throughput_rate(self, transition):
         '''
         The throughput of an exponential transition tj is computed by considering its firing rate over the probability

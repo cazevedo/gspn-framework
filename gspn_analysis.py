@@ -15,8 +15,11 @@ class CoverabilityTree(object):
         self.__gspn = gspn
         self.nodes = {}
         self.edges = []
+        self.deadlock_free = None
 
     def generate(self):
+        self.deadlock_free = True
+
         # obtain the enabled transitions for the initial marking
         exp_transitions_en, immediate_transitions_en = self.__gspn.get_enabled_transitions()
 
@@ -27,6 +30,7 @@ class CoverabilityTree(object):
             marking_type = 'T'  # tangible marking
         else:
             marking_type = 'D'  # deadlock and tangible marking
+            self.deadlock_free = False
             # print('NO transitions enabled : deadlock and tangible')
 
         current_marking_dict = self.__gspn.get_initial_marking()
