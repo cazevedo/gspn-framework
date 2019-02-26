@@ -251,6 +251,34 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
+    def get_connected_arcs(self,place):
+        """
+        Returns two dictionaries of input and output transitions that define the arcs connected to the place used as input
+        """
+        arcs_in = {}
+        for transition in self.__arc_in_m.column:
+            if self.__arc_in_m.loc[place][transition] > 0:
+                if place in arcs_in:
+                    arcs_in[place].append(transition)
+                else:
+                    arcs_in[place] = [transition]
+
+        arcs_out = {}
+        for transition in self.__arc_out_m.index:
+            if self.__arc_out_m.loc[transition][place] > 0:
+                if transition in arcs_out:
+                    arcs_out[transition].append(place)
+                else:
+                    arcs_out[transition] = [place]
+
+        return arcs_in, arcs_out
+
+    def remove_place(self,place):
+
+
+
+
+
     def get_enabled_transitions(self):
         """
         returns a dictionary with the enabled transitions and the corresponding set of input places
