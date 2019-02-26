@@ -274,10 +274,16 @@ class GSPN(object):
         return arcs_in, arcs_out
 
     def remove_place(self,place):
+        """"
+        Removes a place, and returns the arcs that were connected to the place (also deleted from the panda Dataframe)
+        input -> name of place to be deleted as a string
+        """
+        arcs_in, arcs_out = self.get_connected_arcs(place)
+        self.__arc_in_m.drop(index=place, inplace=True)
+        self.__arc_out_m.drop(columns=place, inplace=True)
+        self.__places.pop(place)
 
-
-
-
+        return arcs_in, arcs_out
 
     def get_enabled_transitions(self):
         """
