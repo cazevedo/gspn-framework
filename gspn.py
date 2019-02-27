@@ -257,7 +257,7 @@ class GSPN(object):
 
         if type == 'place':
             arcs_in = {}
-            for transition in self.__arc_in_m.column:
+            for transition in self.__arc_in_m.columns:
                 if self.__arc_in_m.loc[name][transition] > 0:
                     if name in arcs_in:
                         arcs_in[name].append(transition)
@@ -275,19 +275,19 @@ class GSPN(object):
         if type == 'transition':
             arcs_in = {}
             for place in self.__arc_in_m.index:
-                if self.__arc_in_m.loc[name][place] > 0:
-                    if name in arcs_in:
-                        arcs_in[name].append(place)
+                if self.__arc_in_m.loc[place][name] > 0:
+                    if place in arcs_in:
+                        arcs_in[place].append(name)
                     else:
-                        arcs_in[name] = [place]
+                        arcs_in[place] = [name]
 
             arcs_out = {}
-            for place in self.__arc_out_m.column:
-                if self.__arc_out_m.loc[place][name] > 0:
-                    if place in arcs_out:
-                        arcs_out[place].append(name)
+            for place in self.__arc_out_m.columns:
+                if self.__arc_out_m.loc[name][place] > 0:
+                    if name in arcs_out:
+                        arcs_out[name].append(place)
                     else:
-                        arcs_out[place] = [name]
+                        arcs_out[name] = [place]
 
 
         return arcs_in, arcs_out
