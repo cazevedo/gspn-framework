@@ -5,7 +5,7 @@ import gspn_tools
 import pandas as pd
 
 
-# TODO : add methods to remove arcs, places and transitions (removing places and trans should remove the corresponding input and output arcs as well)
+# TODO : add methods to remove arcs
 # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
 class GSPN(object):
     """
@@ -245,6 +245,73 @@ class GSPN(object):
                         arcs_out[transition].append(place)
                     else:
                         arcs_out[transition] = [place]
+
+        return arcs_in, arcs_out
+
+    def get_connected_arcs(self, name, type):
+        """
+        Returns two dictionaries of input and output transitions that define the arcs connected to the place/transition to be deleted
+        """
+        if type!='transition' and type!='place':
+            raise NameError
+
+        if type == 'place':
+            arcs_in = {}
+            for transition in self.__arc_in_m.columns:
+                if self.__arc_in_m.loc[name][transition] > 0:
+                    if name in arcs_in:
+                        arcs_in[name].append(transition)
+                    else:
+                        arcs_in[name] = [transition]
+
+            arcs_out = {}
+            for transition in self.__arc_out_m.index:
+                if self.__arc_out_m.loc[transition][name] > 0:
+                    if transition in arcs_out:
+                        arcs_out[transition].append(name)
+                    else:
+                        arcs_out[transition] = [name]
+
+        if type == 'transition':
+            arcs_in = {}
+            for place in self.__arc_in_m.index:
+                if self.__arc_in_m.loc[place][name] > 0:
+                    if place in arcs_in:
+                        arcs_in[place].append(name)
+                    else:
+                        arcs_in[place] = [name]
+
+            arcs_out = {}
+            for place in self.__arc_out_m.columns:
+                if self.__arc_out_m.loc[name][place] > 0:
+                    if name in arcs_out:
+                        arcs_out[name].append(place)
+                    else:
+                        arcs_out[name] = [place]
+
+
+        return arcs_in, arcs_out
+
+    def remove_place(self,place):
+        """"
+        Removes a place, and returns the arcs that were connected to the place (also deleted from the panda Dataframe)
+        input -> name of place to be deleted as a string
+        """
+        arcs_in, arcs_out = self.get_connected_arcs(place,'place')
+        self.__arc_in_m.drop(index=place, inplace=True)
+        self.__arc_out_m.drop(columns=place, inplace=True)
+        self.__places.pop(place)
+
+        return arcs_in, arcs_out
+
+    def remove_transition(self,transition):
+        """
+
+        """
+        arcs_in, arcs_out = self.get_connected_arcs(transition,'transition')
+        self.__arc_in_m.drop(columns=transition, inplace=True)
+        self.__arc_out_m.drop(index=transition, inplace=True)
+        self.__transitions.pop(transition)
 
         return arcs_in, arcs_out
 
