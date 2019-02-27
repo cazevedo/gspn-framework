@@ -248,25 +248,47 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
-    def get_connected_arcs(self,place):
+    def get_connected_arcs(self, name, type):
         """
-        Returns two dictionaries of input and output transitions that define the arcs connected to the place used as input
+        Returns two dictionaries of input and output transitions that define the arcs connected to the place/transition to be deleted
         """
-        arcs_in = {}
-        for transition in self.__arc_in_m.column:
-            if self.__arc_in_m.loc[place][transition] > 0:
-                if place in arcs_in:
-                    arcs_in[place].append(transition)
-                else:
-                    arcs_in[place] = [transition]
+        if type!='transition' and type!='place':
+            raise NameError
 
-        arcs_out = {}
-        for transition in self.__arc_out_m.index:
-            if self.__arc_out_m.loc[transition][place] > 0:
-                if transition in arcs_out:
-                    arcs_out[transition].append(place)
-                else:
-                    arcs_out[transition] = [place]
+        if type == 'place':
+            arcs_in = {}
+            for transition in self.__arc_in_m.column:
+                if self.__arc_in_m.loc[name][transition] > 0:
+                    if name in arcs_in:
+                        arcs_in[name].append(transition)
+                    else:
+                        arcs_in[name] = [transition]
+
+            arcs_out = {}
+            for transition in self.__arc_out_m.index:
+                if self.__arc_out_m.loc[transition][name] > 0:
+                    if transition in arcs_out:
+                        arcs_out[transition].append(name)
+                    else:
+                        arcs_out[transition] = [name]
+
+        if type == 'transition':
+            arcs_in = {}
+            for place in self.__arc_in_m.index:
+                if self.__arc_in_m.loc[name][place] > 0:
+                    if name in arcs_in:
+                        arcs_in[name].append(place)
+                    else:
+                        arcs_in[name] = [place]
+
+            arcs_out = {}
+            for place in self.__arc_out_m.column:
+                if self.__arc_out_m.loc[place][name] > 0:
+                    if place in arcs_out:
+                        arcs_out[place].append(name)
+                    else:
+                        arcs_out[place] = [name]
+
 
         return arcs_in, arcs_out
 
@@ -275,10 +297,21 @@ class GSPN(object):
         Removes a place, and returns the arcs that were connected to the place (also deleted from the panda Dataframe)
         input -> name of place to be deleted as a string
         """
-        arcs_in, arcs_out = self.get_connected_arcs(place)
+        arcs_in, arcs_out = self.get_connected_arcs(place,'place')
         self.__arc_in_m.drop(index=place, inplace=True)
         self.__arc_out_m.drop(columns=place, inplace=True)
         self.__places.pop(place)
+
+        return arcs_in, arcs_out
+
+    def remove_transition(self,transition):
+        """
+
+        """
+        arcs_in, arcs_out = self.get_connected_arcs(transition,'transition')
+        self.__arc_in_m.drop(columns=transition, inplace=True)
+        self.__arc_out_m.drop(index=transition, inplace=True)
+        self.__transitions.pop(transition)
 
         return arcs_in, arcs_out
 
