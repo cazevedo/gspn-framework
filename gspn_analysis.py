@@ -15,8 +15,11 @@ class CoverabilityTree(object):
         self.__gspn = gspn
         self.nodes = {}
         self.edges = []
+        self.deadlock_free = None
 
     def generate(self):
+        self.deadlock_free = True
+
         # obtain the enabled transitions for the initial marking
         exp_transitions_en, immediate_transitions_en = self.__gspn.get_enabled_transitions()
 
@@ -27,6 +30,7 @@ class CoverabilityTree(object):
             marking_type = 'T'  # tangible marking
         else:
             marking_type = 'D'  # deadlock and tangible marking
+            self.deadlock_free = False
             # print('NO transitions enabled : deadlock and tangible')
 
         current_marking_dict = self.__gspn.get_initial_marking()
@@ -208,7 +212,7 @@ class CTMC(object):
         """
         Coverts a reachability graph into a continuous time markov chain.
         Populates the state and transition attributes with the information provided by the inputed reachability graph
-        :return: True if successful
+        :return: (bool) True if successful
         """
         for marking_id, marking_info in self.state.items():
             if marking_id != 'M0':
@@ -330,7 +334,7 @@ class CTMC(object):
         Computes the transition rate matrix, also called, infinitesimal generator Q.
         Where Qij is the rate of going from state i to state j at time t,
         and Qii represents the rate of leaving state i at time t.
-        :return: True or False depending if it was successful or not
+        :return: (bool) True or False depending if it was successful or not
         """
         if self.__generated:
             states_id = self.state.keys()
@@ -391,8 +395,8 @@ class CTMC(object):
         The transition probability matrix (H(t)) is computed from the infinitesimal generator (Q) through the formula:
         H(t) = exp(Q*t), using Pade approximation to solve it
         The computed transition probability can be accessed through the CTMC attribute transition_probability.
-        :param time_interval: time units that have elapsed from now
-        :return: True if it was successful, raises an exception otherwise
+        :param time_interval: (float) time units that have elapsed from now
+        :return: (bool) True if it was successful, raises an exception otherwise
         """
         if time_interval < 0:
             raise Exception('Time interval must be greater or equal to zero.')
@@ -416,8 +420,9 @@ class CTMC(object):
         The transition probability matrix (H(t)) is computed from the infinitesimal generator (Q) through the formula:
         H(t) = exp(Q*t), by approximating it to H(t) ~= (1+Q*t/large_n)^large_n
         The computed transition probability can be accessed through the CTMC attribute transition_probability.
-        :param time_interval: time units that have elapsed from now
-        :return: True if it was successful
+        :param time_interval: (float) time units that have elapsed from now
+        :param precision: (int) number of decimal places
+        :return: (bool) True if it was successful
         """
         if time_interval < 0:
             raise Exception('Time interval must be greater or equal to zero.')
@@ -457,8 +462,8 @@ class CTMC(object):
         Computes the probability of reaching all states after a certain amount of time have elapsed.
         :param initial_states_prob: pandas DataFrame where each row is a state and the value corresponds to the probability
         of initially being in that state. Can also be interpreted as the probability mass function of the random variable X at the beginning of time.
-        :param time_interval: float representing the time elapsed after the inputed initial state.
-        :return: pandas DataFrame where each row is a different state and the value of that row corresponds to the probability
+        :param time_interval: (float) representing the time elapsed after the inputed initial state.
+        :return: (pandas DataFrame) where each row is a different state and the value of that row corresponds to the probability
         of reaching that state after the inputed time has elapsed.
         '''
 
@@ -472,7 +477,7 @@ class CTMC(object):
         '''
         Computes the steady-state probability distribution PI by solving the linear system: PI*Q = 0, sum(PI_j) = 1
         Where PI_j is the probability of reaching the state j and PI = [PI_0, PI_1, ...]
-        :return: pandas DataFrame where each row represents a different state and the value of that row corresponds to
+        :return: (pandas DataFrame) where each row represents a different state and the value of that row corresponds to
         the steady-state probability of that state
         '''
 
@@ -495,7 +500,7 @@ class CTMC(object):
         '''
         Computes the steady-state probability distribution PI by iteratively increasing the time interval t until PI(t) converges.
         Where PI_j is the probability of reaching the state j and PI = [PI_0, PI_1, ...]
-        :return: pandas DataFrame where each row represents a different state and the value of that row corresponds to
+        :return: (pandas DataFrame) where each row represents a different state and the value of that row corresponds to
         the steady-state probability of that state
         '''
 

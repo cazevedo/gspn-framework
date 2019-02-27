@@ -12,55 +12,77 @@ class GSPNtools(object):
         root = tree.getroot()
 
         for petrinet in root.iter('net'):
+            n_places = len(list(petrinet.iter('place')))
+            place_name = ['']*n_places
+            place_marking = [0]*n_places
+            id2place = {}
 
-            place_name = []
-            place_marking = []
-            for pl in petrinet.iter('place'):  # iterate over all places of the petri net
-                place_name.append(pl.get('id'))  # get place name encoded as 'id' in the pnml structure
+            # iterate over all places of the petri net
+            for i, pl in enumerate(petrinet.iter('place')):
+                # get place name encoded as 'id' in the pnml structure
+                place_name[i] = pl.find('./name/value').text
 
                 text = pl.find('./initialMarking/value').text
-                place_marking.append(int(text.split(',')[-1]))  # get place marking encoded inside 'initalMarking', as the 'text' of the key 'value'
+                # get place marking encoded inside 'initalMarking', as the 'text' of the key 'value'
+                place_marking[i] = int(text.split(',')[-1])
 
-            gspn.add_places(place_name, place_marking, True)  # add the compiled list of places to the gspn object
+                id2place[pl.get('id')] = place_name[i]
 
-            transition_name = []
-            transition_type = []
-            transition_rate = []
-            for tr in petrinet.iter('transition'):  # iterate over all transitions of the petri net
-                transition_name.append(tr.get('id'))  # get transition name encoded as 'id' in the pnml structure
+            # add the list of places to the gspn object
+            gspn.add_places(list(place_name), place_marking, True)
 
-                if tr.find('./timed/value').text == 'true':  # get the transition type either exponential ('exp') or immediate ('imm')
-                    transition_type.append('exp')
+            n_transitions = len(list(petrinet.iter('transition')))
+            transition_name = ['']*n_transitions
+            transition_type = ['']*n_transitions
+            transition_rate = [0]*n_transitions
+            id2transition= {}
+
+            # iterate over all transitions of the petri net
+            for i, tr in enumerate(petrinet.iter('transition')):
+                # get transition name encoded as 'id' in the pnml structure
+                transition_name[i] = tr.find('./name/value').text
+
+                # get the transition type either exponential ('exp') or immediate ('imm')
+                if tr.find('./timed/value').text == 'true':
+                    transition_type[i] = 'exp'
                 else:
-                    transition_type.append('imm')
+                    transition_type[i] = 'imm'
 
-                transition_rate.append(float(tr.find('./rate/value').text))  # get the transition fire rate or weight
+                # get the transition fire rate or weight
+                transition_rate[i] = float(tr.find('./rate/value').text)
 
-            gspn.add_transitions(transition_name, transition_type, transition_rate)  # add the compiled list of transitions to the gspn object
+                id2transition[tr.get('id')] = transition_name[i]
 
-            place_name = gspn.get_current_marking()
-            place_name = place_name.keys()
-            transition_name = gspn.get_transitions()
-            transition_name = transition_name.keys()
+            # add the list of transitions to the gspn object
+            gspn.add_transitions(list(transition_name), transition_type, transition_rate)
 
             arcs_in = {}
             arcs_out = {}
 
-            for arc in petrinet.iter('arc'):  # iterate over all arcs of the petri net
-                src = arc.get('source')
-                trg = arc.get('target')
+            # iterate over all arcs of the petri net
+            for arc in petrinet.iter('arc'):
+                source = arc.get('source')
+                target = arc.get('target')
 
-                if src in place_name:  # IN arc connection (from place to transition)
-                    if src in arcs_in:
-                        arcs_in[src].append(trg)
-                    else:
-                        arcs_in[src] = [trg]
+                # IN arc connection (from place to transition)
+                if source in id2place:
+                    pl = id2place[source]
+                    tr = id2transition[target]
 
-                elif src in transition_name:  # OUT arc connection (from transition to place)
-                    if src in arcs_out:
-                        arcs_out[src].append(trg)
+                    if pl in arcs_in:
+                        arcs_in[pl].append(tr)
                     else:
-                        arcs_out[src] = [trg]
+                        arcs_in[pl] = [tr]
+
+                # OUT arc connection (from transition to place)
+                elif source in id2transition:
+                    tr = id2transition[source]
+                    pl = id2place[target]
+
+                    if tr in arcs_out:
+                        arcs_out[tr].append(pl)
+                    else:
+                        arcs_out[tr] = [pl]
 
             gspn.add_arcs(arcs_in, arcs_out)
 
@@ -68,10 +90,10 @@ class GSPNtools(object):
 
         return list_gspn
 
-    @staticmethod
-    def export_pnml(gspn):
-        # TODO: EXPORT PNML FROM GSPN
-        return True
+    # @staticmethod
+    # def export_pnml(gspn, path):
+    #     # TODO: EXPORT PNML FROM GSPN
+    #     return True
 
     @staticmethod
     def draw_enabled_transitions(gspn, gspn_draw, file='gspn_default', show=True):
