@@ -1,4 +1,5 @@
 import gspn as pn
+import gspn_tools as tools
 
 myPN = pn.GSPN()
 
@@ -26,10 +27,8 @@ arcs_in , arcs_out = myPN.get_arcs()
 print('Arcs IN: ' , arcs_in, '\n')
 print('Arcs OUT: ' , arcs_out, '\n')
 
-myPN.remove_transition('t3')
+pntools = tools.GSPNtools()
+drawing = pntools.draw_gspn(myPN,'Testing')
 
-print('Places: ' , myPN.get_current_marking(), '\n')
-print('Trans: ' , myPN.get_transitions(), '\n')
-arcs_in , arcs_out = myPN.get_arcs()
-print('Arcs IN: ' , arcs_in, '\n')
-print('Arcs OUT: ' , arcs_out, '\n')
+myPN.remove_place('p4')
+drawing = pntools.draw_gspn(myPN,'Testing_1')

@@ -5,7 +5,7 @@ import gspn_tools
 import pandas as pd
 
 
-# TODO : add methods to remove arcs and transitions (removing places and trans should remove the corresponding input and output arcs as well)
+# TODO : add methods to remove arcs
 # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
 class GSPN(object):
     """
