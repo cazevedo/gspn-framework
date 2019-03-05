@@ -205,6 +205,16 @@ class GSPNtools(object):
 
         return ctmc_draw
 
+
+    @staticmethod
+    def expand_pn(parent,child):
+        '''
+        Function
+        :param parent:
+        :param child:
+        :return:
+        '''
+
 if __name__ == "__main__":
     import time
     pntools = GSPNtools()

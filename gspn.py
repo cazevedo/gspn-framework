@@ -5,7 +5,6 @@ import gspn_tools
 import pandas as pd
 
 
-# TODO : add methods to remove arcs
 # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
 class GSPN(object):
     """
@@ -249,9 +248,13 @@ class GSPN(object):
         return arcs_in, arcs_out
 
     def get_connected_arcs(self, name, type):
-        """
-        Returns two dictionaries of input and output transitions that define the arcs connected to the place/transition to be deleted
-        """
+        '''
+        Returns input and output arcs connected to a given element (place/transition) of the Petri Net
+        :param name: (str) Name of the element
+        :param type: (str) Either 'place' or 'transition' to indicate if the input is a place or a transition
+        :return: (dict, dict) Dictionaries of input and output arcs connected to the input element
+        '''
+
         if type!='transition' and type!='place':
             raise NameError
 
@@ -293,10 +296,11 @@ class GSPN(object):
         return arcs_in, arcs_out
 
     def remove_place(self,place):
-        """"
-        Removes a place, and returns the arcs that were connected to the place (also deleted from the panda Dataframe)
-        input -> name of place to be deleted as a string
-        """
+        '''
+        Method that removes PLACE from Petri Net, with corresponding connected input and output arcs
+        :param (str) Name of the place to be removed
+        :return: (dict)(dict) Dictionaries containing input and output arcs connected to the removed place
+        '''
         arcs_in, arcs_out = self.get_connected_arcs(place,'place')
         self.__arc_in_m.drop(index=place, inplace=True)
         self.__arc_out_m.drop(columns=place, inplace=True)
@@ -305,15 +309,42 @@ class GSPN(object):
         return arcs_in, arcs_out
 
     def remove_transition(self,transition):
-        """
-
-        """
+        '''
+        Method that removes TRANSITION from Petri Net, with corresponding input and output arcs
+        :param transition:(str) Name of the transition to be removed
+        :return: (dict)(dict) Dictionaries containing input and output arcs connected to the removed transition
+        '''
         arcs_in, arcs_out = self.get_connected_arcs(transition,'transition')
         self.__arc_in_m.drop(columns=transition, inplace=True)
         self.__arc_out_m.drop(index=transition, inplace=True)
         self.__transitions.pop(transition)
 
         return arcs_in, arcs_out
+
+    def remove_arc(self,arcs_in = None, arcs_out = None):
+        '''
+        Method that removes ARCS from Petri Net.
+        :param arcs_in: (dict) Dictionary containing all input arcs to be deleted: e.g.  arcs_in[p1]=['t1','t2'], arcs_in[p2]=['t1','t3']
+        :param arcs_out: (dict) Dictionary containing output arcs to be deleted: e.g. arcs_out[t1]=['p1','p2'], arcs_out[t2]=['p1','p3']
+        :return:
+        '''
+        #TODO 'Blindar' para caso de tentar apagar arco que não existe
+
+        if arcs_in == None and arcs_out == None:
+            return False
+
+
+        if arcs_in!=None:
+            for place in arcs_in.keys():
+                for transition in arcs_in[place]:
+                    self.__arc_in_m.loc[place][transition] = 0
+
+        if arcs_out!=None:
+            for transition in arcs_out.keys():
+                for place in arcs_out[transition]:
+                    self.__arc_out_m.loc[transition][place] = 0
+
+        return True
 
     def get_enabled_transitions(self):
         """
