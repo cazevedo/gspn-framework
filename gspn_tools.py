@@ -207,13 +207,30 @@ class GSPNtools(object):
 
 
     @staticmethod
-    def expand_pn(parent,child):
+    def expand_pn(parent, child, sym_place):
         '''
-        Function
-        :param parent:
-        :param child:
-        :return:
+        Function that substitutes a place in the parent GSPN with the child GSPN.
+        :param parent: A GSPN object, containing a place with the sym_place name, that will be expanded
+        :param child: A GSPN object where the input places start with an 'i.' and the output places start with an 'f.'
+        :param sym_place: (str) Name of the place to be expanded
+        :return: a GSPN object with the expanded Petri net
         '''
+
+        child_places = child.get_current_marking()
+        input_places = {}
+        output_places = {}
+
+        for place in child_places.keys():
+            if place.startswith('i.') is True:
+                temp = place.replace('i.','')
+                input_places[temp] = child_places[place]
+
+            if place.startswith('f.') is True:
+                temp = place.replace('f.','')
+                output_places[temp] = child_places[place]
+
+
+
 
 if __name__ == "__main__":
     import time
