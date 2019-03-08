@@ -1,4 +1,5 @@
 import gspn as pn
+import pandas as pd
 import xml.etree.ElementTree as et  # XML parser
 from graphviz import Digraph
 
@@ -215,19 +216,58 @@ class GSPNtools(object):
         :param sym_place: (str) Name of the place to be expanded
         :return: a GSPN object with the expanded Petri net
         '''
+        #TODO Make sure that there are no coinciding place and transition names in the parent and child nets
+
+        parent_places = parent.get_current_marking()
+        parent_transitions = parent.get_transitions()
 
         child_places = child.get_current_marking()
+        child_transitions = child.get_transitions()
+
         input_places = {}
         output_places = {}
 
+        expanded_pn = pn.GSPN()
+
         for place in child_places.keys():
             if place.startswith('i.') is True:
-                temp = place.replace('i.','')
-                input_places[temp] = child_places[place]
+                input_places[place] = child_places[place]
 
             if place.startswith('f.') is True:
-                temp = place.replace('f.','')
-                output_places[temp] = child_places[place]
+                output_places[place] = child_places[place]
+
+        arcs_in, arcs_out = parent.remove_place(sym_place)
+
+        expanded_pn.add_places_dict(parent_places)
+        expanded_pn.add_places_dict(child_places)
+
+        expanded_pn.add_transitions_dict(parent_transitions)
+        expanded_pn.add_transitions_dict(child_transitions)
+
+        arc_pin_m, arc_pout_m = parent.get_arcs()
+        arc_cin_m, arc_cout_m = child.get_arcs()
+
+        arc_in_m = pd.concat([arc_pin_m, arc_cin_m],join='outer',sort=False)
+        arc_in_m.where(arc_in_m >= 0, 0.0, inplace=True)
+
+        arc_out_m = pd.concat([arc_pout_m, arc_cout_m], join='outer',sort=False)
+        arc_out_m.where(arc_out_m >= 0, 0.0, inplace=True)
+
+        for arc in arcs_in:
+            for transition in arcs_in[arc]:
+                for place in output_places:
+                    arc_in_m.loc[place][transition] = 1
+
+        for transition in arcs_out.keys():
+            print(transition)
+            for place in input_places:
+                arc_out_m.loc[transition][place] = 1
+
+        return expanded_pn
+
+
+
+
 
 
 
