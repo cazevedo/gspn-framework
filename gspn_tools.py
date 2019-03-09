@@ -216,13 +216,26 @@ class GSPNtools(object):
         :param sym_place: (str) Name of the place to be expanded
         :return: a GSPN object with the expanded Petri net
         '''
+
         #TODO Make sure that there are no coinciding place and transition names in the parent and child nets
 
-
+        parent_places = parent.get_current_marking()
         parent_transitions = parent.get_transitions()
 
         child_places = child.get_current_marking()
         child_transitions = child.get_transitions()
+
+        parent_set = set(parent_places)
+        child_set = set(child_places)
+
+        if parent_set & child_set != False:
+            raise Exception('Parent and child PNs have places with identical names.')
+
+        parent_set = set(parent_transitions)
+        child_set = set(child_transitions)
+
+        if parent_set & child_set != False:
+            raise Exception('Parent and child PNs have places with identical names.')
 
         input_places = {}
         output_places = {}
@@ -236,10 +249,13 @@ class GSPNtools(object):
             if place.startswith('f.') is True:
                 output_places[place] = child_places[place]
 
+        sym_place_marking = parent_places[sym_place]
+
+        for place in input_places:
+            child_places[place] = sym_place_marking
+
         arcs_in, arcs_out = parent.remove_place(sym_place)
-        parent_places = parent.get_current_marking()    # Parent places have to be retrieved
-                                                        # only after removing place to be expanded
-        print(parent.get_current_marking())
+        parent_places = parent.get_current_marking()    # Parent places have to be retrieved only after removing place to be expanded
 
         expanded_pn.add_places_dict(parent_places)
         expanded_pn.add_places_dict(child_places)

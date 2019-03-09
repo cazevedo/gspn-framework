@@ -3,7 +3,7 @@ import gspn_tools as tools
 
 myPN = pn.GSPN()
 
-places = myPN.add_places(['p1', 'p2', 'p3', 'p4', 'p5', 'p6'], [0, 0, 0, 0, 0, 0])
+places = myPN.add_places(['p1', 'p2', 'p3', 'p4', 'p5', 'p6'], [1, 0, 0, 1, 0, 0])
 
 transitions = myPN.add_transitions(['t1', 't2', 't3', 't4'], ['imm', 'imm', 'imm', 'imm'], [1, 1, 1, 1])
 
@@ -23,7 +23,7 @@ a, b = myPN.add_arcs(arc_in ,arc_out)
 
 
 otherPN = pn.GSPN()
-places = otherPN.add_places(['i.p_init', 'i.p2_sub', 'p3_sub', 'p4_sub', 'f.p_fin'],[0, 0, 0, 0, 0])
+places = otherPN.add_places(['i.p_init', 'i.p2_sub', 'p3_sub', 'p4_sub', 'f.p_fin'],[0, 0, 0, 1, 0])
 transitions = otherPN.add_transitions(['t1_sub', 't2_sub'], ['imm', 'imm'], [1, 1])
 arc_in = {}
 arc_in['i.p_init'] = ['t1_sub']
