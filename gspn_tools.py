@@ -218,7 +218,7 @@ class GSPNtools(object):
         '''
         #TODO Make sure that there are no coinciding place and transition names in the parent and child nets
 
-        parent_places = parent.get_current_marking()
+
         parent_transitions = parent.get_transitions()
 
         child_places = child.get_current_marking()
@@ -237,6 +237,9 @@ class GSPNtools(object):
                 output_places[place] = child_places[place]
 
         arcs_in, arcs_out = parent.remove_place(sym_place)
+        parent_places = parent.get_current_marking()    # Parent places have to be retrieved
+                                                        # only after removing place to be expanded
+        print(parent.get_current_marking())
 
         expanded_pn.add_places_dict(parent_places)
         expanded_pn.add_places_dict(child_places)
@@ -259,9 +262,10 @@ class GSPNtools(object):
                     arc_in_m.loc[place][transition] = 1
 
         for transition in arcs_out.keys():
-            print(transition)
             for place in input_places:
                 arc_out_m.loc[transition][place] = 1
+
+        expanded_pn.add_arcs_matrices(arc_in_m, arc_out_m)
 
         return expanded_pn
 
