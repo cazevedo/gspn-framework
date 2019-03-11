@@ -217,8 +217,6 @@ class GSPNtools(object):
         :return: a GSPN object with the expanded Petri net
         '''
 
-        #TODO Make sure that there are no coinciding place and transition names in the parent and child nets
-
         parent_places = parent.get_current_marking()
         parent_transitions = parent.get_transitions()
 
@@ -235,7 +233,7 @@ class GSPNtools(object):
         child_set = set(child_transitions)
 
         if parent_set & child_set != False:
-            raise Exception('Parent and child PNs have places with identical names.')
+            raise Exception('Parent and child PNs have transitions with identical names.')
 
         input_places = {}
         output_places = {}
