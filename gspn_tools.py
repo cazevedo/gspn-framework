@@ -1,4 +1,5 @@
 import gspn as pn
+import pandas as pd
 import xml.etree.ElementTree as et  # XML parser
 from graphviz import Digraph
 
@@ -204,6 +205,92 @@ class GSPNtools(object):
         ctmc_draw.render(file + '.gv', view=show)
 
         return ctmc_draw
+
+
+    @staticmethod
+    def expand_pn(parent, child, sym_place):
+        '''
+        Function that substitutes a place in the parent GSPN with the child GSPN.
+        :param parent: A GSPN object, containing a place with the sym_place name, that will be expanded
+        :param child: A GSPN object where the input places start with an 'i.' and the output places start with an 'f.'
+        :param sym_place: (str) Name of the place to be expanded
+        :return: a GSPN object with the expanded Petri net
+        '''
+
+        #TODO Make sure that there are no coinciding place and transition names in the parent and child nets
+
+        parent_places = parent.get_current_marking()
+        parent_transitions = parent.get_transitions()
+
+        child_places = child.get_current_marking()
+        child_transitions = child.get_transitions()
+
+        parent_set = set(parent_places)
+        child_set = set(child_places)
+
+        if parent_set & child_set != False:
+            raise Exception('Parent and child PNs have places with identical names.')
+
+        parent_set = set(parent_transitions)
+        child_set = set(child_transitions)
+
+        if parent_set & child_set != False:
+            raise Exception('Parent and child PNs have places with identical names.')
+
+        input_places = {}
+        output_places = {}
+
+        expanded_pn = pn.GSPN()
+
+        for place in child_places.keys():
+            if place.startswith('i.') is True:
+                input_places[place] = child_places[place]
+
+            if place.startswith('f.') is True:
+                output_places[place] = child_places[place]
+
+        sym_place_marking = parent_places[sym_place]
+
+        for place in input_places:
+            child_places[place] = sym_place_marking
+
+        arcs_in, arcs_out = parent.remove_place(sym_place)
+        parent_places = parent.get_current_marking()    # Parent places have to be retrieved only after removing place to be expanded
+
+        expanded_pn.add_places_dict(parent_places)
+        expanded_pn.add_places_dict(child_places)
+
+        expanded_pn.add_transitions_dict(parent_transitions)
+        expanded_pn.add_transitions_dict(child_transitions)
+
+        arc_pin_m, arc_pout_m = parent.get_arcs()
+        arc_cin_m, arc_cout_m = child.get_arcs()
+
+        arc_in_m = pd.concat([arc_pin_m, arc_cin_m],join='outer',sort=False)
+        arc_in_m.where(arc_in_m >= 0, 0.0, inplace=True)
+
+        arc_out_m = pd.concat([arc_pout_m, arc_cout_m], join='outer',sort=False)
+        arc_out_m.where(arc_out_m >= 0, 0.0, inplace=True)
+
+        for arc in arcs_in:
+            for transition in arcs_in[arc]:
+                for place in output_places:
+                    arc_in_m.loc[place][transition] = 1
+
+        for transition in arcs_out.keys():
+            for place in input_places:
+                arc_out_m.loc[transition][place] = 1
+
+        expanded_pn.add_arcs_matrices(arc_in_m, arc_out_m)
+
+        return expanded_pn
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     import time
