@@ -674,6 +674,7 @@ class GSPN(object):
 
         return lb
 
+
 if __name__ == "__main__":
     # create a generalized stochastic petri net structure
     my_pn = GSPN()
@@ -698,11 +699,11 @@ if __name__ == "__main__":
     print(my_pn.get_enabled_transitions())
     a = my_pn.get_enabled_transitions()
 
-    print('Places: ' , my_pn.get_current_marking(), '\n')
-    print('Trans: ' , my_pn.get_transitions(), '\n')
-    arcs_in , arcs_out = my_pn.get_arcs()
-    print('Arcs IN: ' , arcs_in, '\n')
-    print('Arcs OUT: ' , arcs_out, '\n')
+    print('Places: ', my_pn.get_current_marking(), '\n')
+    print('Trans: ', my_pn.get_transitions(), '\n')
+    arcs_in, arcs_out = my_pn.get_arcs()
+    print('Arcs IN: ', arcs_in, '\n')
+    print('Arcs OUT: ', arcs_out, '\n')
 
     print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
 
