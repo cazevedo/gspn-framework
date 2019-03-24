@@ -217,8 +217,6 @@ class GSPNtools(object):
         :return: a GSPN object with the expanded Petri net
         '''
 
-        #TODO thread management for running action places
-        #TODO expanding action places according to rules, name the transitions appropriately
         #TODO Find out conflicting transitions, retrieve weights and sample probability
 
         parent_places = parent.get_current_marking()
@@ -285,11 +283,6 @@ class GSPNtools(object):
 
         expanded_pn.add_transitions_dict(parent_transitions)
         expanded_pn.add_transitions_dict(child_transitions)
-
-        print(input_places)
-        print(output_places)
-        print(child_places)
-        print(expanded_pn.get_current_marking())
 
         arc_in_m = pd.concat([arc_pin_m, arc_cin_m],join='outer',sort=False)
         arc_in_m.where(arc_in_m >= 0, 0.0, inplace=True)
