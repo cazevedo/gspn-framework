@@ -217,7 +217,7 @@ class GSPNtools(object):
         :return: a GSPN object with the expanded Petri net
         '''
 
-        #TODO Make sure that there are no coinciding place and transition names in the parent and child nets
+        #TODO Find out conflicting transitions, retrieve weights and sample probability
 
         parent_places = parent.get_current_marking()
         parent_transitions = parent.get_transitions()
@@ -227,15 +227,17 @@ class GSPNtools(object):
 
         parent_set = set(parent_places)
         child_set = set(child_places)
+        intersection = parent_set.intersection(child_set)
 
-        if parent_set & child_set != False:
+        if len(intersection) != 0:
             raise Exception('Parent and child PNs have places with identical names.')
 
         parent_set = set(parent_transitions)
         child_set = set(child_transitions)
+        intersection = parent_set.intersection(child_set)
 
-        if parent_set & child_set != False:
-            raise Exception('Parent and child PNs have places with identical names.')
+        if len(intersection) != 0:
+            raise Exception('Parent and child PNs have transitions with identical names.')
 
         input_places = {}
         output_places = {}
@@ -257,14 +259,30 @@ class GSPNtools(object):
         arcs_in, arcs_out = parent.remove_place(sym_place)
         parent_places = parent.get_current_marking()    # Parent places have to be retrieved only after removing place to be expanded
 
+        arc_pin_m, arc_pout_m = parent.get_arcs()
+        arc_cin_m, arc_cout_m = child.get_arcs()
+
+        for place in input_places:
+            temp = place.replace('i.', '')
+            input_places.pop(place)
+            input_places[temp] = child_places[place]
+            child_places[temp] = child_places.pop(place)
+            arc_cin_m.rename(index={place: temp}, inplace=True)
+            arc_cout_m.rename(columns={place: temp}, inplace=True)
+
+        for place in output_places:
+            temp = place.replace('f.', '')
+            output_places.pop(place)
+            output_places[temp] = child_places[place]
+            child_places[temp] = child_places.pop(place)
+            arc_cin_m.rename(index={place: temp}, inplace=True)
+            arc_cout_m.rename(columns={place: temp}, inplace=True)
+
         expanded_pn.add_places_dict(parent_places)
         expanded_pn.add_places_dict(child_places)
 
         expanded_pn.add_transitions_dict(parent_transitions)
         expanded_pn.add_transitions_dict(child_transitions)
-
-        arc_pin_m, arc_pout_m = parent.get_arcs()
-        arc_cin_m, arc_cout_m = child.get_arcs()
 
         arc_in_m = pd.concat([arc_pin_m, arc_cin_m],join='outer',sort=False)
         arc_in_m.where(arc_in_m >= 0, 0.0, inplace=True)
@@ -284,12 +302,6 @@ class GSPNtools(object):
         expanded_pn.add_arcs_matrices(arc_in_m, arc_out_m)
 
         return expanded_pn
-
-
-
-
-
-
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import gspn as pn
 import gspn_tools as tools
+import gspn_execution as exec
 
 myPN = pn.GSPN()
 
@@ -40,4 +41,20 @@ tools.GSPNtools.draw_gspn(myPN, file = 'pn1')
 tools.GSPNtools.draw_gspn(otherPN, file = 'pn2')
 '''
 expanded_pn = tools.GSPNtools.expand_pn(myPN,otherPN,'p4')
-tools.GSPNtools.draw_gspn(expanded_pn, file='expandedPN')
+# tools.GSPNtools.draw_gspn(expanded_pn, file='expandedPN')
+
+
+anotherPN = pn.GSPN()
+places = anotherPN.add_places(['p1', 'p2', 'p3'], [0, 0, 0])
+transitions = anotherPN.add_transitions(['t_only'], ['imm'], [1])
+arc_in = {}
+arc_in['p1'] = ['t_only']
+arc_out = {}
+arc_out['t_only'] = ['p2', 'p3']
+a, b = anotherPN.add_arcs(arc_in, arc_out)
+
+
+tools.GSPNtools.draw_gspn(anotherPN, file='anotherPN')
+
+exec_net = exec.GSPNexecution.make_executable(anotherPN)
+tools.GSPNtools.draw_gspn(exec_net, file='executablePN')
