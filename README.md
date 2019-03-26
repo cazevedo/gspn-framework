@@ -1,7 +1,6 @@
 # GSPN Framework
 Framework that allows the design, execution and analysis of generalized stochastic Petri nets (GSPN).
-This is a Python framework compatible with the Petri Net Markup Language (PNML) standard that enables
-quantitative (logical) and qualitative (performance) analysis of the designed GSPN providing:
+This is a Python framework compatible with the Petri Net Markup Language (PNML) standard that enables logical and performance analysis of the designed GSPN providing:
 * Reachability;
 * Boundedness;
 * Safety and deadlocks;
