@@ -1,6 +1,6 @@
 # GSPN Framework
-Framework that allows the design, execution and analysis of generalized stochastic Petri nets (GSPN).
-This is a Python framework enables logical and performance analysis of the designed GSPN providing:
+Framework that allows the design, execution and analysis of systems using generalized stochastic Petri nets (GSPN).
+This is a Python framework that enables logical and performance analysis of the designed GSPN providing:
 * Reachability;
 * Boundedness;
 * Safety and deadlocks;
