@@ -65,7 +65,7 @@ def throughput(draw=False):
     print('Expected # tokens R2 Charging')
     print(mypn.expected_number_of_tokens('t.R2Charging').iloc[0])
 
-def mean_wt_flag(save_path, draw=False):
+def mean_wt_speeds(save_path, draw=False):
     '''
     Mean wait time of place p.AppointmentRequest as a
     function of the firing rates of transitions T7 and T9.
@@ -103,17 +103,18 @@ def mean_wt_flag(save_path, draw=False):
 
         transitions = mypn.get_transitions()
 
-    print('Escort Rates: ', escort_rates)
+    print(np.shape(escort_rates))
+    print('Escort Rates: ', list(escort_rates))
+    print(np.shape(bat_trans_rates))
     print('Bat discharge rates: ', bat_trans_rates)
+    print(np.shape(mean_wait_time))
     print('Mean wait time: ', mean_wait_time)
 
     sns.set()
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-
-    X, Y = np.meshgrid(escort_rates, bat_trans_rates)
-
-    ax.plot_surface(X, Y, np.array([mean_wait_time]))
+    ax.plot3D(escort_rates, bat_trans_rates, mean_wait_time)
+    # ax.scatter3D(escort_rates, bat_trans_rates, mean_wait_time)
 
     ax.set_xlabel('T7 Firing Rate')
     ax.set_ylabel('T9 Firing Rate')
@@ -433,7 +434,7 @@ if __name__ == "__main__":
     Obtain the mean wait time of place p.AppointmentRequest as a
     function of the firing rates of transitions T7 and T9.
     '''
-    mean_wt_flag(save_path, draw=False)
+    mean_wt_speeds(save_path, draw=False)
 
     '''
     Obtain the transient evolution of the probability of the robot being
