@@ -21,7 +21,14 @@ pip install -r requirements.txt --upgrade
 ```
 
 ## Running the example
+To run an example that shows some of the analysis capabilities of the framework just run:
 ```bash
 python example_analysis.py
 ```
+
+To run an example that shows how to expand a Petri net and how to execute it just run:
+```bash
+python example_execution.py
+```
+
 Both gspn_tools.py and gspn.py have small examples that you can check by running each one of these files individually.
