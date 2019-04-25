@@ -1,6 +1,6 @@
 import gspn as pn
 import gspn_tools as tools
-import gspn_execution as exec
+import gspn_execution as pn_exec
 
 myPN = pn.GSPN()
 
@@ -20,7 +20,7 @@ arc_out['t1'] = ['p2']
 arc_out['t2'] = ['p3', 'p4']
 arc_out['t3'] = ['p5']
 arc_out['t4'] = ['p6']
-a, b = myPN.add_arcs(arc_in ,arc_out)
+a, b = myPN.add_arcs(arc_in, arc_out)
 
 
 otherPN = pn.GSPN()
@@ -56,5 +56,5 @@ a, b = anotherPN.add_arcs(arc_in, arc_out)
 
 tools.GSPNtools.draw_gspn(anotherPN, file='anotherPN')
 
-exec_net = exec.GSPNexecution.make_executable(anotherPN)
+exec_net = pn_exec.GSPNexecution.make_executable(anotherPN)
 tools.GSPNtools.draw_gspn(exec_net, file='executablePN')

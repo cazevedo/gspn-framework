@@ -328,7 +328,7 @@ class GSPN(object):
         :param arcs_out: (dict) Dictionary containing output arcs to be deleted: e.g. arcs_out[t1]=['p1','p2'], arcs_out[t2]=['p1','p3']
         :return:
         '''
-        #TODO 'Blindar' para caso de tentar apagar arco que não existe
+        #TODO: make it bulletproof in the scneario where someone tries to remove an arc that doesn't exist
 
         if arcs_in == None and arcs_out == None:
             return False
