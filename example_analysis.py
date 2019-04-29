@@ -19,7 +19,7 @@ def throughput(draw=False):
     pntools = gst.GSPNtools()
 
     print('Importing GSPN Model')
-    mypn = pntools.import_pnml('multi_escort_run.xml')[0]
+    mypn = pntools.import_xml('multi_escort_run.xml')[0]
 
     if draw:
         drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
@@ -75,7 +75,7 @@ def mean_wt_speeds(save_path, draw=False):
     pntools = gst.GSPNtools()
 
     print('Importing GSPN Model')
-    mypn = pntools.import_pnml('multi_escort_run.xml')[0]
+    mypn = pntools.import_xml('multi_escort_run.xml')[0]
 
     if draw:
         drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
@@ -136,7 +136,7 @@ def transient_evol(save_path, draw=False):
     pntools = gst.GSPNtools()
 
     print('Importing GSPN Model')
-    mypn = pntools.import_pnml('multi_escort_run.xml')[0]
+    mypn = pntools.import_xml('multi_escort_run.xml')[0]
 
     if draw:
         drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
@@ -234,7 +234,7 @@ def random_switch_tune(save_path, draw=False):
     print('Running Random Switch Tune...')
 
     print('Importing GSPN Model')
-    mypn = pntools.import_pnml('multi_escort_run.xml')[0]
+    mypn = pntools.import_xml('multi_escort_run.xml')[0]
 
     if draw:
         drawing = pntools.draw_gspn(mypn, file=save_path+'petri_net', show=False)
@@ -326,7 +326,7 @@ def check_wait_time(save_path):
     pntools = gst.GSPNtools()
 
     print('Importing GSPN Model')
-    mypn = pntools.import_pnml('rvary_escort_run.xml')[0]
+    mypn = pntools.import_xml('rvary_escort_run.xml')[0]
 
     n_robots = []
     mean_wt = []

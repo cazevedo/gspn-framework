@@ -5,7 +5,7 @@ from graphviz import Digraph
 
 class GSPNtools(object):
     @staticmethod
-    def import_pnml(file):
+    def import_xml(file):
         list_gspn = []  # list of parsed GSPN objects
         gspn = pn.GSPN()
 
@@ -92,8 +92,8 @@ class GSPNtools(object):
         return list_gspn
 
     # @staticmethod
-    # def export_pnml(gspn, path):
-    #     # TODO: EXPORT PNML FROM GSPN
+    # def export_xml(gspn, path):
+    #     # TODO: EXPORT XML FROM GSPN
     #     return True
 
     @staticmethod
@@ -307,7 +307,7 @@ class GSPNtools(object):
 if __name__ == "__main__":
     import time
     pntools = GSPNtools()
-    mypn = pntools.import_pnml('rvary_escort_run.xml')[0]
+    mypn = pntools.import_xml('rvary_escort_run.xml')[0]
 
     drawing = pntools.draw_gspn(mypn, 'run_rvary', show=True)
     time.sleep(2)
