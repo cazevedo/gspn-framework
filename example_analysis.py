@@ -423,7 +423,7 @@ def plot_check_wait_time(save_path):
 
 
 if __name__ == "__main__":
-    save_path = '/home/cazevedo/gspn-framework/'
+    save_path = '/home/carlos/MyGit/gspn-framework/'
 
     '''
     Obtain the throughput and expected number of tokens metrics obtained for some relevant transitions and places.

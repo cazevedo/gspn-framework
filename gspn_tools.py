@@ -4,6 +4,10 @@ import xml.etree.ElementTree as et  # XML parser
 from graphviz import Digraph
 
 class GSPNtools(object):
+
+    # TODO : Document CT and CTMC drawing, by describing what shows up in the generated image
+    # (states, prob, firing rate, etc)
+
     @staticmethod
     def import_xml(file):
         list_gspn = []  # list of parsed GSPN objects

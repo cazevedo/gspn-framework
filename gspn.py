@@ -161,9 +161,14 @@ class GSPN(object):
         return self.__arc_in_m.copy(), self.__arc_out_m.copy()
 
     def add_tokens(self, place_name, ntokens, set_initial_marking=False):
-        """
-        add tokens to the specified places
-        """
+        '''
+        add extra tokens to the specified places.
+        :param place_name: (list) with the input places names, to where the tokens should be added
+        :param ntokens: (list) with the number of tokens to be added (must have the same order as in the place_name list)
+        :param set_initial_marking: (bool) if True the number of tokens added will also be added to the initial
+                                    marking, if False the initial marking remains unchanged
+        :return: (bool) True if successful, and False otherwise
+        '''
         if len(place_name) == len(ntokens):
             place_name.reverse()
             ntokens.reverse()
