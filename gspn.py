@@ -3,12 +3,14 @@ import numpy as np
 import gspn_analysis
 import gspn_tools
 import pandas as pd
+import sparse
 
 
 # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
 class GSPN(object):
     """
     """
+
     def __init__(self):
         """
 
@@ -16,8 +18,8 @@ class GSPN(object):
         self.__places = {}
         self.__initial_marking = {}
         self.__transitions = {}
-        self.__arc_in_m = pd.DataFrame()
-        self.__arc_out_m = pd.DataFrame()
+        self.__arc_in_m = [[], []]
+        self.__arc_out_m = [[], []]
         self.__ct_tree = None
         self.__ctmc = None
         self.__ctmc_steady_state = None
@@ -25,21 +27,30 @@ class GSPN(object):
         self.__nsamples = {}
         self.__sum_samples = {}
 
+        self.__places_mapping = {}
+        self.__transitions_mapping = {}
+
     def add_places(self, name, ntokens=None, set_initial_marking=True):
         """
 
         """
         if ntokens is None:
             ntokens = []
-        else:
-            ntokens.reverse()
 
-        name.reverse()
-        while name:
+        if self.__places:  # if true, dictionary not empty
+            i = len(self.__places)
+        else:
+            i = 0  # if false, dictionary empty
+        index = 0
+        while index != len(name):
             if ntokens:
-                self.__places[name.pop()] = ntokens.pop()
+                self.__places[name[index]] = ntokens[index]
             else:
-                self.__places[name.pop()] = 0
+                self.__places[name[index]] = 0
+
+            self.__places_mapping[name[index]] = i
+            i = i + 1
+            index = index + 1
 
         if set_initial_marking:
             self.__initial_marking = self.__places.copy()
@@ -66,27 +77,31 @@ class GSPN(object):
 
         if tclass is None:
             tclass = []
-        else:
-            tclass.reverse()
 
         if trate is None:
             trate = []
-        else:
-            trate.reverse()
 
-        tname.reverse()
-        while tname:
-            tn = tname.pop()
+        if self.__transitions:  # if true, dictionary not empty
+            i = len(self.__transitions)
+        else:
+            i = 0  # if false, dictionary empty
+
+        index = 0
+        while index != len(tname):
+            tn = tname[index]
             self.__transitions[tn] = []
-            if tclass:
-                self.__transitions[tn].append(tclass.pop())
+            if tclass is not None:
+                self.__transitions[tn].append(tclass[index])
             else:
                 self.__transitions[tn].append('imm')
-            if trate:
-                self.__transitions[tn].append(trate.pop())
+            if trate is not None:
+                self.__transitions[tn].append(trate[index])
             else:
                 self.__transitions[tn].append(1.0)
 
+            self.__transitions_mapping[tname[index]] = i
+            i = i + 1
+            index = index + 1
         return self.__transitions.copy()
 
     def add_transitions_dict(self, transitions_dict):
@@ -114,6 +129,8 @@ class GSPN(object):
         arc_out['t3'] = ['p4']
         arc_out['t4'] = ['p3', 'p5']
 
+        exemplo: {'p1':  ['t1','t2], 'p2': ['t3']}
+
         :param arc_in: (dict) mapping the arc connections from places to transitions
         :param arc_out: (dict) mapping the arc connections from transitions to places
         :return: (pandas DataFrame, pandas DataFrame)
@@ -123,40 +140,27 @@ class GSPN(object):
         or if there is no connecting arc (value equal to 0)
         '''
 
-        # store existing arc dataframes
-        old_arc_in, old_arc_out = self.__arc_in_m, self.__arc_out_m
+        len_coords_in = 0  # this value will be the size of the coords vector used in sparse
+        len_coords_out = 0
+        print('arc_in:', arc_in)
+        print('arc_out:', arc_out)
+        for place1 in arc_in:
+            for transition1 in arc_in[place1]:
+                self.__arc_in_m[0].append(self.__places_mapping[place1])
+                self.__arc_in_m[1].append(self.__transitions_mapping[transition1])
+                len_coords_in = len_coords_in + 1
 
-        # create new empty (no arc connections) dataframe with existing places and transitions
-        pl_len, tr_len = len(self.__places.keys()), len(self.__transitions.keys())
-        new_arc_in = pd.DataFrame(np.zeros((pl_len, tr_len)))
-        new_arc_out = pd.DataFrame(np.zeros((tr_len, pl_len)))
+        for transition2 in arc_out:
+            for place2 in arc_out[transition2]:
+                self.__arc_out_m[0].append(self.__transitions_mapping[transition2])
+                self.__arc_out_m[1].append(self.__places_mapping[place2])
+                len_coords_out = len_coords_out + 1
+        print('arc_in_m:', self.__arc_in_m)
+        print('arc_out_m:', self.__arc_out_m)
 
-        new_arc_in.columns, new_arc_in.index = self.__transitions.keys(), self.__places.keys()
-        new_arc_out.columns, new_arc_out.index = self.__places.keys(), self.__transitions.keys()
-
-        # add to the new dataframe the connections in the old dataframe
-        for old_place in old_arc_in.index:
-            for old_transition in old_arc_in.columns:
-                if old_arc_in.loc[old_place][old_transition] > 0:
-                    if (old_place in new_arc_in.index) and (old_transition in new_arc_in.columns):
-                        new_arc_in.loc[old_place][old_transition] = 1
-
-        for old_place in old_arc_out.columns:
-            for old_transition in old_arc_out.index:
-                if old_arc_out.loc[old_transition][old_place] > 0:
-                    if (old_place in new_arc_in.index) and (old_transition in new_arc_in.columns):
-                        new_arc_out.loc[old_transition][old_place] = 1
-
-        for place, target in arc_in.items():
-            for transition in target:
-                new_arc_in.loc[place][transition] = 1
-
-        for transition, target in arc_out.items():
-            for place in target:
-                new_arc_out.loc[transition][place] = 1
-
-        self.__arc_in_m = new_arc_in
-        self.__arc_out_m = new_arc_out
+        #  Creation of Sparse Matrix
+        sparse_arc_in = sparse.COO(self.__arc_in_m, np.ones(len_coords_in), shape=(len(self.__places), len(self.__transitions)))
+        sparse_arc_out = sparse.COO(self.__arc_out_m, np.ones(len_coords_out), shape=(len(self.__transitions), len(self.__places)))
 
         return self.__arc_in_m.copy(), self.__arc_out_m.copy()
 
@@ -255,7 +259,7 @@ class GSPN(object):
         :return: (dict, dict) Dictionaries of input and output arcs connected to the input element
         '''
 
-        if type!='transition' and type!='place':
+        if type != 'transition' and type != 'place':
             raise NameError
 
         if type == 'place':
@@ -292,54 +296,52 @@ class GSPN(object):
                     else:
                         arcs_out[name] = [place]
 
-
         return arcs_in, arcs_out
 
-    def remove_place(self,place):
+    def remove_place(self, place):
         '''
         Method that removes PLACE from Petri Net, with corresponding connected input and output arcs
         :param (str) Name of the place to be removed
         :return: (dict)(dict) Dictionaries containing input and output arcs connected to the removed place
         '''
-        arcs_in, arcs_out = self.get_connected_arcs(place,'place')
+        arcs_in, arcs_out = self.get_connected_arcs(place, 'place')
         self.__arc_in_m.drop(index=place, inplace=True)
         self.__arc_out_m.drop(columns=place, inplace=True)
         self.__places.pop(place)
 
         return arcs_in, arcs_out
 
-    def remove_transition(self,transition):
+    def remove_transition(self, transition):
         '''
         Method that removes TRANSITION from Petri Net, with corresponding input and output arcs
         :param transition:(str) Name of the transition to be removed
         :return: (dict)(dict) Dictionaries containing input and output arcs connected to the removed transition
         '''
-        arcs_in, arcs_out = self.get_connected_arcs(transition,'transition')
+        arcs_in, arcs_out = self.get_connected_arcs(transition, 'transition')
         self.__arc_in_m.drop(columns=transition, inplace=True)
         self.__arc_out_m.drop(index=transition, inplace=True)
         self.__transitions.pop(transition)
 
         return arcs_in, arcs_out
 
-    def remove_arc(self,arcs_in = None, arcs_out = None):
+    def remove_arc(self, arcs_in=None, arcs_out=None):
         '''
         Method that removes ARCS from Petri Net.
         :param arcs_in: (dict) Dictionary containing all input arcs to be deleted: e.g.  arcs_in[p1]=['t1','t2'], arcs_in[p2]=['t1','t3']
         :param arcs_out: (dict) Dictionary containing output arcs to be deleted: e.g. arcs_out[t1]=['p1','p2'], arcs_out[t2]=['p1','p3']
         :return:
         '''
-        #TODO: make it bulletproof in the scneario where someone tries to remove an arc that doesn't exist
+        # TODO: make it bulletproof in the scneario where someone tries to remove an arc that doesn't exist
 
         if arcs_in == None and arcs_out == None:
             return False
 
-
-        if arcs_in!=None:
+        if arcs_in != None:
             for place in arcs_in.keys():
                 for transition in arcs_in[place]:
                     self.__arc_in_m.loc[place][transition] = 0
 
-        if arcs_out!=None:
+        if arcs_out != None:
             for transition in arcs_out.keys():
                 for place in arcs_out[transition]:
                     self.__arc_out_m.loc[transition][place] = 0
@@ -356,8 +358,9 @@ class GSPN(object):
 
         # for each transition get all the places that have an input arc connection
         for transition in self.__arc_in_m.columns:
-            idd = self.__arc_in_m.loc[:][transition].values > 0 # true/false list stating if there is a connection or not
-            places_in = self.__arc_in_m.index[idd].values # list of input places of the transition in question
+            idd = self.__arc_in_m.loc[:][
+                      transition].values > 0  # true/false list stating if there is a connection or not
+            places_in = self.__arc_in_m.index[idd].values  # list of input places of the transition in question
 
             # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it
             #  have one or more tokens)
@@ -388,10 +391,10 @@ class GSPN(object):
         list_of_output_places = list(self.__arc_out_m.columns[idd].values)
 
         # remove tokens from input places
-        self.remove_tokens(list_of_input_places, [1]*len(list_of_input_places))
+        self.remove_tokens(list_of_input_places, [1] * len(list_of_input_places))
 
         # add tokens to output places
-        self.add_tokens(list_of_output_places, [1]*len(list_of_output_places))
+        self.add_tokens(list_of_output_places, [1] * len(list_of_output_places))
 
         return True
 
@@ -411,7 +414,7 @@ class GSPN(object):
                     # normalize the associated probabilities
                     for key, value in random_switch.items():
                         random_switch_id.append(key)
-                        random_switch_prob.append(value/s)
+                        random_switch_prob.append(value / s)
 
                     # Draw from all enabled immediate transitions
                     firing_transition = np.random.choice(a=random_switch_id, size=None, p=random_switch_prob)
@@ -427,7 +430,7 @@ class GSPN(object):
                         # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
                         # in this case the beta rate parameter is used instead, where beta = 1/lambda
                         for key, value in enabled_exp_transitions.items():
-                            wait_times[key] = np.random.exponential(scale=(1.0/value), size=None)
+                            wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
 
                         firing_transition = min(wait_times, key=wait_times.get)
                         wait = wait_times[firing_transition]
@@ -494,10 +497,10 @@ class GSPN(object):
         :return: (bool) True if is deadlock free and False otherwise.
         '''
         if not self.__ct_ctmc_generated:
-            raise Exception('Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
 
         return self.__ct_tree.deadlock_free
-
 
     def transition_throughput_rate(self, transition):
         '''
@@ -511,7 +514,8 @@ class GSPN(object):
         '''
 
         if not self.__ct_ctmc_generated:
-            raise Exception('Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
+            raise Exception(
+                'Analysis must be initialized before this method can be used, please use init_analysis() method for that purpose.')
 
         if self.__transitions[transition][0] == 'exp':
             transition_rate = self.__transitions[transition]
@@ -521,7 +525,7 @@ class GSPN(object):
             for tr in self.__ctmc.transition:
                 state = tr[0]
                 transiton_id = tr[2]
-                transiton_id = transiton_id.replace('/',':')
+                transiton_id = transiton_id.replace('/', ':')
                 transiton_id = transiton_id.split(':')
                 if (transition in transiton_id) and not (state in states_already_considered):
                     throughput_rate = throughput_rate + self.__ctmc_steady_state.loc[state] * transition_rate
@@ -548,7 +552,7 @@ class GSPN(object):
                             break
 
                     # if the given transition is part of this ctmc edge, multiply the throughput rate of the exponential transition by the prob of immediate transition
-                    if exists_transition and not(tangible_init_state in states_already_considered):
+                    if exists_transition and not (tangible_init_state in states_already_considered):
                         exp_transition = transitioning_list[0]
                         current_state = tangible_init_state
                         for trans in transitioning_list:
@@ -563,7 +567,8 @@ class GSPN(object):
                                 exp_transition_rate = self.__transitions[exp_transition]
                                 exp_transition_rate = exp_transition_rate[1]
 
-                                throughput_rate = throughput_rate + self.__ctmc_steady_state.loc[tangible_init_state] * exp_transition_rate * transition_prob
+                                throughput_rate = throughput_rate + self.__ctmc_steady_state.loc[
+                                    tangible_init_state] * exp_transition_rate * transition_prob
 
                 if add_state:
                     states_already_considered.append(tangible_init_state)
@@ -600,7 +605,8 @@ class GSPN(object):
         # sum all the probabilities of having exactly n tokens in the given place
         expected_number_of_tokens = 0
         for ntokens in range(maximum_n_tokens):
-            expected_number_of_tokens = expected_number_of_tokens + (ntokens+1)*self.prob_of_n_tokens(place,ntokens+1)
+            expected_number_of_tokens = expected_number_of_tokens + (ntokens + 1) * self.prob_of_n_tokens(place,
+                                                                                                          ntokens + 1)
 
         return expected_number_of_tokens
 
@@ -680,6 +686,7 @@ if __name__ == "__main__":
     my_pn = GSPN()
     places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
     # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'])
+
     trans = my_pn.add_transitions(['t1', 't2', 't3', 't4'], ['exp', 'exp', 'exp', 'exp'], [1, 1, 0.5, 0.5])
 
     arc_in = {}
@@ -694,8 +701,8 @@ if __name__ == "__main__":
     arc_out['t2'] = ['p5', 'p1']
     arc_out['t3'] = ['p4']
     arc_out['t4'] = ['p3', 'p5']
-    a, b = my_pn.add_arcs(arc_in ,arc_out)
-
+    a, b = my_pn.add_arcs(arc_in, arc_out)
+    '''
     print(my_pn.get_enabled_transitions())
     a = my_pn.get_enabled_transitions()
 
@@ -705,6 +712,7 @@ if __name__ == "__main__":
     print('Arcs IN: ', arcs_in, '\n')
     print('Arcs OUT: ', arcs_out, '\n')
 
-    print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10,5,1]))
+    print(my_pn.add_tokens(['p1', 'p3', 'p5'], [10, 5, 1]))
 
     print('Places: ', my_pn.get_current_marking(), '\n')
+    '''
