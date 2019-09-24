@@ -29,6 +29,8 @@ class GSPN(object):
 
         self.__places_mapping = {}
         self.__transitions_mapping = {}
+        self.__sparse_matrix_in = None
+        self.__sparse_matrix_out = None
 
     def add_places(self, name, ntokens=None, set_initial_marking=True):
         """
@@ -37,10 +39,7 @@ class GSPN(object):
         if ntokens is None:
             ntokens = []
 
-        if self.__places:  # if true, dictionary not empty
-            i = len(self.__places)
-        else:
-            i = 0  # if false, dictionary empty
+        lenPlaces = len(self.__places)
         index = 0
         while index != len(name):
             if ntokens:
@@ -48,13 +47,12 @@ class GSPN(object):
             else:
                 self.__places[name[index]] = 0
 
-            self.__places_mapping[name[index]] = i
-            i = i + 1
+            self.__places_mapping[name[index]] = lenPlaces
+            lenPlaces = lenPlaces + 1
             index = index + 1
 
         if set_initial_marking:
             self.__initial_marking = self.__places.copy()
-
         return self.__places.copy()
 
     def add_places_dict(self, places_dict, set_initial_marking=True):
@@ -81,11 +79,7 @@ class GSPN(object):
         if trate is None:
             trate = []
 
-        if self.__transitions:  # if true, dictionary not empty
-            i = len(self.__transitions)
-        else:
-            i = 0  # if false, dictionary empty
-
+        lenTransitions = len(self.__transitions)
         index = 0
         while index != len(tname):
             tn = tname[index]
@@ -99,8 +93,8 @@ class GSPN(object):
             else:
                 self.__transitions[tn].append(1.0)
 
-            self.__transitions_mapping[tname[index]] = i
-            i = i + 1
+            self.__transitions_mapping[tname[index]] = lenTransitions
+            lenTransitions = lenTransitions + 1
             index = index + 1
         return self.__transitions.copy()
 
@@ -144,25 +138,24 @@ class GSPN(object):
         len_coords_out = 0
         print('arc_in:', arc_in)
         print('arc_out:', arc_out)
-        for place1 in arc_in:
-            for transition1 in arc_in[place1]:
-                self.__arc_in_m[0].append(self.__places_mapping[place1])
-                self.__arc_in_m[1].append(self.__transitions_mapping[transition1])
+        for place_in in arc_in:
+            for transition_in in arc_in[place_in]:
+                self.__arc_in_m[0].append(self.__places_mapping[place_in])
+                self.__arc_in_m[1].append(self.__transitions_mapping[transition_in])
                 len_coords_in = len_coords_in + 1
 
-        for transition2 in arc_out:
-            for place2 in arc_out[transition2]:
-                self.__arc_out_m[0].append(self.__transitions_mapping[transition2])
-                self.__arc_out_m[1].append(self.__places_mapping[place2])
+        for transition_out in arc_out:
+            for place_out in arc_out[transition_out]:
+                self.__arc_out_m[0].append(self.__transitions_mapping[transition_out])
+                self.__arc_out_m[1].append(self.__places_mapping[place_out])
                 len_coords_out = len_coords_out + 1
         print('arc_in_m:', self.__arc_in_m)
         print('arc_out_m:', self.__arc_out_m)
 
         #  Creation of Sparse Matrix
-        sparse_arc_in = sparse.COO(self.__arc_in_m, np.ones(len_coords_in), shape=(len(self.__places), len(self.__transitions)))
-        sparse_arc_out = sparse.COO(self.__arc_out_m, np.ones(len_coords_out), shape=(len(self.__transitions), len(self.__places)))
-
-        return self.__arc_in_m.copy(), self.__arc_out_m.copy()
+        self.__sparse_matrix_in = sparse.COO(self.__arc_in_m, np.ones(len_coords_in), shape=(len(self.__places), len(self.__transitions)))
+        self.__sparse_matrix_out = sparse.COO(self.__arc_out_m, np.ones(len_coords_out), shape=(len(self.__transitions), len(self.__places)))
+        return self.__sparse_matrix_in, self.__sparse_matrix_out
 
     def add_tokens(self, place_name, ntokens, set_initial_marking=False):
         """
@@ -225,6 +218,9 @@ class GSPN(object):
 
     def get_arcs(self):
         return self.__arc_in_m.copy(), self.__arc_out_m.copy()
+
+    def get_sparse_matrices(self):
+        return self.__sparse_matrix_in.copy(), self.__sparse_matrix_out.copy()
 
     def get_arcs_dict(self):
         '''
@@ -685,7 +681,6 @@ if __name__ == "__main__":
     # create a generalized stochastic petri net structure
     my_pn = GSPN()
     places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'], [1, 0, 1, 0, 1])
-    # places = my_pn.add_places(['p1', 'p2', 'p3', 'p4', 'p5'])
 
     trans = my_pn.add_transitions(['t1', 't2', 't3', 't4'], ['exp', 'exp', 'exp', 'exp'], [1, 1, 0.5, 0.5])
 
