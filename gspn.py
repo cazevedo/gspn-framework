@@ -36,8 +36,8 @@ class GSPN(object):
         Adds new places to the existing ones in the GSPN object. Replaces the ones with the same name.
 
         :param name: (list str) denoting the name of the places
-        :param ntokens: (list int) denotes the current number of tokens of the given places
-        :param set_initial_marking: (bool) denotes whether we want to define ntokens as the initial marking or not
+        :param ntokens: (list int) denoting the current number of tokens of the given places
+        :param set_initial_marking: (bool) denoting whether we want to define ntokens as the initial marking or not
         '''
         if ntokens is None:
             ntokens = []
