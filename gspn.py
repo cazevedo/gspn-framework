@@ -136,8 +136,6 @@ class GSPN(object):
 
         len_coords_in = 0  # this value will be the size of the coords vector used in sparse
         len_coords_out = 0
-        print('arc_in:', arc_in)
-        print('arc_out:', arc_out)
         for place_in in arc_in:
             for transition_in in arc_in[place_in]:
                 self.__arc_in_m[0].append(self.__places_mapping[place_in])
@@ -149,8 +147,6 @@ class GSPN(object):
                 self.__arc_out_m[0].append(self.__transitions_mapping[transition_out])
                 self.__arc_out_m[1].append(self.__places_mapping[place_out])
                 len_coords_out = len_coords_out + 1
-        print('arc_in_m:', self.__arc_in_m)
-        print('arc_out_m:', self.__arc_out_m)
 
         #  Creation of Sparse Matrix
         self.__sparse_matrix_in = sparse.COO(self.__arc_in_m, np.ones(len_coords_in), shape=(len(self.__places), len(self.__transitions)))
