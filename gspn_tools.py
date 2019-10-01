@@ -153,7 +153,6 @@ class GSPNtools(object):
         sparse_in, sparse_out = gspn.get_sparse_matrices()
         sparse_in_coords = sparse_in.coords
         sparse_out_coords = sparse_out.coords
-        print(sparse_in_coords)
         for iterator_in in sparse_in_coords[0]:
             gspn_draw.edge(str(sparse_in_coords[0][iterator_in]), str(sparse_in_coords[1][iterator_in]))
         for iterator_out in sparse_out_coords[0]:

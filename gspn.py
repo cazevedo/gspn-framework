@@ -2,7 +2,6 @@ import time
 import numpy as np
 import gspn_analysis
 import gspn_tools
-import pandas as pd
 import sparse
 
 
@@ -33,9 +32,13 @@ class GSPN(object):
         self.__sparse_matrix_out = None
 
     def add_places(self, name, ntokens=None, set_initial_marking=True):
-        """
+        '''
+        Adds new places to the existing ones in the GSPN object. Replaces the ones with the same name.
 
-        """
+        :param name: (list str) denoting the name of the places
+        :param ntokens: (list int) denotes the maximum number of tokens of each place
+        :param set_initial_marking: (list int) denotes the initial marking of the petri net
+        '''
         if ntokens is None:
             ntokens = []
 
@@ -123,11 +126,11 @@ class GSPN(object):
         arc_out['t3'] = ['p4']
         arc_out['t4'] = ['p3', 'p5']
 
-        exemplo: {'p1':  ['t1','t2], 'p2': ['t3']}
+        example: {'p1':  ['t1','t2], 'p2': ['t3']}
 
         :param arc_in: (dict) mapping the arc connections from places to transitions
         :param arc_out: (dict) mapping the arc connections from transitions to places
-        :return: (pandas DataFrame, pandas DataFrame)
+        :return: (sparse COO, sparse COO)
         arc_in_m -> Pandas DataFrame where the columns hold the transition names and the index the place names
         arc_out_m -> Pandas DataFrame where the columns hold the place names and the index the transition names
         Each element of the DataFrame preserves the information regarding if there is a connecting arc (value equal to 1)
