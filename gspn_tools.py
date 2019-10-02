@@ -150,16 +150,13 @@ class GSPNtools(object):
 
         # draw edges
         edge_in, edge_out = gspn.get_arcs()
-
-        for place in edge_in.index:
-            for transition in edge_in.columns:
-                if edge_in.loc[place][transition] > 0:
-                    gspn_draw.edge(place, transition)
-
-        for place in edge_out.columns:
-            for transition in edge_out.index:
-                if edge_out.loc[transition][place] > 0:
-                    gspn_draw.edge(transition, place)
+        sparse_in, sparse_out = gspn.get_sparse_matrices()
+        sparse_in_coords = sparse_in.coords
+        sparse_out_coords = sparse_out.coords
+        for iterator_in in sparse_in_coords[0]:
+            gspn_draw.edge(str(sparse_in_coords[0][iterator_in]), str(sparse_in_coords[1][iterator_in]))
+        for iterator_out in sparse_out_coords[0]:
+            gspn_draw.edge(str(sparse_out_coords[0][iterator_out]), str(sparse_out_coords[1][iterator_out]))
 
         gspn_draw.render(file+'.gv', view=show)
 
