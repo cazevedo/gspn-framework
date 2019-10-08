@@ -34,7 +34,7 @@ class GSPNtools(object):
                 id2place[pl.get('id')] = place_name[i]
 
             # add the list of places to the gspn object
-            gspn.add_places(list(place_name), place_marking, True)
+            gspn.add_places(name=list(place_name), ntokens=place_marking, set_initial_marking=True)
 
             n_transitions = len(list(petrinet.iter('transition')))
             transition_name = ['']*n_transitions
@@ -119,8 +119,8 @@ class GSPNtools(object):
 
     @staticmethod
     def draw_gspn(gspn, file='gspn_default', show=True):
-        # ref: https://www.graphviz.org/documentation/
 
+        # ref: https://www.graphviz.org/documentation/
         gspn_draw = Digraph(engine='dot')
 
         gspn_draw.attr('node', forcelabels='true')
@@ -154,13 +154,12 @@ class GSPNtools(object):
 
         # draw edges
         edge_in, edge_out = gspn.get_arcs()
-        sparse_in, sparse_out = gspn.get_sparse_matrices()
-        sparse_in_coords = sparse_in.coords
-        sparse_out_coords = sparse_out.coords
-        for iterator_in in sparse_in_coords[0]:
-            gspn_draw.edge(str(sparse_in_coords[0][iterator_in]), str(sparse_in_coords[1][iterator_in]))
-        for iterator_out in sparse_out_coords[0]:
-            gspn_draw.edge(str(sparse_out_coords[0][iterator_out]), str(sparse_out_coords[1][iterator_out]))
+        for iterator, place_index in enumerate(edge_in.coords[0]):
+            transition_index = edge_in.coords[1][iterator]
+            gspn_draw.edge(gspn.index_to_places[place_index], gspn.index_to_transitions[transition_index])
+        for iterator, transition_index in enumerate(edge_out.coords[0]):
+            place_index = edge_out.coords[1][iterator]
+            gspn_draw.edge(gspn.index_to_transitions[transition_index], gspn.index_to_places[place_index])
 
         gspn_draw.render(file+'.gv', view=show)
 
