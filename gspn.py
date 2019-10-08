@@ -26,10 +26,12 @@ class GSPN(object):
         self.__nsamples = {}
         self.__sum_samples = {}
 
-        self.places_mapping = {}
-        self.transitions_mapping = {}
+        self.places_to_index= {}
+        self.transitions_to_index = {}
+        self.index_to_places = {}
+        self.index_to_transitions = {}
 
-    def add_places(self, name, ntokens=None, set_initial_marking=True):
+    def add_places(self, name, ntokens=[], set_initial_marking=True):
         '''
         Adds new places to the existing ones in the GSPN object. Replaces the ones with the same name.
 
@@ -37,8 +39,6 @@ class GSPN(object):
         :param ntokens: (list int) denoting the current number of tokens of the given places
         :param set_initial_marking: (bool) denoting whether we want to define ntokens as the initial marking or not
         '''
-        if ntokens is None:
-            ntokens = []
 
         lenPlaces = len(self.__places)
         index = 0
@@ -48,7 +48,8 @@ class GSPN(object):
             else:
                 self.__places[name[index]] = 0
 
-            self.places_mapping[name[index]] = lenPlaces
+            self.places_to_index[name[index]] = lenPlaces
+            self.index_to_places[lenPlaces] = name[index]
             lenPlaces = lenPlaces + 1
             index = index + 1
 
@@ -65,7 +66,7 @@ class GSPN(object):
 
         return self.__places.copy()
 
-    def add_transitions(self, tname, tclass=None, trate=None):
+    def add_transitions(self, tname, tclass=[], trate=[]):
         '''
         Adds new transitions to the existing ones in the GSPN object. Replaces the ones with the same name.
 
@@ -75,29 +76,22 @@ class GSPN(object):
         :return: (dict) all the transitions of the GSPN object
         '''
 
-        if tclass is None:
-            tclass = []
-
-        if trate is None:
-            trate = []
-
         lenTransitions = len(self.__transitions)
-        index = 0
-        while index != len(tname):
-            tn = tname[index]
-            self.__transitions[tn] = []
-            if tclass is not None:
-                self.__transitions[tn].append(tclass[index])
+        for index, transition_name in enumerate(tname):
+            self.__transitions[transition_name] = []
+            if tclass:
+                self.__transitions[transition_name].append(tclass[index])
             else:
-                self.__transitions[tn].append('imm')
-            if trate is not None:
-                self.__transitions[tn].append(trate[index])
+                self.__transitions[transition_name].append('imm')
+            if trate:
+                self.__transitions[transition_name].append(trate[index])
             else:
-                self.__transitions[tn].append(1.0)
+                self.__transitions[transition_name].append(1.0)
 
-            self.transitions_mapping[tname[index]] = lenTransitions
-            lenTransitions = lenTransitions + 1
-            index = index + 1
+            self.transitions_to_index[tname[index]] = lenTransitions
+            self.index_to_transitions[lenTransitions] = tname[index]
+            lenTransitions += 1
+
         return self.__transitions.copy()
 
     def add_transitions_dict(self, transitions_dict):
@@ -147,8 +141,8 @@ class GSPN(object):
         aux_in_list[1] = list(self.__arc_in_m.coords[1])
         for place_in in arc_in:
             for transition_in in arc_in[place_in]:
-                aux_in_list[0].append(self.places_mapping[place_in])
-                aux_in_list[1].append(self.transitions_mapping[transition_in])
+                aux_in_list[0].append(self.places_to_index[place_in])
+                aux_in_list[1].append(self.transitions_to_index[transition_in])
                 len_coords_in = len_coords_in + 1
 
         aux_out_list = [[],[]]
@@ -156,8 +150,8 @@ class GSPN(object):
         aux_out_list[1] = list(self.__arc_out_m.coords[1])
         for transition_out in arc_out:
             for place_out in arc_out[transition_out]:
-                aux_out_list[0].append(self.transitions_mapping[transition_out])
-                aux_out_list[1].append(self.places_mapping[place_out])
+                aux_out_list[0].append(self.transitions_to_index[transition_out])
+                aux_out_list[1].append(self.places_to_index[place_out])
                 len_coords_out = len_coords_out + 1
 
         #  Creation of Sparse Matrix
