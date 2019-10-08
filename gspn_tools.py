@@ -184,7 +184,6 @@ class GSPNtools(object):
             edge_label = edge[2] + ' (' + str(round(edge[3],2)) + ')'
             ct_draw.edge(edge[0], edge[1], label=edge_label)
 
-        print('rendering CT')
         ct_draw.render(file + '.gv', view=show)
 
         return ct_draw

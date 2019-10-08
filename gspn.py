@@ -147,7 +147,6 @@ class GSPN(object):
         aux_out_list[1] = list(self.__arc_out_m.coords[1])
         for transition_out, list_places_out in arc_out.items():
             for place_out in list_places_out:
-                print(transition_out, place_out)
                 aux_out_list[0].append(self.transitions_to_index[transition_out])
                 aux_out_list[1].append(self.places_to_index[place_out])
                 len_coords_out += 1
