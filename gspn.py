@@ -1,7 +1,6 @@
 import time
 import numpy as np
 import gspn_analysis
-import gspn_tools
 import sparse
 
 
@@ -137,20 +136,21 @@ class GSPN(object):
         aux_in_list = [[],[]]
         aux_in_list[0] = list(self.__arc_in_m.coords[0])
         aux_in_list[1] = list(self.__arc_in_m.coords[1])
-        for place_in in arc_in:
-            for transition_in in arc_in[place_in]:
+        for place_in, list_transitions_in in arc_in.items():
+            for transition_in in list_transitions_in:
                 aux_in_list[0].append(self.places_to_index[place_in])
                 aux_in_list[1].append(self.transitions_to_index[transition_in])
-                len_coords_in = len_coords_in + 1
+                len_coords_in += 1
 
         aux_out_list = [[],[]]
         aux_out_list[0] = list(self.__arc_out_m.coords[0])
         aux_out_list[1] = list(self.__arc_out_m.coords[1])
-        for transition_out in arc_out:
-            for place_out in arc_out[transition_out]:
+        for transition_out, list_places_out in arc_out.items():
+            for place_out in list_places_out:
+                print(transition_out, place_out)
                 aux_out_list[0].append(self.transitions_to_index[transition_out])
                 aux_out_list[1].append(self.places_to_index[place_out])
-                len_coords_out = len_coords_out + 1
+                len_coords_out += 1
 
         #  Creation of Sparse Matrix
         self.__arc_in_m = sparse.COO(aux_in_list, np.ones(len_coords_in), shape=(len(self.__places), len(self.__transitions)))
