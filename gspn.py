@@ -350,35 +350,40 @@ class GSPN(object):
 
         return True
 
-    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def get_enabled_transitions(self):
         """
-        :return: (dict) with the enabled transitions and the corresponding set of input places
+        :return: (dict) where the keys hold the enabled transitions id and the values the rate/weight of each transition
         """
         enabled_exp_transitions = {}
         random_switch = {}
         current_marking = self.__places.copy()
 
-        # for each transition get all the places that have an input arc connection
-        for transition in self.__arc_in_m.columns:
-            idd = self.__arc_in_m.loc[:][
-                      transition].values > 0  # true/false list stating if there is a connection or not
-            places_in = self.__arc_in_m.index[idd].values  # list of input places of the transition in question
+        # dict where the keys are transitions and the values the corresponding input places
+        input_places = {}
 
-            # check if the transition in question is enabled or not (i.e. all the places that have an input arc to it
-            #  have one or more tokens)
+        # for each transition get all the places that have an input arc connection
+        for list_index, transition in enumerate(self.__arc_in_m.coords[1]):
+            place = self.__arc_in_m.coords[0][list_index]
+            if transition in input_places:
+                input_places[transition].append(place)
+            else:
+                input_places[transition] = [place]
+
+        # for all transitions check the ones that are enabled (have at least one token in all input places)
+        for tr, list_places in input_places.items():
             enabled_transition = True
-            for place in places_in:
-                if current_marking.get(place) == 0:
+            for in_pl in list_places:
+                in_pl_name = self.index_to_places[in_pl]
+                if current_marking[in_pl_name] == 0:
                     enabled_transition = False
+                    break
 
             if enabled_transition:
-                if self.__transitions[transition][0] == 'exp':
-                    enabled_exp_transitions[transition] = self.__transitions[transition][1]
-                    # enabled_exp_transitions.add(transition)
+                tr_name = self.index_to_transitions[tr]
+                if self.__transitions[tr_name][0] == 'exp':
+                    enabled_exp_transitions[tr_name] = self.__transitions[tr_name][1]
                 else:
-                    random_switch[transition] = self.__transitions[transition][1]
-                    # random_switch.add(transition)
+                    random_switch[tr_name] = self.__transitions[tr_name][1]
 
         return enabled_exp_transitions.copy(), random_switch.copy()
 
