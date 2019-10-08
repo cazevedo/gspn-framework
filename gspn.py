@@ -41,17 +41,15 @@ class GSPN(object):
         '''
 
         lenPlaces = len(self.__places)
-        index = 0
-        while index != len(name):
+        for index, place_name in enumerate(name):
             if ntokens:
-                self.__places[name[index]] = ntokens[index]
+                self.__places[place_name] = ntokens[index]
             else:
-                self.__places[name[index]] = 0
+                self.__places[place_name] = 0
 
-            self.places_to_index[name[index]] = lenPlaces
-            self.index_to_places[lenPlaces] = name[index]
-            lenPlaces = lenPlaces + 1
-            index = index + 1
+            self.places_to_index[place_name] = lenPlaces
+            self.index_to_places[lenPlaces] = place_name
+            lenPlaces += 1
 
         if set_initial_marking:
             self.__initial_marking = self.__places.copy()
