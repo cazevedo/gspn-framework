@@ -17,8 +17,8 @@ class GSPN(object):
         self.__places = {}
         self.__initial_marking = {}
         self.__transitions = {}
-        self.__arc_in_m = [[], []]
-        self.__arc_out_m = [[], []]
+        self.__arc_in_m = sparse.COO([[],[]], [], shape=(0,0))
+        self.__arc_out_m = sparse.COO([[],[]], [], shape=(0,0))
         self.__ct_tree = None
         self.__ctmc = None
         self.__ctmc_steady_state = None
@@ -26,10 +26,8 @@ class GSPN(object):
         self.__nsamples = {}
         self.__sum_samples = {}
 
-        self.__places_mapping = {}
-        self.__transitions_mapping = {}
-        self.__sparse_matrix_in = None
-        self.__sparse_matrix_out = None
+        self.places_mapping = {}
+        self.transitions_mapping = {}
 
     def add_places(self, name, ntokens=None, set_initial_marking=True):
         '''
@@ -50,12 +48,13 @@ class GSPN(object):
             else:
                 self.__places[name[index]] = 0
 
-            self.__places_mapping[name[index]] = lenPlaces
+            self.places_mapping[name[index]] = lenPlaces
             lenPlaces = lenPlaces + 1
             index = index + 1
 
         if set_initial_marking:
             self.__initial_marking = self.__places.copy()
+
         return self.__places.copy()
 
     def add_places_dict(self, places_dict, set_initial_marking=True):
@@ -96,7 +95,7 @@ class GSPN(object):
             else:
                 self.__transitions[tn].append(1.0)
 
-            self.__transitions_mapping[tname[index]] = lenTransitions
+            self.transitions_mapping[tname[index]] = lenTransitions
             lenTransitions = lenTransitions + 1
             index = index + 1
         return self.__transitions.copy()
@@ -105,7 +104,7 @@ class GSPN(object):
         self.__transitions.update(transitions_dict.copy())
         return self.__transitions.copy()
 
-    def add_arcs_matrices(self, new_arc_in, new_arc_out):
+    def add_arcs_sparse_matrices(self, new_arc_in, new_arc_out):
         self.__arc_in_m = new_arc_in
         self.__arc_out_m = new_arc_out
         return True
@@ -131,30 +130,41 @@ class GSPN(object):
         :param arc_in: (dict) mapping the arc connections from places to transitions
         :param arc_out: (dict) mapping the arc connections from transitions to places
         :return: (sparse COO, sparse COO)
-        arc_in_m -> Pandas DataFrame where the columns hold the transition names and the index the place names
-        arc_out_m -> Pandas DataFrame where the columns hold the place names and the index the transition names
-        Each element of the DataFrame preserves the information regarding if there is a connecting arc (value equal to 1)
-        or if there is no connecting arc (value equal to 0)
+        arc_in_m -> Sparse COO matrix where the x coordinates holds the source place index and the y coordinates
+                   the target transition index.
+        arc_out_m -> Sparse COO matrix where the x coordinates holds the source transition index and the y coordinates
+                   the target place index.
+        Each pair place-transition kept in the sparse matrix corresponds to an input/output connecting arc in the
+        GSPN.
         '''
 
-        len_coords_in = 0  # this value will be the size of the coords vector used in sparse
-        len_coords_out = 0
+        # these values will be the size of the coords vector used in sparse matrix
+        len_coords_in = len(self.__arc_in_m.coords[0])
+        len_coords_out = len(self.__arc_out_m.coords[0])
+
+        aux_in_list = [[],[]]
+        aux_in_list[0] = list(self.__arc_in_m.coords[0])
+        aux_in_list[1] = list(self.__arc_in_m.coords[1])
         for place_in in arc_in:
             for transition_in in arc_in[place_in]:
-                self.__arc_in_m[0].append(self.__places_mapping[place_in])
-                self.__arc_in_m[1].append(self.__transitions_mapping[transition_in])
+                aux_in_list[0].append(self.places_mapping[place_in])
+                aux_in_list[1].append(self.transitions_mapping[transition_in])
                 len_coords_in = len_coords_in + 1
 
+        aux_out_list = [[],[]]
+        aux_out_list[0] = list(self.__arc_out_m.coords[0])
+        aux_out_list[1] = list(self.__arc_out_m.coords[1])
         for transition_out in arc_out:
             for place_out in arc_out[transition_out]:
-                self.__arc_out_m[0].append(self.__transitions_mapping[transition_out])
-                self.__arc_out_m[1].append(self.__places_mapping[place_out])
+                aux_out_list[0].append(self.transitions_mapping[transition_out])
+                aux_out_list[1].append(self.places_mapping[place_out])
                 len_coords_out = len_coords_out + 1
 
         #  Creation of Sparse Matrix
-        self.__sparse_matrix_in = sparse.COO(self.__arc_in_m, np.ones(len_coords_in), shape=(len(self.__places), len(self.__transitions)))
-        self.__sparse_matrix_out = sparse.COO(self.__arc_out_m, np.ones(len_coords_out), shape=(len(self.__transitions), len(self.__places)))
-        return self.__sparse_matrix_in, self.__sparse_matrix_out
+        self.__arc_in_m = sparse.COO(aux_in_list, np.ones(len_coords_in), shape=(len(self.__places), len(self.__transitions)))
+        self.__arc_out_m = sparse.COO(aux_out_list, np.ones(len_coords_out), shape=(len(self.__transitions), len(self.__places)))
+
+        return self.__arc_in_m, self.__arc_out_m
 
     def add_tokens(self, place_name, ntokens, set_initial_marking=False):
         '''
@@ -223,9 +233,7 @@ class GSPN(object):
     def get_arcs(self):
         return self.__arc_in_m.copy(), self.__arc_out_m.copy()
 
-    def get_sparse_matrices(self):
-        return self.__sparse_matrix_in.copy(), self.__sparse_matrix_out.copy()
-
+    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def get_arcs_dict(self):
         '''
         Converts the arcs DataFrames to dicts and outputs them.
@@ -251,6 +259,7 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
+    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def get_connected_arcs(self, name, type):
         '''
         Returns input and output arcs connected to a given element (place/transition) of the Petri Net
@@ -298,6 +307,7 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
+    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def remove_place(self, place):
         '''
         Method that removes PLACE from Petri Net, with corresponding connected input and output arcs
@@ -311,6 +321,7 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
+    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def remove_transition(self, transition):
         '''
         Method that removes TRANSITION from Petri Net, with corresponding input and output arcs
@@ -324,6 +335,7 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
+    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def remove_arc(self, arcs_in=None, arcs_out=None):
         '''
         Method that removes ARCS from Petri Net.
@@ -331,7 +343,6 @@ class GSPN(object):
         :param arcs_out: (dict) Dictionary containing output arcs to be deleted: e.g. arcs_out[t1]=['p1','p2'], arcs_out[t2]=['p1','p3']
         :return:
         '''
-        # TODO: make it bulletproof in the scneario where someone tries to remove an arc that doesn't exist
 
         if arcs_in == None and arcs_out == None:
             return False
@@ -348,6 +359,7 @@ class GSPN(object):
 
         return True
 
+    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def get_enabled_transitions(self):
         """
         :return: (dict) with the enabled transitions and the corresponding set of input places
@@ -379,6 +391,7 @@ class GSPN(object):
 
         return enabled_exp_transitions.copy(), random_switch.copy()
 
+    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def fire_transition(self, transition):
         # true/false list stating if there is an input connection or not
         idd = self.__arc_in_m.loc[:][transition].values > 0
