@@ -159,7 +159,7 @@ class GSPN(object):
 
     def add_tokens(self, place_name, ntokens, set_initial_marking=False):
         '''
-        add extra tokens to the specified places.
+        Adds extra tokens to the places in the place_name list.
         :param place_name: (list) with the input places names, to where the tokens should be added
         :param ntokens: (list) with the number of tokens to be added (must have the same order as in the place_name list)
         :param set_initial_marking: (bool) if True the number of tokens added will also be added to the initial
@@ -186,9 +186,15 @@ class GSPN(object):
             return False
 
     def remove_tokens(self, place_name, ntokens, set_initial_marking=False):
-        """
-        remove tokens from the specified places
-        """
+        '''
+        Removes tokens from the places in the place_name list.
+        :param place_name: (list) with the input places names, from where the tokens should be removed.
+        :param ntokens: (list) with the number of tokens to be removed (must have the same order as in the place_name list)
+        :param set_initial_marking: (bool) if True the number of tokens removed will also be added to the initial
+                                    marking, if False the initial marking remains unchanged.
+        :return: (bool) True if successful, and False otherwise
+        '''
+
         if len(place_name) == len(ntokens):
             place_name.reverse()
             ntokens.reverse()
@@ -387,23 +393,33 @@ class GSPN(object):
 
         return enabled_exp_transitions.copy(), random_switch.copy()
 
-    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
     def fire_transition(self, transition):
-        # true/false list stating if there is an input connection or not
-        idd = self.__arc_in_m.loc[:][transition].values > 0
-        # list with all the input places of the given transition
-        list_of_input_places = list(self.__arc_in_m.index[idd].values)
+        '''
+        Removes 1 token from all input places and adds 1 token to all the output places of the given transition.
+        :param transition: (str) name of the transition to be fired.
+        :return: always returns True
+        '''
+        input_places = []
+        output_places = []
+        transition_index = self.transitions_to_index[transition]
 
-        # true/false list stating if there is an output connection or not
-        idd = self.__arc_out_m.loc[transition][:].values > 0
-        # list with all the output places of the given transition
-        list_of_output_places = list(self.__arc_out_m.columns[idd].values)
+        # get a list with all the input places of the given transition
+        for list_index, transition in enumerate(self.__arc_in_m.coords[1]):
+            if transition == transition_index:
+                place = self.__arc_in_m.coords[0][list_index]
+                input_places.append(self.index_to_places[place])
+
+        # get a list with all the output places of the given transition
+        for list_index, transition in enumerate(self.__arc_out_m.coords[0]):
+            if transition == transition_index:
+                place = self.__arc_out_m.coords[1][list_index]
+                output_places.append(self.index_to_places[place])
 
         # remove tokens from input places
-        self.remove_tokens(list_of_input_places, [1] * len(list_of_input_places))
+        self.remove_tokens(input_places, [1] * len(input_places))
 
         # add tokens to output places
-        self.add_tokens(list_of_output_places, [1] * len(list_of_output_places))
+        self.add_tokens(output_places, [1] * len(output_places))
 
         return True
 
