@@ -181,7 +181,7 @@ class GSPN(object):
                         self.__sparse_marking[p] = 'w'
                     else:
                         self.__places[p] = self.__places[p] + tokens_to_add
-                        if p in self.__sparse_marking.keys():
+                        if p in self.__sparse_marking:
                             self.__sparse_marking[p] = self.__sparse_marking[p] + tokens_to_add
                         else:
                             self.__sparse_marking[p] = 1
@@ -511,7 +511,7 @@ class GSPN(object):
         enabled_exp_transitions, enabled_imm_transitions = self.get_enabled_transitions()
 
         current_state = self.get_state_from_marking(marking=self.__sparse_marking, states_to_marking=states_to_marking)
-        if current_state in policy.keys():
+        if current_state in policy:
             action = policy[current_state]
         else:
             action = None
@@ -533,44 +533,10 @@ class GSPN(object):
                         # Draw from all enabled immediate transitions
                         firing_transition = np.random.choice(a=random_switch_id, size=None, p=random_switch_prob)
 
+                    wait = 0
                     # Fire transition
                     self.fire_transition(firing_transition)
                 elif enabled_exp_transitions:
-                    if simulate_wait:
-                        wait_times = enabled_exp_transitions.copy()
-                        # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
-                        # in this case the beta rate parameter is used instead, where beta = 1/lambda
-                        for key, value in enabled_exp_transitions.items():
-                            wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
-
-                        firing_transition = min(wait_times, key=wait_times.get)
-                        wait = wait_times[firing_transition]
-                        time.sleep(wait)
-
-                    else:
-                        s = sum(enabled_exp_transitions.values())
-                        exp_trans_id = []
-                        exp_trans_prob = []
-                        # normalize the associated probabilities
-                        for key, value in enabled_exp_transitions.items():
-                            exp_trans_id.append(key)
-                            exp_trans_prob.append(value / s)
-
-                        # Draw from all enabled exponential transitions
-                        firing_transition = np.random.choice(a=exp_trans_id, size=None, p=exp_trans_prob)
-
-                        # Fire transition
-                    self.fire_transition(firing_transition)
-                else:
-                    raise Exception('Deadlock, there are no enabled transitions in marking: ' + str(self.__sparse_marking))
-            else:
-                raise Exception('Policy not defined for marking: ' + str(self.__sparse_marking))
-        elif action in enabled_imm_transitions.keys():
-            firing_transition = action
-            self.fire_transition(firing_transition)
-        elif action in ['EXP', 'WAIT']:
-            if enabled_exp_transitions:
-                if simulate_wait:
                     wait_times = enabled_exp_transitions.copy()
                     # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
                     # in this case the beta rate parameter is used instead, where beta = 1/lambda
@@ -579,19 +545,31 @@ class GSPN(object):
 
                     firing_transition = min(wait_times, key=wait_times.get)
                     wait = wait_times[firing_transition]
-                    time.sleep(wait)
+                    if simulate_wait:
+                        time.sleep(wait)
 
+                        # Fire transition
+                    self.fire_transition(firing_transition)
                 else:
-                    s = sum(enabled_exp_transitions.values())
-                    exp_trans_id = []
-                    exp_trans_prob = []
-                    # normalize the associated probabilities
-                    for key, value in enabled_exp_transitions.items():
-                        exp_trans_id.append(key)
-                        exp_trans_prob.append(value / s)
+                    raise Exception('Deadlock, there are no enabled transitions in marking: ' + str(self.__sparse_marking))
+            else:
+                raise Exception('Policy not defined for marking: ' + str(self.__sparse_marking))
+        elif action in enabled_imm_transitions:
+            firing_transition = action
+            wait = 0
+            self.fire_transition(firing_transition)
+        elif action in ['EXP', 'WAIT']:
+            if enabled_exp_transitions:
+                wait_times = enabled_exp_transitions.copy()
+                # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
+                # in this case the beta rate parameter is used instead, where beta = 1/lambda
+                for key, value in enabled_exp_transitions.items():
+                    wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
 
-                    # Draw from all enabled exponential transitions
-                    firing_transition = np.random.choice(a=exp_trans_id, size=None, p=exp_trans_prob)
+                firing_transition = min(wait_times, key=wait_times.get)
+                wait = wait_times[firing_transition]
+                if simulate_wait:
+                    time.sleep(wait)
 
                 # Fire transition
                 self.fire_transition(firing_transition)
@@ -602,8 +580,8 @@ class GSPN(object):
             raise Exception('Action: '+str(action)+' does not match with any enabled transition in the marking: '
                             +str(self.__sparse_marking))
 
-        print('Fired transition : ', firing_transition)
-        return firing_transition, self.get_current_marking(sparse_marking=False), self.get_current_marking(sparse_marking=True)
+        # print('Fired transition : ', firing_transition)
+        return firing_transition, wait, self.get_current_marking(sparse_marking=False), self.get_current_marking(sparse_marking=True)
 
     def reset_simulation(self):
         self.__places = self.__initial_marking.copy()
