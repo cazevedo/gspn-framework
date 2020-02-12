@@ -533,7 +533,7 @@ class GSPN(object):
                         # Draw from all enabled immediate transitions
                         firing_transition = np.random.choice(a=random_switch_id, size=None, p=random_switch_prob)
 
-                    wait = 0
+                    wait_until_fire = 0
                     # Fire transition
                     self.fire_transition(firing_transition)
                 elif enabled_exp_transitions:
@@ -544,9 +544,9 @@ class GSPN(object):
                         wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
 
                     firing_transition = min(wait_times, key=wait_times.get)
-                    wait = wait_times[firing_transition]
+                    wait_until_fire = wait_times[firing_transition]
                     if simulate_wait:
-                        time.sleep(wait)
+                        time.sleep(wait_until_fire)
 
                         # Fire transition
                     self.fire_transition(firing_transition)
@@ -556,7 +556,7 @@ class GSPN(object):
                 raise Exception('Policy not defined for marking: ' + str(self.__sparse_marking))
         elif action in enabled_imm_transitions:
             firing_transition = action
-            wait = 0
+            wait_until_fire = 0
             self.fire_transition(firing_transition)
         elif action in ['EXP', 'WAIT']:
             if enabled_exp_transitions:
@@ -567,9 +567,9 @@ class GSPN(object):
                     wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
 
                 firing_transition = min(wait_times, key=wait_times.get)
-                wait = wait_times[firing_transition]
+                wait_until_fire = wait_times[firing_transition]
                 if simulate_wait:
-                    time.sleep(wait)
+                    time.sleep(wait_until_fire)
 
                 # Fire transition
                 self.fire_transition(firing_transition)
@@ -581,7 +581,7 @@ class GSPN(object):
                             +str(self.__sparse_marking))
 
         # print('Fired transition : ', firing_transition)
-        return firing_transition, wait, self.get_current_marking(sparse_marking=False), self.get_current_marking(sparse_marking=True)
+        return firing_transition, wait_until_fire, self.get_current_marking(sparse_marking=False), self.get_current_marking(sparse_marking=True)
 
     def reset_simulation(self):
         self.__places = self.__initial_marking.copy()
