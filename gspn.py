@@ -16,6 +16,7 @@ class GSPN(object):
         self.__sparse_marking = {}
         self.__places = {}
         self.__initial_marking = {}
+        self.__initial_marking_sparse = {}
         self.__transitions = {}
         self.__arc_in_m = sparse.COO([[],[]], [], shape=(0,0))
         self.__arc_out_m = sparse.COO([[],[]], [], shape=(0,0))
@@ -55,6 +56,7 @@ class GSPN(object):
 
         if set_initial_marking:
             self.__initial_marking = self.__places.copy()
+            self.__initial_marking_sparse = self.__sparse_marking.copy()
 
         return self.__places.copy()
 
@@ -63,6 +65,7 @@ class GSPN(object):
 
         if set_initial_marking:
             self.__initial_marking = self.__places.copy()
+            self.__initial_marking_sparse = self.__sparse_marking.copy()
 
         return self.__places.copy()
 
@@ -188,6 +191,7 @@ class GSPN(object):
 
             if set_initial_marking:
                 self.__initial_marking = self.__places.copy()
+                self.__initial_marking_sparse = self.__initial_marking.copy()
 
             return True
         else:
@@ -221,6 +225,7 @@ class GSPN(object):
 
             if set_initial_marking:
                 self.__initial_marking = self.__places.copy()
+                self.__initial_marking_sparse = self.__sparse_marking.copy()
 
             return True
         else:
@@ -234,10 +239,17 @@ class GSPN(object):
 
     def set_marking(self, places):
         self.__places = places.copy()
+        self.__sparse_marking = {}
+        for pl, tk in self.__places.items():
+            if tk > 0:
+                self.__sparse_marking[pl] = tk
         return True
 
-    def get_initial_marking(self):
-        return self.__initial_marking.copy()
+    def get_initial_marking(self, sparse_marking=False):
+        if sparse_marking:
+            return self.__initial_marking_sparse.copy()
+        else:
+            return self.__initial_marking.copy()
 
     def get_transitions(self):
         return self.__transitions.copy()
@@ -330,6 +342,8 @@ class GSPN(object):
         self.__arc_in_m.drop(index=place, inplace=True)
         self.__arc_out_m.drop(columns=place, inplace=True)
         self.__places.pop(place)
+        if place in self.__sparse_marking:
+            self.__sparse_marking.pop(place)
 
         return arcs_in, arcs_out
 
@@ -585,10 +599,12 @@ class GSPN(object):
 
     def reset_simulation(self):
         self.__places = self.__initial_marking.copy()
+        self.__sparse_marking = self.__initial_marking_sparse.copy()
         return True
 
     def reset(self):
         self.__places = self.__initial_marking.copy()
+        self.__sparse_marking = self.__initial_marking_sparse.copy()
         self.__nsamples = {}
         self.__sum_samples = {}
         return True
