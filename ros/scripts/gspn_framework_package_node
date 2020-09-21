@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+
+import gspn_framework_package_ros.gspn_framework_package_node
+
+if __name__ == '__main__':
+ gspn_framework_package_ros.gspn_framework_package_node.main()

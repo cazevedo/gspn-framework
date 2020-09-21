@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+    <title>GSPN Visualization</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="./static/css/gspn_visualization_template.css">
+    <body>
+    {% extends "gspn_visualization_template.html" %}
+    {% block content %}
+
+        <div class='button_container'>
+            <button id="test" class='new-button' onclick="test()">Simulate 1 Step</button>
+            <button id=reset class='new-button new-button-red' onclick="reset()">Reset Simulation</button></a>
+            <button id=clearNetwork class='new-button new-button-red' onclick="clearNetwork()">Clear Network</button>
+            <button id=startExecution class='new-button' onclick="startExecution()">Start Execution</button>
+            <button id=stopExecution class='new-button new-button-red' onclick="stopExecution()">Stop Execution</button>
+
+            <form action="{{ url_for('background_fire_chosen_transition') }}" method="post" id="userTransitionForm" enctype="multipart/form-data">
+                <select id="mySelect" name="chosenTransitionDropdown" class="dropdownStyle"></select>
+                <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+                <script type=text/javascript>
+                var parsed_exp_transitions = JSON.parse('{{data.get_enabled_transitions()[0] | tojson}}');
+                for (var exp_transition in parsed_exp_transitions) {
+                     $('<option value="'+ exp_transition +'">' + exp_transition + '</option>').appendTo('#mySelect');
+                }
+                var parsed_imm_transitions = JSON.parse('{{data.get_enabled_transitions()[1] | tojson}}');
+                for (var imm_transition in parsed_imm_transitions) {
+                     $('<option value="'+ imm_transition +'">' + imm_transition + '</option>').appendTo('#mySelect');
+                }
+                </script>
+                <input id="checkUserTransition" type="submit" class='new-button' value="Fire Chosen Transition">
+            </form>
+            <form action="{{ url_for('background_simulate_n_steps') }}" method="post" id="nStepsForm" enctype="multipart/form-data">
+              <input name="n_steps_text" class="input_box">
+              <input id="checkNSteps" type="submit" class='new-button' value="Simulate n Steps">
+            </form>
+        </div>
+
+    <div id="frame_container">
+        <div id="mynetwork"></div>
+        <div id="dataAnalysis">
+
+            <table style="width:100%">
+                <tr>
+                    <th class="analysis-title">Input</th>
+                    <th class="analysis-title">Analysis Tools</th>
+                    <th class="analysis-title">Output</th>
+                </tr>
+
+                <tr id="Liveness" class="data_entry">
+                    <form action="{{ url_for('background_check_liveness') }}" method="post" id="livenessForm" enctype="multipart/form-data">
+                        <th></th>
+                        <th><input id="checkLiveness" type="submit" class='new-button-data' value="Check Liveness"></th>
+                        <th><output id="liveResult" class="result_box" ></output></th>
+                    </form>
+                </tr>
+
+                <tr id="ThroughputRate" class="data_entry">
+                    <form action="{{ url_for('background_check_throughputrate') }}" method="post" id="throughputRateForm" enctype="multipart/form-data">
+                        <th> <select id="throughput_select" name="throughput_rate_dropdown" class="dropdownStyle"> </select> </th>
+                        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+                        <script type=text/javascript>
+                            var parsed_transitions = JSON.parse('{{data.get_transitions() | tojson}}');
+                            for (var transition in parsed_transitions) {
+                                 $('<option value="'+ transition +'">' + transition + '</option>').appendTo('#throughput_select');
+                            }
+                        </script>
+                        <th><input id="checkThroughputRate" type="submit" class='new-button-data' value="Check Throughput Rate"></th>
+                        <th><output id="throughputRateResult" class="result_box" ></output></th>
+                    </form>
+                </tr>
+
+                <tr id="ProbNTokens" class="data_entry">
+                    <form action="{{ url_for('background_check_probntokens') }}" method="post", target="probNTokensResult">
+                        <th><input name="prob_n_tokens_text" class="input_box"></th>
+                        <th><input id="checkProbNTokens" type="submit" class='new-button-data' value="Prob N Tokens"></th>
+                        <th><iframe id="probNTokensResult" name="probNTokensResult" class="result_box" >-</iframe></th>
+                    </form>
+                </tr>
+
+                <tr id="ExpectedNTokens" class="data_entry">
+                    <form action="{{ url_for('background_expected_n_tokens') }}" method="post" id="expectedntokensForm" enctype="multipart/form-data">
+                        <th><select id="expected_n_tokens_select" name="expected_n_tokens_dropdown" class="dropdownStyle"></select></th>
+                        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+                        <script type=text/javascript>
+                            var parsed_places = JSON.parse('{{data.get_places() | tojson}}');
+                            for (var place in parsed_places) {
+                                 $('<option value="'+ place +'">' + place + '</option>').appendTo('#expected_n_tokens_select');
+                            }
+                        </script>
+                        <th><input id="checkExpectedNTokens" type="submit" class='new-button-data' value="Check Expected N Tokens"></th>
+                        <th><output id="expectedNTokensResult" class="result_box" ></output></th>
+                    </form>
+                </tr>
+
+                <tr id="TransitionProbEvolution" class="data_entry">
+                    <form action="{{ url_for('background_check_transitionprobevo') }}" method="post", target="transitionProbEvoResult">
+                        <th><input name="transition_prob_evo_text" class="input_box"></th>
+                        <th><input id="checkTransitionProbEvo" type="submit" class='new-button-data' value="Check Transition Probability Evolution"></th>
+                        <th><iframe id="transitionProbEvoResult" name="transitionProbEvoResult" class="result_box" >-</iframe></th>
+                    </form>
+                </tr>
+
+                <tr id="MeanWaitTime" class="data_entry">
+                    <form action="{{ url_for('background_check_mean_wait_time') }}" method="post" id="meanwaittimeForm" enctype="multipart/form-data">
+                        <th><select id="mean_wait_time_select" name="mean_wait_time_dropdown" class="dropdownStyle"></select></th>
+                        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+                        <script type=text/javascript>
+                            var parsed_places = JSON.parse('{{data.get_places() | tojson}}');
+                            for (var place in parsed_places) {
+                                 $('<option value="'+ place +'">' + place + '</option>').appendTo('#mean_wait_time_select');
+                            }
+                        </script>
+                        <th><input id="checkMeanWaitTime" type="submit" class='new-button-data' value="Check Mean Wait Time"></th>
+                        <th><output id="meanWaitTimeResult" class="result_box" ></output></th>
+                    </form>
+                </tr>
+            </table>
+        </div>
+        <div id="clear"></div>
+    </div>
+    <script type="text/javascript">
+
+      var nodes = new vis.DataSet({});
+      var edges = new vis.DataSet({});
+
+      // Create nodes for the places
+      var parsed_places = JSON.parse('{{data.get_places() | tojson}}');
+      for(place in parsed_places) {
+        var marking = parsed_places[place];
+        image_link = 'https://raw.githubusercontent.com/PedroACaldeira/gspn-framework/master/images/token_' + marking + '.png';
+        nodes.add({id:place, shape:'circularImage', color:'black', title:place, physics:'false', label:place, image:image_link});
+      }
+
+      // Create nodes for the transitions
+      var parsed_transitions = JSON.parse('{{data.get_transitions() | tojson}}');
+      for(transition in parsed_transitions) {
+        if(parsed_transitions[transition][0] == 'exp') {
+          nodes.add({id:transition, title:transition, color: {background:'white', border:'black'}, shape:'square', physics:'false', label:transition, size:10});
+        }
+        else {
+          nodes.add({id:transition, title:transition, color:'black', shape:'square', physics:'false', label:transition, size:10});
+        }
+      }
+
+      // Get edge information
+      var arcs_in = {{ data.get_arcs_dict()[0] }}
+      var arcs_out = {{ data.get_arcs_dict()[1] }}
+
+      // Create edges from places to transitions
+      for(place in arcs_in){
+        var parsed_places_map = JSON.parse('{{data.index_to_places | tojson}}');
+        var place_id = parsed_places_map[place];
+        for(transition in arcs_in[place]){
+          var parsed_transitions_map = JSON.parse('{{data.index_to_transitions | tojson}}');
+          var transition_id = parsed_transitions_map[arcs_in[place][transition]];
+          edges.add({from:place_id, to:transition_id, arrows:'to', color:'black'});
+        }
+      }
+
+      // Create edges from transitions to places
+      for(transition in arcs_out){
+        var parsed_transitions_map = JSON.parse('{{data.index_to_transitions | tojson}}');
+        var transition_id = parsed_transitions_map[transition];
+        for(place in arcs_out[transition]){
+          var parsed_places_map = JSON.parse('{{data.index_to_places | tojson}}');
+          var place_id = parsed_places_map[arcs_out[transition][place]];
+          edges.add({from:transition_id, to:place_id, arrows:'to', color:'black'});
+        }
+      }
+
+      // create a network
+      var container = document.getElementById('mynetwork');
+      var data = {
+        nodes: nodes,
+        edges: edges
+      };
+      var options = {};
+      var NETWORK = new vis.Network(container, data, options);
+    </script>
+
+    </body>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type=text/javascript>
+
+            var stopped_execution = true;
+
+            function clearNetwork() {
+                console.log("before")
+                console.log(NETWORK.body)
+                var r = confirm("This action will delete your current GSPN and return to the Main Menu.");
+                if (r == true) {
+                    NETWORK.destroy();
+                    window.location.href = "/"
+                }
+            }
+
+            function sleep(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            async function change_color(transition, places) {
+                nodes.update({id:transition, color:{border:'yellow'}, shadow:{enabled:true, color:'yellow', x:0, y:0, size:20}});
+                await sleep(1000);
+                nodes.update({id:transition, color:{border:'black'}, shadow:{enabled:false}});
+                for(place in places) {
+                  var marking = places[place];
+                  image_link = 'https://raw.githubusercontent.com/PedroACaldeira/gspn-framework/master/images/token_' + marking + '.png';
+                  nodes.update({id:place, image:image_link});
+                }
+            }
+
+            async function change_color_n(full_data) {
+                var transitions = full_data[full_data.length - 1];
+                console.log(transitions);
+                for(i = 1; i < full_data.length - 1; i++) {
+                    console.log("oi");
+                    console.log(full_data[i]);
+                    nodes.update({id:transitions[i-1], color:{border:'yellow'}, shadow:{enabled:true, color:'yellow', x:0, y:0, size:20}});
+                    await sleep(1000);
+                    nodes.update({id:transitions[i-1], color:{border:'black'}, shadow:{enabled:false}});
+                    for(place in full_data[i]) {
+                      console.log("place");
+                      console.log(place);
+                      console.log("place");
+                      var marking = full_data[i][place];
+                      console.log(marking);
+                      image_link = 'https://raw.githubusercontent.com/PedroACaldeira/gspn-framework/master/images/token_' + marking + '.png';
+                      nodes.update({id:place, image:image_link});
+                    }
+                }
+            }
+
+            setInterval(function(){
+              if(stopped_execution == false) {
+                fetch('/return_gspn_updates').then(response => response.json()).then(data => {
+                  if(data != "nothing") {
+                    for(iterator=0; iterator < data[0].length; iterator+=1) {
+                      marking_to_use = JSON.parse(data[1][iterator].replace(/'/g,"\""));
+                      console.log(data[0][iterator]);
+                      console.log(marking_to_use);
+                      change_color(data[0][iterator], marking_to_use);
+                    }
+                  }
+                })
+              }
+            }, 1000);
+
+
+            function test() {
+              $.getJSON('/background_process_test', function(data) {
+                change_color(data[1], data[0]);
+                document.getElementById('mySelect').options.length = 0;
+                  var parsed_exp_transitions = data[2][0];
+                  for (var exp_transition in parsed_exp_transitions) {
+                       $('<option value="'+ exp_transition +'">' + exp_transition + '</option>').appendTo('#mySelect');
+                  }
+                  var parsed_imm_transitions = data[2][1];
+                  for (var imm_transition in parsed_imm_transitions) {
+                       $('<option value="'+ imm_transition +'">' + imm_transition + '</option>').appendTo('#mySelect');
+                  }
+              });
+              return false;
+            }
+
+            function startExecution() {
+              stopped_execution = false;
+              document.getElementById("test").disabled = true;
+              document.getElementById("test").style.background = "grey";
+              document.getElementById("reset").disabled = true;
+              document.getElementById("reset").style.background = "grey";
+              document.getElementById("clearNetwork").disabled = true;
+              document.getElementById("clearNetwork").style.background = "grey";
+
+              document.getElementById("checkUserTransition").disabled = true;
+              document.getElementById("checkUserTransition").style.background = "grey";
+              document.getElementById("checkNSteps").disabled = true;
+              document.getElementById("checkNSteps").style.background = "grey";
+
+              $.getJSON('/start_execution', function(data) {
+                console.log(data);
+              });
+              return false;
+            }
+
+            function stopExecution() {
+              $.getJSON('/stop_execution', function(data) {
+                stopped_execution = true;
+                document.getElementById("test").disabled = false;
+                document.getElementById("test").style.background = "#4CAF50";
+                document.getElementById("reset").disabled = false;
+                document.getElementById("reset").style.background = "#f44336";
+                document.getElementById("clearNetwork").disabled = false;
+                document.getElementById("clearNetwork").style.background = "#f44336";
+
+                document.getElementById("checkUserTransition").disabled = false;
+                document.getElementById("checkUserTransition").style.background = "#4CAF50";
+                document.getElementById("checkNSteps").disabled = false;
+                document.getElementById("checkNSteps").style.background = "#4CAF50";
+                reset();
+              });
+              return false;
+            }
+
+            function reset() {
+              $.getJSON('/background_reset_simulation', function(data) {
+                for(place in data[0]) {
+                  var marking = data[0][place];
+                  image_link = 'https://raw.githubusercontent.com/PedroACaldeira/gspn-framework/master/images/token_' + marking + '.png';
+                  nodes.update({id:place, image:image_link});
+                }
+                  document.getElementById('mySelect').options.length = 0;
+                  var parsed_exp_transitions = data[1][0];
+                  for (var exp_transition in parsed_exp_transitions) {
+                       $('<option value="'+ exp_transition +'">' + exp_transition + '</option>').appendTo('#mySelect');
+                  }
+                  var parsed_imm_transitions = data[1][1];
+                  for (var imm_transition in parsed_imm_transitions) {
+                       $('<option value="'+ imm_transition +'">' + imm_transition + '</option>').appendTo('#mySelect');
+                  }
+              });
+              return false;
+            }
+
+
+            $(function() {
+              $('a#test').bind('click', function() {
+                $.getJSON('/background_process_test', function(data) {
+                  change_color(data[1], data[0]);
+                  document.getElementById('mySelect').options.length = 0;
+                    var parsed_exp_transitions = data[2][0];
+                    for (var exp_transition in parsed_exp_transitions) {
+                         $('<option value="'+ exp_transition +'">' + exp_transition + '</option>').appendTo('#mySelect');
+                    }
+                    var parsed_imm_transitions = data[2][1];
+                    for (var imm_transition in parsed_imm_transitions) {
+                         $('<option value="'+ imm_transition +'">' + imm_transition + '</option>').appendTo('#mySelect');
+                    }
+                });
+                return false;
+              });
+
+              $('a#startExecution').bind('click', function() {
+                $.getJSON('/start_execution', function(data) {
+                  console.log(data);
+                });
+                return false;
+              });
+
+              $('#nStepsForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this)[0];
+                var formData = new FormData(form);
+
+                $.ajax({
+                    url: '/background_simulate_n_steps',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        if(data== "NONE") {
+                            window.alert("No value inserted as input.");
+                        }
+                        else if(data== "ZERO") {
+                            window.alert("Zero steps is not a valid input.");
+                        }
+                        else {
+                            console.log(data);
+                            change_color_n(data[0]);
+                            document.getElementById('mySelect').options.length = 0;
+                            var parsed_exp_transitions = data[1][0];
+                            for (var exp_transition in parsed_exp_transitions) {
+                                 $('<option value="'+ exp_transition +'">' + exp_transition + '</option>').appendTo('#mySelect');
+                            }
+                            var parsed_imm_transitions = data[1][1];
+                            for (var imm_transition in parsed_imm_transitions) {
+                                 $('<option value="'+ imm_transition +'">' + imm_transition + '</option>').appendTo('#mySelect');
+                            }
+                        }
+                    }
+                });
+              });
+
+              $('a#reset').bind('click', function() {
+                $.getJSON('/background_reset_simulation', function(data) {
+                  for(place in data[0]) {
+                    var marking = data[0][place];
+                    image_link = 'https://raw.githubusercontent.com/PedroACaldeira/gspn-framework/master/images/token_' + marking + '.png';
+                    nodes.update({id:place, image:image_link});
+                  }
+                    document.getElementById('mySelect').options.length = 0;
+                    var parsed_exp_transitions = data[1][0];
+                    for (var exp_transition in parsed_exp_transitions) {
+                         $('<option value="'+ exp_transition +'">' + exp_transition + '</option>').appendTo('#mySelect');
+                    }
+                    var parsed_imm_transitions = data[1][1];
+                    for (var imm_transition in parsed_imm_transitions) {
+                         $('<option value="'+ imm_transition +'">' + imm_transition + '</option>').appendTo('#mySelect');
+                    }
+                });
+                return false;
+              });
+
+              $('#livenessForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this)[0];
+                var formData = new FormData(form);
+
+                $.ajax({
+                    url: '/background_check_liveness',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        document.getElementById('liveResult').innerHTML = data;
+                    }
+                });
+              });
+
+              $('#throughputRateForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this)[0];
+                var formData = new FormData(form);
+
+                $.ajax({
+                    url: '/background_check_throughputrate',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log(data);
+                        document.getElementById('throughputRateResult').innerHTML = data;
+                    }
+                });
+              });
+
+
+              $('#expectedntokensForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this)[0];
+                var formData = new FormData(form);
+
+                $.ajax({
+                    url: '/background_expected_n_tokens',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log(data);
+                        document.getElementById('expectedNTokensResult').innerHTML = data;
+                    }
+                });
+              });
+
+
+              $('#meanwaittimeForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this)[0];
+                var formData = new FormData(form);
+
+                $.ajax({
+                    url: '/background_check_mean_wait_time',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        console.log(data);
+                        document.getElementById('meanWaitTimeResult').innerHTML = data;
+                    }
+                });
+              });
+
+
+              $('#userTransitionForm').on('submit', function (e) {
+                e.preventDefault();
+
+                var form = $(this)[0];
+                var formData = new FormData(form);
+
+                $.ajax({
+                    url: '/background_fire_chosen_transition',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (data) {
+                        change_color(data[1], data[0]);
+                        document.getElementById('mySelect').options.length = 0;
+                        var parsed_exp_transitions = data[2][0];
+                        for (var exp_transition in parsed_exp_transitions) {
+                             $('<option value="'+ exp_transition +'">' + exp_transition + '</option>').appendTo('#mySelect');
+                        }
+                        var parsed_imm_transitions = data[2][1];
+                        for (var imm_transition in parsed_imm_transitions) {
+                             $('<option value="'+ imm_transition +'">' + imm_transition + '</option>').appendTo('#mySelect');
+                        }
+                    }
+                });
+              });
+            });
+    </script>
+
+    {% endblock %}
+
+</html>

@@ -1,0 +1,121 @@
+#mynetwork {
+    border-radius: 8px;
+    width: 60%;
+    float: left;
+    height: 500px;
+    background: lightgray;
+}
+
+#dataAnalysis {
+    border-radius: 8px;
+    width: 36%;
+    float: right;
+    height: 500px;
+    background: lightgray;
+}
+
+#clear {
+    clear: both;
+}
+
+.logo {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.menu {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.btn {
+  display: inline-block;
+}
+
+.new-button {
+  display: inline-block;
+  margin: 5px; /* space between buttons */
+  background-color: #4CAF50; /* Green */
+  border-radius: 8px;
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+
+.new-button-red {
+  background-color: #f44336; /* Red */
+}
+
+.button_container {
+  display: inline-block;
+  text-align: center;
+}
+
+.data_entry{
+    text-align:right;
+    width:100%;
+    padding:0;
+}
+
+.dropdownStyle {
+  margin: 2px; /* space between buttons */
+  background-color: white;
+  border: 1px solid black;
+  float:left;
+  border-radius: 8px;
+  width:110px;
+  color: black;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.input_box {
+  margin: 2px; /* space between buttons */
+  background-color: white;
+  border: 1px solid black;
+  float:left;
+  border-radius: 8px;
+  width:80px;
+  color: black;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.result_box {
+  margin: 2px; /* space between buttons */
+  background-color: white;
+  border: 1px solid black;
+  float:right;
+  border-radius: 8px;
+  width:80px;
+  height: 15px;
+  color: black;
+  padding: 10px 16px;
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.new-button-data {
+  margin: 5px;
+  background-color: #555555;
+  border-radius: 8px;
+  width:250px;
+  color: white;
+  padding: 10px 16px;
+  float:center;
+}
+
+.data-analysis-header {
+}
+
+.analysis-title{
+  text-align:center;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size:30px;
+}
+
+

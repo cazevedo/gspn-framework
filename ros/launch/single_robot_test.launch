@@ -1,0 +1,11 @@
+<launch>
+	<!-- Single Robot System -->
+	<include file="$(find gspn_framework_package)/ros/launch/static_transform_publisher_test/multi_robot_simulation.launch"/>
+	<include file="$(find gspn_framework_package)/ros/launch/static_transform_publisher_test/multi_robot_navigation.launch"/>
+
+
+	<!-- GSPN Servers
+	<node pkg="gspn_framework_package" ns="robot_1" type="server_1_goto.py" name="action_server_1" output="screen"/>
+	<node pkg="gspn_framework_package" ns="robot_1" type="server_2.py" name="action_server_2" output="screen"/>-->
+
+</launch>

@@ -1,0 +1,27 @@
+<launch>
+  <arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
+
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find gspn_framework_package)/ros/config/map.yaml" >
+  </node>
+
+  <group ns="robot_1">
+    <param name="amcl/initial_pose_x" value="-0.5" />
+    <param name="amcl/initial_pose_y" value="0.5" />
+    <include file="$(find gspn_framework_package)/ros/launch/static_transform_publisher_test/move_base.launch">
+      <arg name="name_space"  value="robot_1" />
+    </include>
+  </group>
+<!--
+  <group ns="robot_2">
+    <param name="tf_prefix" value="robot_2_tf" />
+    <param name="amcl/initial_pose_x" value="2" />
+    <param name="amcl/initial_pose_y" value="1" />
+    <include file="$(find gspn_framework_package)/ros/launch/static_transform_publisher_test/move_base.launch" />
+  </group>-->
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gspn_framework_package)/ros/config/myconfig.rviz"/>
+  <remap from="map" to="/map"/>
+</launch>

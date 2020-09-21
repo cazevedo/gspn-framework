@@ -1,0 +1,4 @@
+---
+string current_place
+string current_status
+int64 robot_id

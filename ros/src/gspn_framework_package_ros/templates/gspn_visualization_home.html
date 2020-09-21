@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+  <title>GSPN Visualization</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="./static/css/gspn_visualization_template.css">
+  <body>
+    {% extends "gspn_visualization_template.html" %}
+    {% block content %}
+
+    <div id="frame_container">
+        <div id="mynetwork"></div>
+    </div>
+    <script type="text/javascript">
+
+      var nodes = new vis.DataSet({});
+      var edges = new vis.DataSet({});
+
+      // Create nodes for the places
+      var parsed_places = JSON.parse('{{data.get_places() | tojson}}');
+      for(place in parsed_places) {
+        var marking = parsed_places[place];
+        image_link = 'https://raw.githubusercontent.com/PedroACaldeira/gspn-framework/master/images/token_' + marking + '.png';
+        nodes.add({id:place, shape:'circularImage', color:'black', title:place, physics:'false', label:place, image:image_link});
+      }
+
+      // Create nodes for the transitions
+      var parsed_transitions = JSON.parse('{{data.get_transitions() | tojson}}');
+      for(transition in parsed_transitions) {
+        if(parsed_transitions[transition][0] == 'exp') {
+          nodes.add({id:transition, title:transition, color: {background:'white', border:'black'}, shape:'square', physics:'false', label:transition, size:10});
+        }
+        else {
+          nodes.add({id:transition, title:transition, color:'black', shape:'square', physics:'false', label:transition, size:10});
+        }
+      }
+
+      // Get edge information
+      var arcs_in = {{ data.get_arcs_dict()[0] }}
+      var arcs_out = {{ data.get_arcs_dict()[1] }}
+
+      // Create edges from places to transitions
+      for(place in arcs_in){
+        var parsed_places_map = JSON.parse('{{data.index_to_places | tojson}}');
+        var place_id = parsed_places_map[place];
+        for(transition in arcs_in[place]){
+          var parsed_transitions_map = JSON.parse('{{data.index_to_transitions | tojson}}');
+          var transition_id = parsed_transitions_map[arcs_in[place][transition]];
+          edges.add({from:place_id, to:transition_id, arrows:'to', color:'black'});
+        }
+      }
+
+      // Create edges from transitions to places
+      for(transition in arcs_out){
+        var parsed_transitions_map = JSON.parse('{{data.index_to_transitions | tojson}}');
+        var transition_id = parsed_transitions_map[transition];
+        for(place in arcs_out[transition]){
+          var parsed_places_map = JSON.parse('{{data.index_to_places | tojson}}');
+          var place_id = parsed_places_map[arcs_out[transition][place]];
+          edges.add({from:transition_id, to:place_id, arrows:'to', color:'black'});
+        }
+      }
+
+      // create a network
+      var container = document.getElementById('mynetwork');
+      var data = {
+        nodes: nodes,
+        edges: edges
+      };
+      var options = {};
+      var NETWORK = new vis.Network(container, data, options);
+    </script>
+
+    </body>
+    <script type=text/javascript>
+
+            function sleep(ms) {
+              return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            async function change_color(transition, places) {
+                nodes.update({id:transition, color:{border:'yellow'}, shadow:{enabled:true, color:'yellow', x:0, y:0, size:20}});
+                await sleep(500);
+                nodes.update({id:transition, color:{border:'black'}, shadow:{enabled:false}});
+                for(place in places) {
+                  var marking = places[place];
+                  image_link = 'https://raw.githubusercontent.com/PedroACaldeira/gspn-framework/master/images/token_' + marking + '.png';
+                  nodes.update({id:place, image:image_link});
+                }
+            }
+
+            setInterval(function(){
+              fetch('/return_gspn_updates').then(response => response.json()).then(data => {
+                if(data.length > 0) {
+                  for(iterator=0; iterator < data.length; iterator+=2) {
+                    marking_to_use = JSON.parse(data[iterator+1].replace(/'/g,"\""));
+                    console.log(data[iterator]);
+                    console.log(marking_to_use);
+                    change_color(data[iterator], marking_to_use);
+                  }
+                }
+              })
+            }, 1000);
+
+    </script>
+
+    {% endblock %}
+
+</html>

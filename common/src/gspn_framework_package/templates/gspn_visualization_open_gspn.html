@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>GSPN Visualization</title>
+  </head>
+  <body>
+    {% extends "gspn_visualization_template.html" %}
+    {% block content %}
+    <div class='button_container'>
+      <a href="{{ url_for('use_code') }}" id=use_code><button class='new-button' style="float:left;">Use GSPN on Code</button></a>
+      <form method="post" action="/use_xml" enctype="multipart/form-data" >
+        <dl >
+            <p class="new-button" >
+                <input id="file" type="file" name="file" autocomplete="off" required>
+                <input type="submit" value="Submit" >
+            </p>
+        </dl>
+      </form>
+
+    </div>
+
+    {% endblock %}
+  </body>
+</html>

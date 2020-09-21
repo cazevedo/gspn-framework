@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Flask Parent Template</title>
+
+    <link rel="stylesheet" href="{{ url_for('static',    filename='css/gspn_visualization_template.css') }}">
+
+</head>
+  <body style="background-color:#E3E7E8;">
+    <header>
+      <div class="container">
+        <h1 class="logo">GSPN ROS Online Visualization Module</h1>
+      </div>
+    </header>
+
+{% block content %}
+{% endblock %}
+
+ </body>
+</html>

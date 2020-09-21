@@ -1,0 +1,5 @@
+string place
+---
+string transition
+---
+int32[] time_passed

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+
+<node pkg="gspn_framework_package" ns="robot_1" type="server_1.py" name="action_server_1" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_1" type="server_2.py" name="action_server_2" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_1" type="server_3.py" name="action_server_3" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_1" type="server_4.py" name="action_server_4" output="screen"/>
+
+<node pkg="gspn_framework_package" ns="robot_2" type="server_1.py" name="action_server_1" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_2" type="server_2.py" name="action_server_2" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_2" type="server_3.py" name="action_server_3" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_2" type="server_4.py" name="action_server_4" output="screen"/>
+
+<node pkg="gspn_framework_package" ns="robot_3" type="server_1.py" name="action_server_1" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_3" type="server_2.py" name="action_server_2" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_3" type="server_3.py" name="action_server_3" output="screen"/>
+<node pkg="gspn_framework_package" ns="robot_3" type="server_4.py" name="action_server_4" output="screen"/>
+
+</launch>

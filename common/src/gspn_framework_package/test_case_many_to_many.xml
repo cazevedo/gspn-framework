@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="ISO-8859-1"?><pnml>
+<net id="Net-One" type="P/T net">
+  <token id="Default" enabled="true" red="0" green="0" blue="0"/>
+
+  <place id="p1">
+    <name>
+      <value>p1</value>
+    </name>
+    <initialMarking>
+      <value>Default,0</value>
+    </initialMarking>
+    <capacity>
+      <value>0</value>
+    </capacity>
+  </place>
+
+  <place id="p2">
+    <name>
+      <value>p2</value>
+    </name>
+    <initialMarking>
+      <value>Default,1</value>
+    </initialMarking>
+    <capacity>
+      <value>0</value>
+    </capacity>
+  </place>
+
+  <place id="p3">
+    <name>
+      <value>p3</value>
+    </name>
+    <initialMarking>
+      <value>Default,0</value>
+    </initialMarking>
+    <capacity>
+      <value>0</value>
+    </capacity>
+  </place>
+
+  <place id="p4">
+    <name>
+      <value>p4</value>
+    </name>
+    <initialMarking>
+      <value>Default,0</value>
+    </initialMarking>
+    <capacity>
+      <value>0</value>
+    </capacity>
+  </place>
+
+  <place id="p5">
+    <name>
+      <value>p5</value>
+    </name>
+    <initialMarking>
+      <value>Default,0</value>
+    </initialMarking>
+    <capacity>
+      <value>0</value>
+    </capacity>
+  </place>
+
+  <place id="p6">
+    <name>
+      <value>p6</value>
+    </name>
+    <initialMarking>
+      <value>Default,1</value>
+    </initialMarking>
+    <capacity>
+      <value>0</value>
+    </capacity>
+  </place>
+
+  <transition id="t1">
+    <name>
+      <value>t1</value>
+    </name>
+    <rate>
+      <value>1.0</value>
+    </rate>
+    <timed>
+      <value>true</value>
+    </timed>
+    <infiniteServer>
+      <value>false</value>
+    </infiniteServer>
+    <priority>
+      <value>1</value>
+    </priority>
+  </transition>
+
+  <transition id="t2">
+    <name>
+      <value>t2</value>
+    </name>
+    <rate>
+      <value>1.0</value>
+    </rate>
+    <timed>
+      <value>true</value>
+    </timed>
+    <infiniteServer>
+      <value>false</value>
+    </infiniteServer>
+    <priority>
+      <value>1</value>
+    </priority>
+  </transition>
+
+  <arc id="p1 to t1" source="p1" target="t1">
+    <inscription>
+      <value>Default,1</value>
+    </inscription>
+    <tagged>
+      <value>false</value>
+    </tagged>
+  </arc>
+
+  <arc id="p6 to t2" source="p6" target="t2">
+    <inscription>
+      <value>Default,1</value>
+    </inscription>
+    <tagged>
+      <value>false</value>
+    </tagged>
+  </arc>
+
+  <arc id="p2 to t1" source="p2" target="t1">
+    <inscription>
+      <value>Default,1</value>
+    </inscription>
+    <tagged>
+      <value>false</value>
+    </tagged>
+  </arc>
+
+  <arc id="t2 to p1" source="t2" target="p1">
+    <inscription>
+      <value>Default,1</value>
+    </inscription>
+    <tagged>
+      <value>false</value>
+    </tagged>
+  </arc>
+
+  <arc id="t1 to p3" source="t1" target="p3">
+    <inscription>
+      <value>Default,1</value>
+    </inscription>
+    <tagged>
+      <value>false</value>
+    </tagged>
+  </arc>
+
+  <arc id="t1 to p4" source="t1" target="p4">
+    <inscription>
+      <value>Default,1</value>
+    </inscription>
+    <tagged>
+      <value>false</value>
+    </tagged>
+  </arc>
+
+  <arc id="t1 to p5" source="t1" target="p5">
+    <inscription>
+      <value>Default,1</value>
+    </inscription>
+    <tagged>
+      <value>false</value>
+    </tagged>
+  </arc>
+
+  </net>
+</pnml>

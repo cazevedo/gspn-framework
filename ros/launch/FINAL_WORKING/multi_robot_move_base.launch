@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find gspn_framework_package)/ros/launch/FINAL_WORKING/move_base_namespace.launch">
+    <arg name="robot_namespace" value="robot_1" />
+  </include>
+
+  <include file="$(find gspn_framework_package)/ros/launch/FINAL_WORKING/move_base_namespace.launch">
+    <arg name="robot_namespace" value="robot_2" />
+  </include>
+</launch>
