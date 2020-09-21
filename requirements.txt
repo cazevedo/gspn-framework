@@ -1,7 +1,0 @@
-sparse
-matplotlib
-numpy
-graphviz
-pandas
-seaborn
-tqdm
