@@ -455,9 +455,6 @@ class GSPN(object):
     def simulate(self, nsteps=1, reporting_step=1, simulate_wait=False):
         markings = []
         for step in range(nsteps):
-            if step % reporting_step == 0:
-                markings.append(self.get_current_marking())
-
             enabled_exp_transitions, random_switch = self.get_enabled_transitions()
 
             if random_switch:
@@ -511,6 +508,9 @@ class GSPN(object):
 
                     # Fire transition
                     self.fire_transition(list(enabled_exp_transitions.keys())[0])
+
+            if step % reporting_step == 0:
+                markings.append(self.get_current_marking())
 
         return list(markings)
 
