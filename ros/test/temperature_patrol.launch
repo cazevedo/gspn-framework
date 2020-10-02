@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<launch>
+	<!-- TODO: Replace this with  Multi-Robot Simulation -->
+	
+	<!-- Launch Multi-Robot Simulation -->
+	<include file="$(find multi_robot_sim)/ros/launch/multi_robot_simulation.launch"/>
+	<!-- Launch Multi-Robot Motion Planning -->
+	<include file="$(find multi_robot_sim)/ros/launch/multi_robot_move_base.launch"/>
+	<!-- Launch Multi-Robot Map Server + AMCL -->
+	<include file="$(find multi_robot_sim)/ros/launch/multi_robot_move_base.launch"/>
+
+	<!-- Launch Action Servers-->
+	<node pkg="multi_robot_sim" ns="robot_1" type="P1_Check_Temperature_L1.py" name="action_server_1" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P2_Alarm_L1.py" name="action_server_2" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P3_Decide_L1.py" name="action_server_3" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P4_Check_Temperature_L2.py" name="action_server_4" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P5_Alarm_L2.py" name="action_server_5" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P6_Decide_L2.py" name="action_server_6" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P7_Check_Temperature_L3.py" name="action_server_7" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P8_Alarm_L3.py" name="action_server_8" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P9_Decide_L3.py" name="action_server_9" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P10_Check_Temperature_L4.py" name="action_server_10" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P11_Alarm_L4.py" name="action_server_11" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_1" type="P12_Decide_L4.py" name="action_server_12" output="screen"/>
+
+	<node pkg="multi_robot_sim" ns="robot_2" type="P1_Check_Temperature_L1.py" name="action_server_1" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P2_Alarm_L1.py" name="action_server_2" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P3_Decide_L1.py" name="action_server_3" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P4_Check_Temperature_L2.py" name="action_server_4" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P5_Alarm_L2.py" name="action_server_5" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P6_Decide_L2.py" name="action_server_6" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P7_Check_Temperature_L3.py" name="action_server_7" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P8_Alarm_L3.py" name="action_server_8" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P9_Decide_L3.py" name="action_server_9" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P10_Check_Temperature_L4.py" name="action_server_10" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P11_Alarm_L4.py" name="action_server_11" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_2" type="P12_Decide_L4.py" name="action_server_12" output="screen"/>
+
+	<node pkg="multi_robot_sim" ns="robot_3" type="P1_Check_Temperature_L1.py" name="action_server_1" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P2_Alarm_L1.py" name="action_server_2" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P3_Decide_L1.py" name="action_server_3" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P4_Check_Temperature_L2.py" name="action_server_4" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P5_Alarm_L2.py" name="action_server_5" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P6_Decide_L2.py" name="action_server_6" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P7_Check_Temperature_L3.py" name="action_server_7" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P8_Alarm_L3.py" name="action_server_8" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P9_Decide_L3.py" name="action_server_9" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P10_Check_Temperature_L4.py" name="action_server_10" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P11_Alarm_L4.py" name="action_server_11" output="screen"/>
+	<node pkg="multi_robot_sim" ns="robot_3" type="P12_Decide_L4.py" name="action_server_12" output="screen"/>
+
+</launch>

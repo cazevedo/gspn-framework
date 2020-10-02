@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="user_input_file" value="$(find gspn_framework_package)/ros/config/execution_input_parameters.json" />
+  <param name="user_input_path" value="$(find gspn_framework_package)/ros/test" />
+
+  <!-- Launch GSPN Visualization Module (Optional) -->
+  <node pkg="gspn_framework_package" type="gspn_online_visualization_node.py" name="gspn_online_visualization" output="screen" launch-prefix="gnome-terminal --command"/>
+
+  <!-- Launch GSPN Execution Module for each robot -->
+  <node pkg="gspn_framework_package" ns="robot_1" type="gspn_execution_node.py" name="executor_1" output="screen" launch-prefix="gnome-terminal --command">
+    <param name="user_robot_id" value="1" />
+    <param name="user_current_place" value="p4:Check_Temperature_L2" />
+  </node>
+
+  <node pkg="gspn_framework_package" ns="robot_2" type="gspn_execution_node.py" name="executor_2" output="screen" launch-prefix="gnome-terminal --command">
+    <param name="user_robot_id" value="2" />
+    <param name="user_current_place" value="p1:Check_Temperature_L1" />
+  </node>
+
+  <node pkg="gspn_framework_package" ns="robot_3" type="gspn_execution_node.py" name="executor_3" output="screen" launch-prefix="gnome-terminal --command">
+    <param name="user_robot_id" value="3" />
+    <param name="user_current_place" value="p10:Check_Temperature_L4" />
+  </node>
+</launch>
