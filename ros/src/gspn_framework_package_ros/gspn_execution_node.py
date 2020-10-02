@@ -444,13 +444,13 @@ class GSPNExecutionROS(object):
 
                 else:
                     while GEN_CURRENT_STATUS == "DONE":
-                        time.sleep(1)
+                        time.sleep(0.1)
                         print("I am waiting for a change in the status.")
                         continue
 
             else:
                 while GEN_CURRENT_STATUS == "DONE":
-                    time.sleep(1)
+                    time.sleep(0.1)
                     print("I am waiting for a change in the status.")
                     continue
 
@@ -568,5 +568,5 @@ def main():
     my_execution.ros_gspn_execution()
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

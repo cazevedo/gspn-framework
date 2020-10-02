@@ -1,5 +1,0 @@
-{ "gspn":"gspn_case_create.xml",
-  "place_to_function_mapping": "{'p1': 'functions.count_Number1', 'p2': 'functions.count_Number2', 'p3': 'functions.do_nothing', 'p4': 'functions.do_nothing', 'p5': 'functions.do_nothing', 'p6': 'functions.count_Number6'}",
-  "places_tuple": "('p1', 'p2', 'p3', 'p4', 'p5', 'p6')",
-  "policy_dictionary": "{(0,0,1,1,0,0): {'t4':1}, (0,1,0,1,0,0): {'t5':1}}"
-}

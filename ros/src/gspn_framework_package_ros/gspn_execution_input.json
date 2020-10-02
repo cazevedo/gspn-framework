@@ -1,6 +1,0 @@
-{ "gspn":"gspn_6_places.xml",
-  "place_to_client_mapping": "{'p1': ['ExecGSPN', 'action_server_1'], 'p2': ['ExecGSPN', 'action_server_2'], 'p3': ['ExecGSPN', 'action_server_3'], 'p4': ['ExecGSPN','action_server_4'], 'p5': ['ExecGSPN', 'action_server_5'], 'p6': ['ExecGSPN', 'action_server_6']}",
-  "places_tuple": "('p1', 'p2', 'p3', 'p4', 'p5', 'p6')",
-  "policy_dictionary": "{(0,0,1,1,0,0): {'t4':1}, (0,1,0,1,0,0): {'t5':1}, (1,0,0,1,0,0):{'t4':1}, (0,0,0,2,0,0):{'t4':1}}",
-  "full_synchronization":"True"
-}

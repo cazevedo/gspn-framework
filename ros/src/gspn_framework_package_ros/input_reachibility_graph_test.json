@@ -1,7 +1,0 @@
-{ "gspn":"test_case_one_to_many.xml",
-  "place_to_client_mapping": "{'p1': ['ExecGSPN', 'action_server_1'], 'p2': ['ExecGSPN', 'action_server_2'], 'p3': ['ExecGSPN', 'action_server_3'], 'p4': ['ExecGSPN', 'action_server_4']}",
-  "resources_list": "['p4']",
-  "places_tuple": "('p1', 'p2')",
-  "policy_dictionary": "{(0,0,1): {'t4':1}}",
-  "full_synchronization":"True"
-}
