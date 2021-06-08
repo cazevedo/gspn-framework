@@ -1,0 +1,1318 @@
+<?xml version="1.0" encoding="ISO-8859-1"?><pnml>
+<net id="Net-One" type="P/T net">
+<token id="Default" enabled="true" red="0" green="0" blue="0"/>
+<place id="L1">
+<graphics>
+<position x="660.0" y="375.0"/>
+</graphics>
+<name>
+<value>L1</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="L2">
+<graphics>
+<position x="1110.0" y="375.0"/>
+</graphics>
+<name>
+<value>L2</value>
+<graphics>
+<offset x="36.0" y="-6.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="L3">
+<graphics>
+<position x="300.0" y="375.0"/>
+</graphics>
+<name>
+<value>L3</value>
+<graphics>
+<offset x="5.0" y="-5.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="MoppingL1">
+<graphics>
+<position x="660.0" y="540.0"/>
+</graphics>
+<name>
+<value>MoppingL1</value>
+<graphics>
+<offset x="-13.0" y="29.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="MoppingL2">
+<graphics>
+<position x="1185.0" y="465.0"/>
+</graphics>
+<name>
+<value>MoppingL2</value>
+<graphics>
+<offset x="103.0" y="16.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="MoppingL3">
+<graphics>
+<position x="225.0" y="465.0"/>
+</graphics>
+<name>
+<value>MoppingL3</value>
+<graphics>
+<offset x="-13.0" y="19.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="NavigatingL1-L2">
+<graphics>
+<position x="855.0" y="375.0"/>
+</graphics>
+<name>
+<value>NavigatingL1-L2</value>
+<graphics>
+<offset x="65.0" y="-13.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="NavigatingL1-L3">
+<graphics>
+<position x="495.0" y="375.0"/>
+</graphics>
+<name>
+<value>NavigatingL1-L3</value>
+<graphics>
+<offset x="65.0" y="-16.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="NavigatingL2-L1">
+<graphics>
+<position x="915.0" y="450.0"/>
+</graphics>
+<name>
+<value>NavigatingL2-L1</value>
+<graphics>
+<offset x="61.0" y="65.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="NavigatingL3-L1">
+<graphics>
+<position x="405.0" y="435.0"/>
+</graphics>
+<name>
+<value>NavigatingL3-L1</value>
+<graphics>
+<offset x="53.0" y="61.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="VacuumingL1">
+<graphics>
+<position x="660.0" y="225.0"/>
+</graphics>
+<name>
+<value>VacuumingL1</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="VacuumingL2">
+<graphics>
+<position x="1110.0" y="195.0"/>
+</graphics>
+<name>
+<value>VacuumingL2</value>
+<graphics>
+<offset x="122.0" y="16.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<place id="VacuumingL3">
+<graphics>
+<position x="300.0" y="210.0"/>
+</graphics>
+<name>
+<value>VacuumingL3</value>
+<graphics>
+<offset x="-20.0" y="21.0"/>
+</graphics>
+</name>
+<initialMarking>
+<value>Default,0</value>
+<graphics>
+<offset x="0.0" y="0.0"/>
+</graphics>
+</initialMarking>
+<capacity>
+<value>0</value>
+</capacity>
+</place>
+<transition id="ArrivedL1-L2">
+<graphics>
+<position x="990.0" y="375.0"/>
+</graphics>
+<name>
+<value>ArrivedL1-L2</value>
+<graphics>
+<offset x="39.0" y="-11.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="ArrivedL1-L3">
+<graphics>
+<position x="390.0" y="375.0"/>
+</graphics>
+<name>
+<value>ArrivedL1-L3</value>
+<graphics>
+<offset x="47.0" y="-13.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="ArrivedL2-L1">
+<graphics>
+<position x="795.0" y="450.0"/>
+</graphics>
+<name>
+<value>ArrivedL2-L1</value>
+<graphics>
+<offset x="46.0" y="67.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="ArrivedL3-L1">
+<graphics>
+<position x="525.0" y="435.0"/>
+</graphics>
+<name>
+<value>ArrivedL3-L1</value>
+<graphics>
+<offset x="43.0" y="67.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="FinishedMopL1">
+<graphics>
+<position x="660.0" y="615.0"/>
+</graphics>
+<name>
+<value>FinishedMopL1</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="FinishedMopL2">
+<graphics>
+<position x="1185.0" y="540.0"/>
+</graphics>
+<name>
+<value>FinishedMopL2</value>
+<graphics>
+<offset x="113.0" y="18.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="FinishedMopL3">
+<graphics>
+<position x="225.0" y="540.0"/>
+</graphics>
+<name>
+<value>FinishedMopL3</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="FinishedVacuumL1">
+<graphics>
+<position x="660.0" y="135.0"/>
+</graphics>
+<name>
+<value>FinishedVacuumL1</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="FinishedVacuumL2">
+<graphics>
+<position x="1110.0" y="120.0"/>
+</graphics>
+<name>
+<value>FinishedVacuumL2</value>
+<graphics>
+<offset x="137.0" y="20.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="FinishedVacuumL3">
+<graphics>
+<position x="300.0" y="120.0"/>
+</graphics>
+<name>
+<value>FinishedVacuumL3</value>
+<graphics>
+<offset x="-3.0" y="20.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>true</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="GoL1-L2">
+<graphics>
+<position x="750.0" y="375.0"/>
+</graphics>
+<name>
+<value>GoL1-L2</value>
+<graphics>
+<offset x="34.0" y="-14.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="GoL1-L3">
+<graphics>
+<position x="585.0" y="375.0"/>
+</graphics>
+<name>
+<value>GoL1-L3</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="GoL2-L1">
+<graphics>
+<position x="1035.0" y="450.0"/>
+</graphics>
+<name>
+<value>GoL2-L1</value>
+<graphics>
+<offset x="28.0" y="67.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="GoL3-L1">
+<graphics>
+<position x="300.0" y="435.0"/>
+</graphics>
+<name>
+<value>GoL3-L1</value>
+<graphics>
+<offset x="28.0" y="58.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="MopL1">
+<graphics>
+<position x="660.0" y="450.0"/>
+</graphics>
+<name>
+<value>MopL1</value>
+<graphics>
+<offset x="-2.0" y="50.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="MopL2">
+<graphics>
+<position x="1185.0" y="375.0"/>
+</graphics>
+<name>
+<value>MopL2</value>
+<graphics>
+<offset x="78.0" y="16.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="MopL3">
+<graphics>
+<position x="225.0" y="375.0"/>
+</graphics>
+<name>
+<value>MopL3</value>
+<graphics>
+<offset x="-4.0" y="19.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="VacuumL1">
+<graphics>
+<position x="660.0" y="300.0"/>
+</graphics>
+<name>
+<value>VacuumL1</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="VacuumL2">
+<graphics>
+<position x="1110.0" y="285.0"/>
+</graphics>
+<name>
+<value>VacuumL2</value>
+<graphics>
+<offset x="90.0" y="21.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<transition id="VacuumL3">
+<graphics>
+<position x="300.0" y="285.0"/>
+</graphics>
+<name>
+<value>VacuumL3</value>
+<graphics>
+<offset x="-5.0" y="35.0"/>
+</graphics>
+</name>
+<orientation>
+<value>0</value>
+</orientation>
+<rate>
+<value>1.0</value>
+</rate>
+<timed>
+<value>false</value>
+</timed>
+<infiniteServer>
+<value>false</value>
+</infiniteServer>
+<priority>
+<value>1</value>
+</priority>
+</transition>
+<arc id="ArrivedL1-L2 to L2" source="ArrivedL1-L2" target="L2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1006" y="387" curvePoint="false"/>
+<arcpath id="001" x="1107" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="ArrivedL1-L3 to L3" source="ArrivedL1-L3" target="L3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="396" y="387" curvePoint="false"/>
+<arcpath id="001" x="326" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="ArrivedL2-L1 to L1" source="ArrivedL2-L1" target="L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="801" y="462" curvePoint="false"/>
+<arcpath id="001" x="684" y="394" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="ArrivedL3-L1 to L1" source="ArrivedL3-L1" target="L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="541" y="447" curvePoint="false"/>
+<arcpath id="001" x="658" y="393" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="FinishedMopL1 to L1" source="FinishedMopL1" target="L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="676" y="627" curvePoint="false"/>
+<arcpath id="001" x="702" y="627" curvePoint="false"/>
+<arcpath id="002" x="702" y="432" curvePoint="false"/>
+<arcpath id="003" x="680" y="399" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="FinishedMopL2 to L2" source="FinishedMopL2" target="L2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1191" y="552" curvePoint="false"/>
+<arcpath id="001" x="1152" y="552" curvePoint="false"/>
+<arcpath id="002" x="1152" y="417" curvePoint="false"/>
+<arcpath id="003" x="1132" y="397" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="FinishedMopL3 to L3" source="FinishedMopL3" target="L3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="241" y="552" curvePoint="false"/>
+<arcpath id="001" x="267" y="552" curvePoint="false"/>
+<arcpath id="002" x="267" y="417" curvePoint="false"/>
+<arcpath id="003" x="299" y="395" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="FinishedVacuumL1 to L1" source="FinishedVacuumL1" target="L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="676" y="147" curvePoint="false"/>
+<arcpath id="001" x="717" y="147" curvePoint="false"/>
+<arcpath id="002" x="717" y="342" curvePoint="false"/>
+<arcpath id="003" x="682" y="376" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="FinishedVacuumL2 to L2" source="FinishedVacuumL2" target="L2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1116" y="132" curvePoint="false"/>
+<arcpath id="001" x="1077" y="132" curvePoint="false"/>
+<arcpath id="002" x="1077" y="342" curvePoint="false"/>
+<arcpath id="003" x="1111" y="376" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="FinishedVacuumL3 to L3" source="FinishedVacuumL3" target="L3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="316" y="132" curvePoint="false"/>
+<arcpath id="001" x="357" y="132" curvePoint="false"/>
+<arcpath id="002" x="357" y="327" curvePoint="false"/>
+<arcpath id="003" x="321" y="375" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="GoL1-L2 to NavigatingL1-L2" source="GoL1-L2" target="NavigatingL1-L2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="766" y="387" curvePoint="false"/>
+<arcpath id="001" x="852" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="GoL1-L3 to NavigatingL1-L3" source="GoL1-L3" target="NavigatingL1-L3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="591" y="387" curvePoint="false"/>
+<arcpath id="001" x="521" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="GoL2-L1 to NavigatingL2-L1" source="GoL2-L1" target="NavigatingL2-L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1041" y="462" curvePoint="false"/>
+<arcpath id="001" x="941" y="462" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="GoL3-L1 to NavigatingL3-L1" source="GoL3-L1" target="NavigatingL3-L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="316" y="447" curvePoint="false"/>
+<arcpath id="001" x="402" y="447" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L1 to GoL1-L2" source="L1" target="GoL1-L2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="686" y="387" curvePoint="false"/>
+<arcpath id="001" x="756" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L1 to GoL1-L3" source="L1" target="GoL1-L3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="657" y="387" curvePoint="false"/>
+<arcpath id="001" x="601" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L1 to MopL1" source="L1" target="MopL1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="672" y="401" curvePoint="false"/>
+<arcpath id="001" x="672" y="447" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L1 to VacuumL1" source="L1" target="VacuumL1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="672" y="372" curvePoint="false"/>
+<arcpath id="001" x="672" y="327" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L2 to GoL2-L1" source="L2" target="GoL2-L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1111" y="397" curvePoint="false"/>
+<arcpath id="001" x="1051" y="462" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L2 to MopL2" source="L2" target="MopL2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1136" y="387" curvePoint="false"/>
+<arcpath id="001" x="1191" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L2 to VacuumL2" source="L2" target="VacuumL2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1122" y="372" curvePoint="false"/>
+<arcpath id="001" x="1122" y="312" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L3 to GoL3-L1" source="L3" target="GoL3-L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="312" y="401" curvePoint="false"/>
+<arcpath id="001" x="312" y="432" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L3 to MopL3" source="L3" target="MopL3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="297" y="387" curvePoint="false"/>
+<arcpath id="001" x="241" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="L3 to VacuumL3" source="L3" target="VacuumL3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="312" y="372" curvePoint="false"/>
+<arcpath id="001" x="312" y="312" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="MopL1 to MoppingL1" source="MopL1" target="MoppingL1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="672" y="477" curvePoint="false"/>
+<arcpath id="001" x="672" y="537" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="MopL2 to MoppingL2" source="MopL2" target="MoppingL2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1197" y="402" curvePoint="false"/>
+<arcpath id="001" x="1197" y="462" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="MopL3 to MoppingL3" source="MopL3" target="MoppingL3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="237" y="402" curvePoint="false"/>
+<arcpath id="001" x="237" y="462" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="MoppingL1 to FinishedMopL1" source="MoppingL1" target="FinishedMopL1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="672" y="566" curvePoint="false"/>
+<arcpath id="001" x="672" y="612" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="MoppingL2 to FinishedMopL2" source="MoppingL2" target="FinishedMopL2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1197" y="492" curvePoint="false"/>
+<arcpath id="001" x="1197" y="492" curvePoint="false"/>
+<arcpath id="002" x="1197" y="537" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="MoppingL3 to FinishedMopL3" source="MoppingL3" target="FinishedMopL3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="237" y="491" curvePoint="false"/>
+<arcpath id="001" x="237" y="537" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="NavigatingL1-L2 to ArrivedL1-L2" source="NavigatingL1-L2" target="ArrivedL1-L2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="881" y="387" curvePoint="false"/>
+<arcpath id="001" x="996" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="NavigatingL1-L3 to ArrivedL1-L3" source="NavigatingL1-L3" target="ArrivedL1-L3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="492" y="387" curvePoint="false"/>
+<arcpath id="001" x="406" y="387" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="NavigatingL2-L1 to ArrivedL2-L1" source="NavigatingL2-L1" target="ArrivedL2-L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="912" y="462" curvePoint="false"/>
+<arcpath id="001" x="811" y="462" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="NavigatingL3-L1 to ArrivedL3-L1" source="NavigatingL3-L1" target="ArrivedL3-L1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="431" y="447" curvePoint="false"/>
+<arcpath id="001" x="531" y="447" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="VacuumingL1 to FinishedVacuumL1" source="VacuumingL1" target="FinishedVacuumL1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="672" y="222" curvePoint="false"/>
+<arcpath id="001" x="672" y="162" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="VacuumingL2 to FinishedVacuumL2" source="VacuumingL2" target="FinishedVacuumL2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1122" y="192" curvePoint="false"/>
+<arcpath id="001" x="1122" y="147" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="VacuumingL3 to FinishedVacuumL3" source="VacuumingL3" target="FinishedVacuumL3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="312" y="207" curvePoint="false"/>
+<arcpath id="001" x="312" y="147" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="VacuumL1 to VacuumingL1" source="VacuumL1" target="VacuumingL1">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="672" y="297" curvePoint="false"/>
+<arcpath id="001" x="672" y="251" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="VacuumL2 to VacuumingL2" source="VacuumL2" target="VacuumingL2">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="1122" y="282" curvePoint="false"/>
+<arcpath id="001" x="1122" y="221" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+<arc id="VacuumL3 to VacuumingL3" source="VacuumL3" target="VacuumingL3">
+<graphics/>
+<inscription>
+<value>Default,1</value>
+<graphics/>
+</inscription>
+<tagged>
+<value>false</value>
+</tagged>
+<arcpath id="000" x="312" y="282" curvePoint="false"/>
+<arcpath id="001" x="312" y="236" curvePoint="false"/>
+<type value="normal"/>
+</arc>
+</net>
+</pnml>
