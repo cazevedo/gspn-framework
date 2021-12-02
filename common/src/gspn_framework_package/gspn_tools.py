@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
-from gspn_framework_package import gspn as pn
+# from gspn_framework_package import gspn as pn
+import gspn as pn
 import pandas as pd
 import xml.etree.ElementTree as et  # XML parser
 from graphviz import Digraph
@@ -93,6 +94,91 @@ class GSPNtools(object):
             gspn.add_arcs(arcs_in, arcs_out)
 
             list_gspn.append(gspn)
+
+        return list_gspn
+
+    @staticmethod
+    def import_greatspn(file):
+        list_gspn = []  # list of parsed GSPN objects
+
+        tree = et.parse(file)  # parse XML with ElementTree
+        root = tree.getroot()
+
+        for proj in root.iter('project'):
+            for petri_net in proj.iter('gspn'):
+                gspn = pn.GSPN()
+
+                for node in petri_net.iter('nodes'):
+                    n_places = len(list(node.iter('place')))
+                    place_name = [''] * n_places
+                    place_marking = [0] * n_places
+
+                    for i, place in enumerate(node.iter('place')):
+                        place_name[i] = place.get('name')
+                        pm = place.get('marking')
+                        if pm != None:
+                            place_marking[i] = int(pm)
+
+                    # print(place_name)
+                    # print(place_marking)
+                    gspn.add_places(name=list(place_name), ntokens=place_marking, set_initial_marking=True)
+
+                    n_transitions = len(list(node.iter('transition')))
+                    transition_name = [''] * n_transitions
+                    transition_type = [''] * n_transitions
+                    transition_rate = [0.0] * n_transitions
+
+                    for i, transition in enumerate(node.iter('transition')):
+                        transition_name[i] = transition.get('name')
+
+                        tr_type = transition.get('type')
+                        if tr_type == 'IMM':
+                            transition_type[i] = 'imm'
+                            if transition.get('weight') != None:
+                                transition_rate[i] = float(transition.get('weight'))
+                        elif tr_type == 'EXP':
+                            transition_type[i] = 'exp'
+                            if transition.get('delay') != None:
+                                transition_rate[i] = float(transition.get('delay'))
+                        else:
+                            raise Exception(tr_type+' is an incorrect transition type.')
+
+                    # print(transition_name, transition_type, transition_rate)
+                    gspn.add_transitions(list(transition_name), transition_type, transition_rate)
+
+                for edge in petri_net.iter('edges'):
+                    # IN arc connection (from place to transition)
+                    arcs_in = {}
+                    # OUT arc connection (from transition to place)
+                    arcs_out = {}
+
+                    for arc in edge.iter('arc'):
+                        # future implementations that may require multiple arc weights should use: arc.get('mult')
+                        if arc.get('kind') == 'INPUT':
+                            if arc.get('tail') in place_name and arc.get('head') in transition_name:
+                                if arc.get('tail') in arcs_in:
+                                    arcs_in[arc.get('tail')].append(arc.get('head'))
+                                else:
+                                    arcs_in[arc.get('tail')] = [arc.get('head')]
+                            else:
+                                raise Exception('Incorrect order in INPUT arc '+arc.get('head')+' to '+arc.get('tail'))
+                        elif arc.get('kind') == 'OUTPUT':
+                            if  arc.get('tail') in transition_name and arc.get('head') in place_name:
+                                if arc.get('tail') in arcs_out:
+                                    arcs_out[arc.get('tail')].append(arc.get('head'))
+                                else:
+                                    arcs_out[arc.get('tail')] = [arc.get('head')]
+                            else:
+                                raise Exception(
+                                    'Incorrect order in OUTPUT arc ' + arc.get('head') + ' to ' + arc.get('tail'))
+                        else:
+                            raise Exception(arc.get('kind')+' is an incorrect arc type.')
+
+                    # print(arcs_in)
+                    # print(arcs_out)
+                    gspn.add_arcs(arcs_in, arcs_out)
+
+                list_gspn.append(gspn)
 
         return list_gspn
 
