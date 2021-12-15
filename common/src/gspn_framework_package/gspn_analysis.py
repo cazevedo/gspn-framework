@@ -3,7 +3,8 @@
 import numpy as np
 import pandas as pd
 from scipy import linalg
-from gspn_framework_package import gspn as pn
+# from gspn_framework_package import gspn as pn
+import gspn as pn
 
 # TODO : Extend analysis methods to matrix equation and reduction decomposition approaches (take a look at Murata)
 class CoverabilityTree(object):
