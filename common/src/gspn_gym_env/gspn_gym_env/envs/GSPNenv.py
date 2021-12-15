@@ -3,9 +3,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 
 import numpy as np
-import gspn
 import gspn_tools
-from pyglet.resource import location
 
 
 class GSPNenv(gym.Env):
@@ -16,63 +14,115 @@ class GSPNenv(gym.Env):
         pn_tool = gspn_tools.GSPNtools()
         self.mr_gspn = pn_tool.import_greatspn(gspn_path)[0]
         # pn_tool.draw_gspn(mr_gspn)
-
-        print(self.mr_gspn.get_current_marking())
-        print(self.mr_gspn.places_to_index)
-
-        sparse_state = self.mr_gspn.get_current_marking(sparse_marking=True)
-        location = list(sparse_state.keys())[0]
-        print('right_' + location)
-        self.mr_gspn.fire_transition('right_' + location)
-
-        sparse_state = self.mr_gspn.get_current_marking(sparse_marking=True)
-        location = list(sparse_state.keys())[0]
-
-        token_index = self.mr_gspn.places_to_index[location]
-        print(token_index)
+        self.timestamp = 0
 
     def step(self, action):
-        print(action)
-        # state = self.mr_gspn.get_current_marking()
-        sparse_state = self.mr_gspn.get_current_marking(sparse_marking=True)
+        # get current state
+        current_state = self.get_current_state()
+        print('S: ', current_state)
 
-        current_location = list(sparse_state.keys())[0]
-        reward = self.reward_function(current_location, action)
+        # map input action to associated transition
+        transition = self.action_to_transition(current_state, action)
+        print('Action: ', action, transition)
 
-        if action > 0.5:
-            self.mr_gspn.fire_transition('left_'+current_location)
-        else:
-            self.mr_gspn.fire_transition('right_'+current_location)
+        # get reward
+        reward = self.reward_function(current_state, transition)
+        print('Reward: ', reward)
 
-        sparse_state = self.mr_gspn.get_current_marking(sparse_marking=True)
-        next_location = list(sparse_state.keys())[0]
+        # apply action
+        self.mr_gspn.fire_transition(transition)
+        # get execution time until next decision state
+        self.timestamp += self.get_execution_time()
+        print('Timestamp: ', self.timestamp)
 
-        next_state = [0]*len(self.mr_gspn.get_current_marking().keys())
-        token_index = self.mr_gspn.places_to_index[next_location]
-        next_state[token_index] = 1
+        # get next state
+        next_state = self.marking_to_state()
+        print("S': ", self.get_current_state())
+        print("S': ", next_state)
+        print()
 
         episode_done = False
 
-        return True
-        # return next_state, reward, episode_done,\
-        #        {'timestamp': self.timestamp, 'observation_obj': observation_dict}
+        return next_state, reward, episode_done,\
+               {'timestamp': self.timestamp}
 
     def reset(self):
-        return True
+        self.timestamp = 0
+        self.mr_gspn.reset_simulation()
+        current_state = self.marking_to_state()
+
+        return current_state, {'timestamp': self.timestamp}
 
     def render(self, mode='human'):
-        print('render')
+        print('rendering not implemented')
         return True
 
     def close(self):
+        self.reset()
         print('Au Revoir Shoshanna!')
 
-    def reward_function(self, state, action):
-        reward = 0
-        # if state == :
+    def get_current_state(self):
+        sparse_state = self.mr_gspn.get_current_marking(sparse_marking=True)
+        current_state = list(sparse_state.keys())[0]
 
+        return current_state
+
+    def action_to_transition(self, state, action):
+        # if action > 0.5 then go through the left door else go throught the right door
+        if action < 0.5:
+            return 'left_'+state
+        else:
+            return 'right_'+state
+
+    def marking_to_state(self):
+        # map dict marking to list marking
+        marking_dict = self.mr_gspn.get_current_marking(sparse_marking=True)
+        next_location = list(marking_dict.keys())[0]
+        state = [0]*len(self.mr_gspn.get_current_marking().keys())
+        token_index = self.mr_gspn.places_to_index[next_location]
+        state[token_index] = 1
+
+        return state
+
+    def reward_function(self, state, transition):
+        reward = 0
+        # Start + Left Door
+        if state == 'Start' and transition == 'left_Start':
+            reward = 1
+        # Intermediate + Right Door
+        elif state == 'Intermediate' and transition == 'right_Intermediate':
+            reward = 1
+        # End + Left Door
+        elif state == 'End' and transition == 'left_End':
+            reward = 1
 
         return reward
+
+    def fire_timed_transitions(self):
+        enabled_exp_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+
+        wait_times = enabled_exp_transitions.copy()
+        # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
+        # in this case the beta rate parameter is used instead, where beta = 1/lambda
+        for key, value in enabled_exp_transitions.items():
+            wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
+
+        timed_transition = min(wait_times, key=wait_times.get)
+        wait_until_fire = wait_times[timed_transition]
+
+        self.mr_gspn.fire_transition(timed_transition)
+
+        return wait_until_fire
+
+    def get_execution_time(self):
+        elapsed_time = 0
+
+        enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+        while(enabled_timed_transitions and not enabled_imm_transitions):
+            elapsed_time += self.fire_timed_transitions()
+            enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+
+        return elapsed_time
 
     # def seed(self, seed=None):
     #     self.np_random, seed = seeding.np_random(seed)
