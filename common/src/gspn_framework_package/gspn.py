@@ -2,24 +2,9 @@
 import time
 import numpy as np
 # tira daqui o from . para funcionar o gspn_execution
-from gspn_framework_package import gspn_analysis
+# from gspn_framework_package import gspn_analysis
+import gspn_analysis
 import sparse
-
-
-def find_correct_value(list1, list2, element1, element2):
-    '''
-    We know the elements we want to find on each list and we want to know their index
-    :param list1: list of int
-    :param list2: list of int
-    :param element1: element we want to find on list 1
-    :param element2: element we want to find on list 2
-    :return: index of the elements
-    '''
-    for i in list1:
-        if list1[i] == element1:
-            if list2[i] == element2:
-                return i
-
 
 # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
 class GSPN(object):
@@ -486,7 +471,7 @@ class GSPN(object):
                     transition_id = self.transitions_to_index[transition]  # This is an int
                     places_list = self.__arc_in_m.coords[0].tolist()
                     transitions_list = self.__arc_in_m.coords[1].tolist()
-                    value = find_correct_value(places_list, transitions_list, place_id, transition_id)
+                    value = self.find_index_value(places_list, transitions_list, place_id, transition_id)
                     del places_list[value]
                     del transitions_list[value]
                     self.__arc_in_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)),
@@ -499,12 +484,26 @@ class GSPN(object):
                     place_id = self.places_to_index[place]  # This is an int
                     transitions_list = self.__arc_out_m.coords[0].tolist()
                     places_list = self.__arc_out_m.coords[1].tolist()
-                    value = find_correct_value(places_list, transitions_list, place_id, transition_id)
+                    value = self.find_index_value(places_list, transitions_list, place_id, transition_id)
                     del places_list[value]
                     del transitions_list[value]
                     self.__arc_out_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)),
                                                   self.__arc_out_m.shape)
         return True
+
+    def find_index_value(self, list1, list2, element1, element2):
+        '''
+        Return the first index where there is overlap between list1 and list2 elements.
+        :param list1: list of int
+        :param list2: list of int
+        :param element1: element we want to find on list 1
+        :param element2: element we want to find on list 2
+        :return: index of the elements
+        '''
+        for i in list1:
+            if list1[i] == element1:
+                if list2[i] == element2:
+                    return i
 
     def get_enabled_transitions(self):
         """
@@ -696,7 +695,7 @@ class GSPN(object):
                     if simulate_wait:
                         time.sleep(wait_until_fire)
 
-                        # Fire transition
+                    # Fire transition
                     self.fire_transition(firing_transition)
                 else:
                     raise Exception('Deadlock, there are no enabled transitions in marking: ' + str(self.__sparse_marking))
