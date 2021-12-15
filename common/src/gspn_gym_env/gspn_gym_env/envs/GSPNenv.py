@@ -9,12 +9,19 @@ import gspn_tools
 class GSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, gspn_path):
+    def __init__(self, gspn_path, n_robots):
         print('GSPN Gym Env')
         pn_tool = gspn_tools.GSPNtools()
         self.mr_gspn = pn_tool.import_greatspn(gspn_path)[0]
         # pn_tool.draw_gspn(mr_gspn)
         self.timestamp = 0
+
+        # [0, 1, 1, 0, 1, 2, 0]
+        self.observation_space = spaces.MultiDiscrete(nvec=[n_robots+1]*len(self.mr_gspn.get_current_marking()))
+
+        # [0.0...1.0]
+        self.action_space = spaces.Box(low=0.0, high=1.0,
+                                       shape=(1,), dtype=np.float32)
 
     def step(self, action):
         # get current state
