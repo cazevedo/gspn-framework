@@ -3,7 +3,8 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 
 import numpy as np
-import gspn_tools
+from gspn_framework_package import gspn_tools
+# import gspn_tools
 
 
 class GSPNenv(gym.Env):
