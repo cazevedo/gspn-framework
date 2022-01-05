@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="example" version="121">
+  <gspn name="GSPN" show-color-cmd="false" show-fluid-cmd="false">
+    <nodes>
+      <place label-x="-2.0" label-y="0.5" marking="1" name="Start" x="10.0" y="5.0"/>
+      <transition name="left_Start" type="IMM" x="17.85" y="5.0"/>
+      <transition name="right_Start" type="IMM" x="17.85" y="11.0"/>
+      <place name="LeftDoor1" x="27.0" y="5.0"/>
+      <place name="RightDoor1" x="27.0" y="11.0"/>
+      <transition delay="100" label-x="4.0" label-y="-1.0" name="LD1Finish" nservers-x="0.5" type="EXP" x="36.55" y="5.0"/>
+      <transition delay="100" label-x="3.5" label-y="-1.0" name="RD1Finish" nservers-x="0.5" type="EXP" x="36.55" y="11.0"/>
+      <place name="Intermediate" x="8.0" y="23.0"/>
+      <place name="End" x="7.0" y="37.0"/>
+      <place name="LeftDoor2" x="27.0" y="23.0"/>
+      <place name="RightDoor2" x="27.0" y="29.0"/>
+      <transition delay="0.1" name="LD2Finish" nservers-x="0.5" type="EXP" x="36.55" y="23.0"/>
+      <transition delay="0.1" name="RD2Finish" nservers-x="0.5" type="EXP" x="36.55" y="29.0"/>
+      <transition name="left_Intermediate" type="IMM" x="17.85" y="23.0"/>
+      <transition name="right_Intermediate" type="IMM" x="17.85" y="29.0"/>
+      <transition name="left_End" type="IMM" x="17.85" y="36.0"/>
+      <transition name="right_End" type="IMM" x="17.85" y="41.0"/>
+      <place name="LeftDoor3" x="27.0" y="36.0"/>
+      <place name="RightDoor3" x="27.0" y="41.0"/>
+      <transition delay="1" name="LD3Finish" nservers-x="0.5" type="EXP" x="36.55" y="36.0"/>
+      <transition delay="1" name="RD3Finish" nservers-x="0.5" type="EXP" x="36.55" y="41.0"/>
+    </nodes>
+    <edges>
+      <arc head="left_Start" kind="INPUT" tail="Start"/>
+      <arc head="right_Start" kind="INPUT" tail="Start"/>
+      <arc head="LeftDoor1" kind="OUTPUT" tail="left_Start"/>
+      <arc head="RightDoor1" kind="OUTPUT" tail="right_Start"/>
+      <arc head="LD1Finish" kind="INPUT" tail="LeftDoor1"/>
+      <arc head="RD1Finish" kind="INPUT" tail="RightDoor1"/>
+      <arc head="Intermediate" kind="OUTPUT" tail="LD1Finish"/>
+      <arc head="Intermediate" kind="OUTPUT" tail="RD1Finish"/>
+      <arc head="left_Intermediate" kind="INPUT" tail="Intermediate"/>
+      <arc head="right_Intermediate" kind="INPUT" tail="Intermediate"/>
+      <arc head="LeftDoor2" kind="OUTPUT" tail="left_Intermediate"/>
+      <arc head="RightDoor2" kind="OUTPUT" tail="right_Intermediate"/>
+      <arc head="LD2Finish" kind="INPUT" tail="LeftDoor2"/>
+      <arc head="RD2Finish" kind="INPUT" tail="RightDoor2"/>
+      <arc head="End" kind="OUTPUT" tail="LD2Finish"/>
+      <arc head="left_End" kind="INPUT" tail="End"/>
+      <arc head="right_End" kind="INPUT" tail="End"/>
+      <arc head="End" kind="OUTPUT" tail="RD2Finish"/>
+      <arc head="LeftDoor3" kind="OUTPUT" tail="left_End"/>
+      <arc head="RightDoor3" kind="OUTPUT" tail="right_End"/>
+      <arc head="RD3Finish" kind="INPUT" tail="RightDoor3"/>
+      <arc head="LD3Finish" kind="INPUT" tail="LeftDoor3"/>
+      <arc head="Start" kind="OUTPUT" tail="LD3Finish"/>
+      <arc head="Start" kind="OUTPUT" tail="RD3Finish"/>
+    </edges>
+  </gspn>
+  <measures gspn-name="GSPN" name="Measures" simplified-UI="false">
+    <assignments/>
+    <greatspn/>
+    <formulas>
+      <formula comment="Basic statistics of the toolchain execution." language="STAT"/>
+      <formula comment="All the basic Petri net measures" language="ALL"/>
+    </formulas>
+  </measures>
+</project>
