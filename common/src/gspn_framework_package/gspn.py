@@ -1,9 +1,7 @@
 #! /usr/bin/env python3
 import time
 import numpy as np
-# tira daqui o from . para funcionar o gspn_execution
 from gspn_framework_package import gspn_analysis
-# import gspn_analysis
 import sparse
 
 # TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
@@ -970,7 +968,7 @@ if __name__ == "__main__":
     arc_out['t3'] = ['p4']
     arc_out['t4'] = ['p3', 'p5']
     a, b = my_pn.add_arcs(arc_in, arc_out)
-    '''
+
     places = my_pn.add_places(['p1', 'p2'], [1,1])
     trans = my_pn.add_transitions(['t1'], ['exp'], [1])
     arc_in = {}
@@ -978,7 +976,3 @@ if __name__ == "__main__":
     arc_out = {}
     arc_out['t1'] = ['p2']
     a, b = my_pn.add_arcs(arc_in, arc_out)
-'''
-    print("get Arc in, ", my_pn.get_arc_in_m().coords)
-    print("get Arc out", my_pn.get_arc_out_m().coords)
-    print("current marking", my_pn.get_current_marking())
