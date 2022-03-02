@@ -6,6 +6,7 @@ import numpy as np
 from gspn_framework_package import gspn_tools
 # import gspn_tools
 
+DEBUG = False
 
 class GSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
@@ -20,34 +21,42 @@ class GSPNenv(gym.Env):
         # [0, 1, 1, 0, 1, 2, 0]
         self.observation_space = spaces.MultiDiscrete(nvec=[n_robots+1]*len(self.mr_gspn.get_current_marking()))
 
-        # [0.0...1.0]
-        self.action_space = spaces.Box(low=0.0, high=1.0,
-                                       shape=(1,), dtype=np.float32)
+        # # [0.0...1.0]
+        # self.action_space = spaces.Box(low=0.0, high=1.0,
+        #                                shape=(1,), dtype=np.float32)
+
+        # # {0,1}
+        self.action_space = spaces.Discrete(2)
 
     def step(self, action):
         # get current state
         current_state = self.get_current_state()
-        print('S: ', current_state)
+        if DEBUG:
+            print('S: ', current_state)
 
         # map input action to associated transition
         transition = self.action_to_transition(current_state, action)
-        print('Action: ', action, transition)
+        if DEBUG:
+            print('Action: ', action, transition)
 
         # get reward
         reward = self.reward_function(current_state, transition)
-        print('Reward: ', reward)
+        if DEBUG:
+            print('Reward: ', reward)
 
         # apply action
         self.mr_gspn.fire_transition(transition)
         # get execution time until next decision state
         self.timestamp += self.get_execution_time()
-        print('Timestamp: ', self.timestamp)
+        if DEBUG:
+            print('Timestamp: ', self.timestamp)
 
         # get next state
         next_state = self.marking_to_state()
-        print("S': ", self.get_current_state())
-        print("S': ", next_state)
-        print()
+        if DEBUG:
+            print("S': ", self.get_current_state())
+            print("S': ", next_state)
+            print()
 
         episode_done = False
 
