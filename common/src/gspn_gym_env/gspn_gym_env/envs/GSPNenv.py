@@ -6,12 +6,11 @@ import numpy as np
 from gspn_framework_package import gspn_tools
 # import gspn_tools
 
-DEBUG = False
-
 class GSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, gspn_path, n_robots):
+    def __init__(self, gspn_path, n_robots, verbose=False):
+        self.verbose = verbose
         print('GSPN Gym Env')
         pn_tool = gspn_tools.GSPNtools()
         self.mr_gspn = pn_tool.import_greatspn(gspn_path)[0]
@@ -31,29 +30,29 @@ class GSPNenv(gym.Env):
     def step(self, action):
         # get current state
         current_state = self.get_current_state()
-        if DEBUG:
+        if self.verbose:
             print('S: ', current_state)
 
         # map input action to associated transition
         transition = self.action_to_transition(current_state, action)
-        if DEBUG:
+        if self.verbose:
             print('Action: ', action, transition)
 
         # get reward
         reward = self.reward_function(current_state, transition)
-        if DEBUG:
+        if self.verbose:
             print('Reward: ', reward)
 
         # apply action
         self.mr_gspn.fire_transition(transition)
         # get execution time until next decision state
         self.timestamp += self.get_execution_time()
-        if DEBUG:
+        if self.verbose:
             print('Timestamp: ', self.timestamp)
 
         # get next state
         next_state = self.marking_to_state()
-        if DEBUG:
+        if self.verbose:
             print("S': ", self.get_current_state())
             print("S': ", next_state)
             print()
@@ -87,8 +86,12 @@ class GSPNenv(gym.Env):
     def action_to_transition(self, state, action):
         # if action > 0.5 then go through the left door else go throught the right door
         if action < 0.5:
+            if self.verbose:
+                print('took left')
             return 'left_'+state
         else:
+            if self.verbose:
+                print('took right')
             return 'right_'+state
 
     def marking_to_state(self):
@@ -104,14 +107,20 @@ class GSPNenv(gym.Env):
     def reward_function(self, state, transition):
         reward = 0
         # Start + Left Door
-        if state == 'Start' and transition == 'left_Start':
-            reward = 1
+        # if state == 'Start' and transition == 'left_Start':
+        if state == 'Start' and transition == 'right_Start':
+            reward = 10
         # Intermediate + Right Door
-        elif state == 'Intermediate' and transition == 'right_Intermediate':
-            reward = 1
+        # elif state == 'Intermediate' and transition == 'left_Intermediate':
+        # elif state == 'Intermediate' and transition == 'right_Intermediate':
+        elif state == 'Intermediate':
+            reward = 10
         # End + Left Door
-        elif state == 'End' and transition == 'left_End':
-            reward = 1
+        # elif state == 'End' and transition == 'left_End':
+        elif state == 'End' and transition == 'right_End':
+            reward = 10
+
+        reward = 10
 
         return reward
 
