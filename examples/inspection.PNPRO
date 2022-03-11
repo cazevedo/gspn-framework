@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="Inspection" version="121">
+  <gspn name="GSPN" show-color-cmd="false" show-fluid-cmd="false">
+    <nodes>
+      <place marking="2" name="L1" x="8.0" y="18.0"/>
+      <place name="NavL1L2" x="15.0" y="18.0"/>
+      <place label-y="-2.0" name="L2" x="22.0" y="18.0"/>
+      <place name="NavL2L1" x="15.0" y="13.0"/>
+      <place name="NavL2L3" x="28.0" y="14.0"/>
+      <place name="L3" x="36.0" y="7.0"/>
+      <transition name="t0" type="IMM" x="11.85" y="18.0"/>
+      <transition name="T0" nservers-x="0.5" type="EXP" x="18.55" y="18.0"/>
+      <transition name="t1" type="IMM" x="18.85" y="13.0"/>
+      <transition name="T1" nservers-x="0.5" type="EXP" x="11.55" y="13.0"/>
+      <transition name="t2" type="IMM" x="25.85" y="16.0"/>
+      <transition name="T2" nservers-x="0.5" type="EXP" x="32.55" y="11.0"/>
+      <transition name="T3" nservers-x="0.5" type="EXP" x="25.55" y="12.0"/>
+      <transition name="t3" type="IMM" x="32.85" y="7.0"/>
+      <place name="NavL3L2" x="28.0" y="9.0"/>
+      <place name="NavL2L4" x="28.0" y="22.0"/>
+      <place name="L4" x="32.0" y="27.0"/>
+      <place name="NavL4L2" x="25.0" y="25.0"/>
+      <transition name="t4" type="IMM" x="25.85" y="20.0"/>
+      <transition name="t5" type="IMM" x="28.85" y="27.0"/>
+      <transition name="T4" nservers-x="0.5" type="EXP" x="31.55" y="24.0"/>
+      <transition name="T5" nservers-x="0.5" type="EXP" x="23.55" y="23.0"/>
+    </nodes>
+    <edges>
+      <arc head="t0" kind="INPUT" tail="L1"/>
+      <arc head="NavL1L2" kind="OUTPUT" tail="t0"/>
+      <arc head="T0" kind="INPUT" tail="NavL1L2"/>
+      <arc head="L2" kind="OUTPUT" tail="T0"/>
+      <arc head="t1" kind="INPUT" tail="L2"/>
+      <arc head="NavL2L1" kind="OUTPUT" tail="t1"/>
+      <arc head="T1" kind="INPUT" tail="NavL2L1"/>
+      <arc head="L1" kind="OUTPUT" tail="T1"/>
+      <arc head="t2" kind="INPUT" tail="L2"/>
+      <arc head="NavL2L3" kind="OUTPUT" tail="t2"/>
+      <arc head="T2" kind="INPUT" tail="NavL2L3"/>
+      <arc head="L3" kind="OUTPUT" tail="T2"/>
+      <arc head="t3" kind="INPUT" tail="L3"/>
+      <arc head="NavL3L2" kind="OUTPUT" tail="t3"/>
+      <arc head="T3" kind="INPUT" tail="NavL3L2"/>
+      <arc head="L2" kind="OUTPUT" tail="T3"/>
+      <arc head="t4" kind="INPUT" tail="L2"/>
+      <arc head="NavL2L4" kind="OUTPUT" tail="t4"/>
+      <arc head="T4" kind="INPUT" tail="NavL2L4"/>
+      <arc head="L4" kind="OUTPUT" tail="T4"/>
+      <arc head="t5" kind="INPUT" tail="L4"/>
+      <arc head="NavL4L2" kind="OUTPUT" tail="t5"/>
+      <arc head="T5" kind="INPUT" tail="NavL4L2"/>
+      <arc head="L2" kind="OUTPUT" tail="T5"/>
+    </edges>
+  </gspn>
+  <measures gspn-name="GSPN" name="Measures" simplified-UI="false">
+    <assignments/>
+    <greatspn/>
+    <formulas>
+      <formula comment="Basic statistics of the toolchain execution." language="STAT"/>
+      <formula comment="All the basic Petri net measures" language="ALL"/>
+    </formulas>
+  </measures>
+</project>
