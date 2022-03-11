@@ -18,11 +18,11 @@
       <transition name="left_End" type="IMM" x="13.85" y="39.0"/>
       <transition name="right_End" type="IMM" x="13.85" y="47.0"/>
       <transition delay="0.04" name="LD1Finish" nservers-x="0.5" type="EXP" x="31.55" y="2.0"/>
-      <transition delay="0.5" name="RD1Finish" nservers-x="0.5" type="EXP" x="31.55" y="10.0"/>
-      <transition delay="2" name="LD2Finish" nservers-x="0.5" type="EXP" x="30.55" y="20.0"/>
+      <transition delay="1" name="RD1Finish" nservers-x="0.5" type="EXP" x="31.55" y="10.0"/>
+      <transition delay="1" name="LD2Finish" nservers-x="0.5" type="EXP" x="30.55" y="20.0"/>
       <transition delay="0.3" name="RD2Finish" nservers-x="0.5" type="EXP" x="31.55" y="31.0"/>
       <transition delay="0.07" name="LD3Finish" nservers-x="0.5" type="EXP" x="31.55" y="39.0"/>
-      <transition delay="0.1" name="RD3Finish" nservers-x="0.5" type="EXP" x="31.55" y="48.0"/>
+      <transition delay="1" name="RD3Finish" nservers-x="0.5" type="EXP" x="31.55" y="48.0"/>
     </nodes>
     <edges>
       <arc head="left_Start" kind="INPUT" tail="Start"/>
