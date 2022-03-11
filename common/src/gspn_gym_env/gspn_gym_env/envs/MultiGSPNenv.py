@@ -34,21 +34,28 @@ class MultiGSPNenv(gym.Env):
             print('S: ', current_state)
 
         # map input action to associated transition
-        transition = self.action_to_transition(current_state, action)
+        transition = self.action_to_transition(action)
         if self.verbose:
-            print('Action: ', action, transition)
+            print('Action: ', action)
 
-        # get reward
-        reward = self.reward_function(current_state, transition)
-        if self.verbose:
-            print('Reward: ', reward)
+        if transition != None:
+            # get reward
+            reward = self.reward_function(current_state, transition)
+            if self.verbose:
+                print('Reward: ', reward)
 
-        # apply action
-        self.mr_gspn.fire_transition(transition)
-        # get execution time until next decision state
-        self.timestamp += self.get_execution_time()
-        if self.verbose:
-            print('Timestamp: ', self.timestamp)
+            # apply action
+            self.mr_gspn.fire_transition(transition)
+            # get execution time until next decision state; get reward
+            elapsed_time = self.get_execution_time()
+            self.timestamp += elapsed_time
+            if self.verbose:
+                print('Timestamp: ', self.timestamp)
+
+        else:
+            # stay in the same state, return reward 0, timestamp 0
+            # consider that rate =1/timestamp, so in this case rate must = 0´
+            reward = 0
 
         # get next state
         next_state = self.marking_to_state()
@@ -79,48 +86,33 @@ class MultiGSPNenv(gym.Env):
 
     def get_current_state(self):
         sparse_state = self.mr_gspn.get_current_marking(sparse_marking=True)
-        current_state = list(sparse_state.keys())[0]
+        # current_state = list(sparse_state.keys())[0]
 
-        return current_state
+        return sparse_state
 
-    def action_to_transition(self, state, action):
-        # if action > 0.5 then go through the left door else go throught the right door
-        if action < 0.5:
-            if self.verbose:
-                print('took left')
-            return 'left_'+state
+    def action_to_transition(self, action):
+        action = '_' + str(action)
+        # check if action exists in the enabled transitions; if don't fire any transition
+        _, enabled_actions = self.mr_gspn.get_enabled_transitions()
+        if action in enabled_actions.keys():
+            return action
         else:
-            if self.verbose:
-                print('took right')
-            return 'right_'+state
+            return None
 
     def marking_to_state(self):
         # map dict marking to list marking
         marking_dict = self.mr_gspn.get_current_marking(sparse_marking=True)
-        next_location = list(marking_dict.keys())[0]
         state = [0]*len(self.mr_gspn.get_current_marking().keys())
-        token_index = self.mr_gspn.places_to_index[next_location]
-        state[token_index] = 1
+        for place_name, number_robots in marking_dict.items():
+            token_index = self.mr_gspn.places_to_index[place_name]
+            state[token_index] = number_robots
 
         return state
 
-    def reward_function(self, state, transition):
+    def reward_function(self, sparse_state, transition):
         reward = 0
-        # Start + Left Door
-        # if state == 'Start' and transition == 'left_Start':
-        if state == 'Start' and transition == 'right_Start':
-            reward = 10
-        # Intermediate + Right Door
-        # elif state == 'Intermediate' and transition == 'left_Intermediate':
-        # elif state == 'Intermediate' and transition == 'right_Intermediate':
-        elif state == 'Intermediate':
-            reward = 10
-        # End + Left Door
-        # elif state == 'End' and transition == 'left_End':
-        elif state == 'End' and transition == 'right_End':
-            reward = 10
-
-        reward = 10
+        if 'L4' in sparse_state.keys() and transition == '_6':
+            reward += 10
 
         return reward
 
@@ -142,11 +134,14 @@ class MultiGSPNenv(gym.Env):
 
     def get_execution_time(self):
         elapsed_time = 0
+        # reward = 0
 
         enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
         while(enabled_timed_transitions and not enabled_imm_transitions):
             elapsed_time += self.fire_timed_transitions()
             enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+            # if 'Finished' in enabled_timed_transitions.keys():
+            #     reward += 10
 
         return elapsed_time
 
