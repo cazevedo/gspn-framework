@@ -50,10 +50,8 @@ class GSPN(object):
         self.__initial_marking_sparse = self.__sparse_marking.copy()
 
     def get_number_of_tokens(self):
-        total = 0
-        for place in self.__places:
-            total = total + self.__places[place]
-        return total
+        total_tokens = sum(list(self.__sparse_marking.values()))
+        return total_tokens
 
     def get_sparse_marking(self):
         return self.__sparse_marking

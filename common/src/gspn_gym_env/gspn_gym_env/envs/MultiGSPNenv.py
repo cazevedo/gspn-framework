@@ -9,13 +9,16 @@ from gspn_framework_package import gspn_tools
 class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, gspn_path, n_robots, verbose=False):
+    # TODO: read number of actions and actions names from gspn model
+    def __init__(self, gspn_path, verbose=False):
         self.verbose = verbose
         print('Multi GSPN Gym Env')
         pn_tool = gspn_tools.GSPNtools()
         self.mr_gspn = pn_tool.import_greatspn(gspn_path)[0]
         # pn_tool.draw_gspn(mr_gspn)
         self.timestamp = 0
+
+        n_robots = self.mr_gspn.get_number_of_tokens()
 
         # [0, 1, 1, 0, 1, 2, 0]
         self.observation_space = spaces.MultiDiscrete(nvec=[n_robots+1]*len(self.mr_gspn.get_current_marking()))
@@ -24,6 +27,9 @@ class MultiGSPNenv(gym.Env):
         # self.action_space = spaces.Box(low=0.0, high=1.0,
         #                                shape=(1,), dtype=np.float32)
 
+        # get number of transitions in order to get number of actions
+        # import sys
+        # sys.exit()
         # # {0,1}
         self.action_space = spaces.Discrete(2)
 
