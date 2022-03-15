@@ -10,7 +10,7 @@ class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     # TODO: read number of actions and actions names from gspn model
-    def __init__(self, gspn_path, verbose=False):
+    def __init__(self, gspn_path, set_actions=None, verbose=False):
         self.verbose = verbose
         print('Multi GSPN Gym Env')
         pn_tool = gspn_tools.GSPNtools()
@@ -27,11 +27,19 @@ class MultiGSPNenv(gym.Env):
         # self.action_space = spaces.Box(low=0.0, high=1.0,
         #                                shape=(1,), dtype=np.float32)
 
-        # get number of transitions in order to get number of actions
-        # import sys
-        # sys.exit()
+        if set_actions:
+            # when the number of robots (tokens) is smaller than the number of locations (places/transitions)
+            # the most efficient approach is define a set of actions that are common to every robot
+            # and replicate it with different names for each robot
+            n_actions = len(set_actions) * n_robots
+        else:
+            # get number of transitions in order to get number of actions
+            # when the number of robots (tokens) is considerably bigger than the number of locations (places/transitions)
+            # the most efficient approach is to use every single transition as an individual action
+            n_actions = len(self.mr_gspn.get_transitions().keys())
+
         # # {0,1}
-        self.action_space = spaces.Discrete(2)
+        self.action_space = spaces.Discrete(n_actions)
 
     def step(self, action):
         # get current state
