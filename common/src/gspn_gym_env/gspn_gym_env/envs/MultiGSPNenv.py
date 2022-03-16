@@ -36,7 +36,13 @@ class MultiGSPNenv(gym.Env):
             # get number of transitions in order to get number of actions
             # when the number of robots (tokens) is considerably bigger than the number of locations (places/transitions)
             # the most efficient approach is to use every single transition as an individual action
-            n_actions = len(self.mr_gspn.get_transitions().keys())
+            imm_transitions = self.mr_gspn.get_imm_transitions()
+            actions = imm_transitions.copy()
+            for tr_name, tr_rate in imm_transitions.items():
+                if tr_rate != 0:
+                    del actions[tr_name]
+
+            n_actions = len(actions.keys())
 
         # # {0,1}
         self.action_space = spaces.Discrete(n_actions)

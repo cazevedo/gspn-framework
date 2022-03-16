@@ -18,6 +18,8 @@ class GSPN(object):
         self.__initial_marking = {}
         self.__initial_marking_sparse = {}
         self.__transitions = {}
+        self.__imm_transitions = {}
+        self.__timed_transitions = {}
         self.__arc_in_m = sparse.COO([[], []], [], shape=(0, 0))
         self.__arc_out_m = sparse.COO([[], []], [], shape=(0, 0))
         self.__ct_tree = None
@@ -279,6 +281,26 @@ class GSPN(object):
 
     def get_transitions(self):
         return self.__transitions.copy()
+
+    def get_imm_transitions(self):
+        if not self.__imm_transitions:
+            for tr_name, tr_info in self.__transitions.items():
+                tr_type = tr_info[0]
+                tr_rate = tr_info[1]
+                if tr_type == 'imm':
+                    self.__imm_transitions[tr_name] = tr_rate
+
+        return self.__imm_transitions.copy()
+
+    def get_timed_transitions(self):
+        if not self.__timed_transitions:
+            for tr_name, tr_info in self.__transitions.items():
+                tr_type = tr_info[0]
+                tr_rate = tr_info[1]
+                if tr_type == 'imm':
+                    self.__timed_transitions[tr_name] = tr_rate
+
+        return self.__timed_transitions.copy()
 
     def get_arcs(self):
         return self.__arc_in_m.copy(), self.__arc_out_m.copy()
