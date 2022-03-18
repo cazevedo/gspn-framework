@@ -9,7 +9,6 @@ from gspn_framework_package import gspn_tools
 class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    # TODO: read number of actions and actions names from gspn model
     def __init__(self, gspn_path, set_actions=None, verbose=False):
         self.verbose = verbose
         print('Multi GSPN Gym Env')
@@ -44,7 +43,7 @@ class MultiGSPNenv(gym.Env):
 
             n_actions = len(actions.keys())
 
-        # # {0,1}
+        # # {0,1,...,n_actions}
         self.action_space = spaces.Discrete(n_actions)
 
     def step(self, action):
@@ -61,40 +60,43 @@ class MultiGSPNenv(gym.Env):
         if transition != None:
             # get reward
             reward = self.reward_function(current_state, transition)
-            if self.verbose:
-                print('Reward: ', reward)
 
             # apply action
             self.mr_gspn.fire_transition(transition)
             # get execution time until next decision state; get reward
-            elapsed_time = self.get_execution_time()
+            elapsed_time, actions_info = self.get_execution_time()
             self.timestamp += elapsed_time
-            if self.verbose:
-                print('Timestamp: ', self.timestamp)
 
         else:
+            print('Transition not enabled')
             # stay in the same state, return reward 0, timestamp 0
-            # consider that rate =1/timestamp, so in this case rate must = 0´
+            # consider that rate =1/timestamp, so in this case rate must = 0
             reward = 0
+            actions_info = [('Finished_'+str(action), 0)]
+
+        if self.verbose:
+            print('Reward: ', reward)
+            print('Timestamp: ', self.timestamp)
+            print('Action info: ', actions_info)
 
         # get next state
         next_state = self.marking_to_state()
         if self.verbose:
             print("S': ", self.get_current_state())
-            print("S': ", next_state)
+            # print("S': ", next_state)
             print()
 
         episode_done = False
 
         return next_state, reward, episode_done,\
-               {'timestamp': self.timestamp}
+               {'timestamp': self.timestamp, 'actions_info': actions_info}
 
     def reset(self):
         self.timestamp = 0
         self.mr_gspn.reset_simulation()
         current_state = self.marking_to_state()
 
-        return current_state, {'timestamp': self.timestamp}
+        return current_state, {'timestamp': self.timestamp, 'actions_info': []}
 
     def render(self, mode='human'):
         print('rendering not implemented')
@@ -133,6 +135,8 @@ class MultiGSPNenv(gym.Env):
         reward = 0
         if 'L4' in sparse_state.keys() and transition == '_6':
             reward += 10
+        elif 'L3' in sparse_state.keys() and transition == '_7':
+            reward += 10
 
         return reward
 
@@ -150,20 +154,22 @@ class MultiGSPNenv(gym.Env):
 
         self.mr_gspn.fire_transition(timed_transition)
 
-        return wait_until_fire
+        return wait_until_fire, timed_transition
 
     def get_execution_time(self):
-        elapsed_time = 0
+        total_elapsed_time = 0
+        actions_info = []
         # reward = 0
 
         enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
         while(enabled_timed_transitions and not enabled_imm_transitions):
-            elapsed_time += self.fire_timed_transitions()
-            enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
-            # if 'Finished' in enabled_timed_transitions.keys():
-            #     reward += 10
+            action_time, timed_transition = self.fire_timed_transitions()
+            total_elapsed_time += action_time
+            actions_info.append((timed_transition, action_time))
 
-        return elapsed_time
+            enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+
+        return total_elapsed_time, actions_info
 
     # def seed(self, seed=None):
     #     self.np_random, seed = seeding.np_random(seed)
