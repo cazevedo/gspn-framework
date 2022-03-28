@@ -68,11 +68,14 @@ class MultiGSPNenv(gym.Env):
             self.timestamp += elapsed_time
 
         else:
-            print('Transition not enabled')
+            if self.verbose:
+                print('Transition not enabled')
             # stay in the same state, return reward 0, timestamp 0
             # consider that rate =1/timestamp, so in this case rate must = 0
-            reward = 0
-            actions_info = [('Finished_'+str(action), 0)]
+            # reward = 0
+            # actions_info = [('Finished_'+str(action), 0)]
+            reward = -1
+            actions_info = [('Finished_'+str(action), 1)]
 
         if self.verbose:
             print('Reward: ', reward)
@@ -88,7 +91,7 @@ class MultiGSPNenv(gym.Env):
 
         episode_done = False
 
-        return next_state, reward, episode_done,\
+        return next_state, reward, episode_done, \
                {'timestamp': self.timestamp, 'actions_info': actions_info}
 
     def reset(self):
@@ -134,9 +137,9 @@ class MultiGSPNenv(gym.Env):
     def reward_function(self, sparse_state, transition):
         reward = 0
         if 'L4' in sparse_state.keys() and transition == '_6':
-            reward += 10
+            reward += 1
         elif 'L3' in sparse_state.keys() and transition == '_7':
-            reward += 10
+            reward += 1
 
         return reward
 
