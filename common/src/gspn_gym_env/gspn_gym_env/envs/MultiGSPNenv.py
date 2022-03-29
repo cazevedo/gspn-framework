@@ -75,7 +75,8 @@ class MultiGSPNenv(gym.Env):
             # reward = 0
             # actions_info = [('Finished_'+str(action), 0)]
             reward = -1
-            actions_info = [('Finished_'+str(action), 1)]
+            # actions_info = [('Finished_'+str(action), -1)]
+            actions_info = None
 
         if self.verbose:
             print('Reward: ', reward)
@@ -161,18 +162,42 @@ class MultiGSPNenv(gym.Env):
 
     def get_execution_time(self):
         total_elapsed_time = 0
-        actions_info = []
+        # actions_info = []
+        actions_info = None
         # reward = 0
 
         enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
         while(enabled_timed_transitions and not enabled_imm_transitions):
             action_time, timed_transition = self.fire_timed_transitions()
             total_elapsed_time += action_time
-            actions_info.append((timed_transition, action_time))
+            # actions_info.append((timed_transition, action_time))
+            actions_info = (timed_transition, action_time)
 
             enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
 
         return total_elapsed_time, actions_info
+
+    def get_action_info_attributes(self, action):
+        # print('att')
+        # print(action)
+        action_name = action[0]
+        action_number = int(action_name.split('_')[-1])
+        action_time = action[1]
+
+        # print(action_name)
+        # print(action_number)
+        # print(action_time)
+
+        return action_name, action_number, action_time
+
+    def get_rates_ground_truth(self):
+        timed_transitions = self.mr_gspn.get_timed_transitions()
+        true_rates = {}
+        for name, rate in timed_transitions.items():
+            action = int(name.split('_')[-1])
+            true_rates[action] = rate
+
+        return true_rates
 
     # def seed(self, seed=None):
     #     self.np_random, seed = seeding.np_random(seed)
