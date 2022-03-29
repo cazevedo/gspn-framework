@@ -64,19 +64,17 @@ class MultiGSPNenv(gym.Env):
             # apply action
             self.mr_gspn.fire_transition(transition)
             # get execution time until next decision state; get reward
-            elapsed_time, actions_info = self.get_execution_time()
+            elapsed_time, actions_info = self.get_execution_time(action)
             self.timestamp += elapsed_time
 
         else:
             if self.verbose:
                 print('Transition not enabled')
-            # stay in the same state, return reward 0, timestamp 0
-            # consider that rate =1/timestamp, so in this case rate must = 0
-            # reward = 0
-            # actions_info = [('Finished_'+str(action), 0)]
+            # stay in the same state, return reward -1, timestamp 0
+            # reward -1 to discourage actions that do not change the system state
+
             reward = -1
-            # actions_info = [('Finished_'+str(action), -1)]
-            actions_info = None
+            actions_info = ('action-not-available_'+str(action), -1)
 
         if self.verbose:
             print('Reward: ', reward)
@@ -160,11 +158,9 @@ class MultiGSPNenv(gym.Env):
 
         return wait_until_fire, timed_transition
 
-    def get_execution_time(self):
+    def get_execution_time(self, action):
         total_elapsed_time = 0
-        # actions_info = []
-        actions_info = None
-        # reward = 0
+        actions_info = ('action-available_'+str(action), 0)
 
         enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
         while(enabled_timed_transitions and not enabled_imm_transitions):
