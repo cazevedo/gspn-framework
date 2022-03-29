@@ -297,7 +297,7 @@ class GSPN(object):
             for tr_name, tr_info in self.__transitions.items():
                 tr_type = tr_info[0]
                 tr_rate = tr_info[1]
-                if tr_type == 'imm':
+                if tr_type == 'exp':
                     self.__timed_transitions[tr_name] = tr_rate
 
         return self.__timed_transitions.copy()
