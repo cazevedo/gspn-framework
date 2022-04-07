@@ -135,10 +135,17 @@ class MultiGSPNenv(gym.Env):
 
     def reward_function(self, sparse_state, transition):
         reward = 0
-        if 'L4' in sparse_state.keys() and transition == '_6':
-            reward += 1
-        elif 'L3' in sparse_state.keys() and transition == '_7':
-            reward += 1
+        # if 'L4' in sparse_state.keys() and transition == '_6':
+        #     reward = 1
+        # elif 'L3' in sparse_state.keys() and transition == '_7':
+        #     reward = 1
+
+        if 'L1' in sparse_state.keys() and transition == '_0':
+            reward = 1
+        elif 'L1' in sparse_state.keys() and transition == '_1':
+            reward = 1
+        elif 'L4' in sparse_state.keys() and transition == '_5':
+            reward = 1
 
         return reward
 
