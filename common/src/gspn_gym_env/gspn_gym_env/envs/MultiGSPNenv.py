@@ -47,6 +47,9 @@ class MultiGSPNenv(gym.Env):
         self.action_space = spaces.Discrete(n_actions)
 
     def step(self, action):
+        # get disabled actions in current state
+        disabled_actions_names, disabled_actions_indexes = self.get_disabled_actions()
+
         # get current state
         current_state = self.get_current_state()
         if self.verbose:
@@ -91,7 +94,7 @@ class MultiGSPNenv(gym.Env):
         episode_done = False
 
         return next_state, reward, episode_done, \
-               {'timestamp': self.timestamp, 'actions_info': actions_info}
+               {'timestamp': self.timestamp, 'actions_info': actions_info, 'disabled_actions': (disabled_actions_names, disabled_actions_indexes)}
 
     def reset(self):
         self.timestamp = 0
@@ -115,7 +118,7 @@ class MultiGSPNenv(gym.Env):
         return sparse_state
 
     def action_to_transition(self, action):
-        action = '_' + str(action)
+        action = self.from_index_to_action(action)
         # check if action exists in the enabled transitions; if don't fire any transition
         _, enabled_actions = self.mr_gspn.get_enabled_transitions()
         if action in enabled_actions.keys():
@@ -181,15 +184,9 @@ class MultiGSPNenv(gym.Env):
         return total_elapsed_time, actions_info
 
     def get_action_info_attributes(self, action):
-        # print('att')
-        # print(action)
         action_name = action[0]
         action_number = int(action_name.split('_')[-1])
         action_time = action[1]
-
-        # print(action_name)
-        # print(action_number)
-        # print(action_time)
 
         return action_name, action_number, action_time
 
@@ -201,6 +198,24 @@ class MultiGSPNenv(gym.Env):
             true_rates[action] = rate
 
         return true_rates
+
+    def from_index_to_action(self, action_index):
+        return '_'+str(action_index)
+
+    def get_disabled_actions(self):
+        enabled_exp_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+
+        disabled_actions_indexes = list(range(self.action_space.n))
+        disabled_actions_names = list(map(self.from_index_to_action, disabled_actions_indexes))
+
+        for enabled_action in enabled_imm_transitions.keys():
+            disabled_actions_names.remove(enabled_action)
+            action_index = int(enabled_action.split('_')[-1])
+            disabled_actions_indexes.remove(action_index)
+
+        return disabled_actions_names, disabled_actions_indexes
+
+
 
     # def seed(self, seed=None):
     #     self.np_random, seed = seeding.np_random(seed)
