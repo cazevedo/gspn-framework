@@ -83,6 +83,7 @@ class MultiGSPNenv(gym.Env):
             print('Reward: ', reward)
             print('Timestamp: ', self.timestamp)
             print('Action info: ', actions_info)
+            print('actions disabled: ', disabled_actions_names)
 
         # get next state
         next_state = self.marking_to_state()
