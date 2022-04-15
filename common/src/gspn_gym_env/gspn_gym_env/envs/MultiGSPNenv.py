@@ -139,17 +139,17 @@ class MultiGSPNenv(gym.Env):
 
     def reward_function(self, sparse_state, transition):
         reward = 0
-        # if 'L4' in sparse_state.keys() and transition == '_6':
-        #     reward = 1
-        # elif 'L3' in sparse_state.keys() and transition == '_7':
-        #     reward = 1
+        if 'L4' in sparse_state.keys() and transition == '_6':
+            reward = 1
+        elif 'L3' in sparse_state.keys() and transition == '_7':
+            reward = 1
 
-        if 'L1' in sparse_state.keys() and transition == '_0':
-            reward = 1
-        elif 'L1' in sparse_state.keys() and transition == '_1':
-            reward = 1
-        elif 'L4' in sparse_state.keys() and transition == '_5':
-            reward = 1
+        # if 'L1' in sparse_state.keys() and transition == '_0':
+        #     reward = 1
+        # elif 'L1' in sparse_state.keys() and transition == '_1':
+        #     reward = 1
+        # elif 'L4' in sparse_state.keys() and transition == '_5':
+        #     reward = 1
 
         return reward
 
@@ -161,6 +161,7 @@ class MultiGSPNenv(gym.Env):
         # in this case the beta rate parameter is used instead, where beta = 1/lambda
         for key, value in enabled_exp_transitions.items():
             wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
+            # wait_times[key] = np.random.normal(loc=value, scale=10)
 
         timed_transition = min(wait_times, key=wait_times.get)
         wait_until_fire = wait_times[timed_transition]
@@ -203,6 +204,9 @@ class MultiGSPNenv(gym.Env):
     def from_index_to_action(self, action_index):
         return '_'+str(action_index)
 
+    def from_action_to_index(self, action_name):
+        return int(action_name.split('_')[-1])
+
     def get_disabled_actions(self):
         enabled_exp_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
 
@@ -216,6 +220,12 @@ class MultiGSPNenv(gym.Env):
 
         return disabled_actions_names, disabled_actions_indexes
 
+    def get_enabled_actions(self):
+        enabled_exp_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+        enabled_actions_names = list(enabled_imm_transitions.keys())
+        enabled_actions_indexes = list(map(self.from_action_to_index, enabled_actions_names))
+
+        return enabled_actions_names, enabled_actions_indexes
 
 
     # def seed(self, seed=None):
