@@ -58,6 +58,11 @@ class GSPN(object):
     def get_sparse_marking(self):
         return self.__sparse_marking
 
+    def get_transition_rate(self, transition):
+        tr_info = self.__transitions[transition]
+        rate = tr_info[-1]
+        return rate
+
     def add_places(self, name, ntokens=[], set_initial_marking=True):
         '''
         Adds new places to the existing ones in the GSPN object. Replaces the ones with the same name.
