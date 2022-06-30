@@ -166,8 +166,8 @@ class MultiGSPNenv(gym.Env):
         reward = 0.0
 
         # inspection test
-        if 'L4' in sparse_state.keys() and transition == '_6':
-            reward = 10
+        # if 'L4' in sparse_state.keys() and transition == '_6':
+        #     reward = 10
 
         # inspection 1
         # if 'L4' in sparse_state.keys() and transition == '_6':
@@ -178,11 +178,11 @@ class MultiGSPNenv(gym.Env):
         # if 'FullL4' in sparse_state.keys() and 'FullL3' in sparse_state.keys() and transition == '_9':
         #     reward = 1
 
-        # inspection 2
+        # robot scalability
         # if 'L4' in sparse_state.keys() and transition == '_5':
         #     reward = 1
-        # elif 'L3' in sparse_state.keys() and transition == '_4':
-        #     reward = 1
+        if 'L3' in sparse_state.keys() and transition == '_4':
+            reward = 1
 
         return reward
 
