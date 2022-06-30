@@ -2,19 +2,19 @@
 <!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="Inspection" version="121">
   <gspn name="GSPN" show-color-cmd="false" show-fluid-cmd="false">
     <nodes>
-      <place marking="2" name="L1" x="8.0" y="18.0"/>
+      <place marking="1" name="L1" x="8.0" y="18.0"/>
       <place name="NavL1L2" x="15.0" y="18.0"/>
       <place label-y="-2.0" name="L2" x="22.0" y="18.0"/>
       <place name="NavL2L1" x="15.0" y="13.0"/>
       <place name="NavL2L3" x="28.0" y="14.0"/>
       <place name="L3" x="36.0" y="7.0"/>
       <transition name="_0" type="IMM" x="11.85" y="18.0"/>
-      <transition delay="0.1" name="Finished_0" nservers-x="0.5" type="EXP" x="18.55" y="18.0"/>
+      <transition delay="1.5" name="Finished_0" nservers-x="0.5" type="EXP" x="18.55" y="18.0"/>
       <transition name="_1" type="IMM" x="18.85" y="13.0"/>
-      <transition delay="0.3" name="Finished_1" nservers-x="0.5" type="EXP" x="11.55" y="13.0"/>
+      <transition delay="1.5" name="Finished_1" nservers-x="0.5" type="EXP" x="11.55" y="13.0"/>
       <transition name="_2" type="IMM" x="25.85" y="16.0"/>
-      <transition delay="0.5" name="Finished_2" nservers-x="0.5" type="EXP" x="32.55" y="11.0"/>
-      <transition delay="1.1" label-x="-2.5" label-y="-2.0" name="Finished_4" nservers-x="0.5" type="EXP" x="25.55" y="12.0"/>
+      <transition delay="1.5" name="Finished_2" nservers-x="0.5" type="EXP" x="32.55" y="11.0"/>
+      <transition delay="1.5" label-x="-2.5" label-y="-2.0" name="Finished_4" nservers-x="0.5" type="EXP" x="25.55" y="12.0"/>
       <transition name="_4" type="IMM" x="32.85" y="7.0"/>
       <place name="NavL3L2" x="28.0" y="9.0"/>
       <place name="NavL2L4" x="28.0" y="22.0"/>
@@ -22,21 +22,22 @@
       <place name="NavL4L2" x="25.0" y="25.0"/>
       <transition name="_3" type="IMM" x="25.85" y="20.0"/>
       <transition label-y="2.5" name="_5" type="IMM" x="28.85" y="28.0"/>
-      <transition delay="0.7" name="Finished_3" nservers-x="0.5" type="EXP" x="31.55" y="24.0"/>
-      <transition delay="1.3" delay-x="-2.0" delay-y="1.5" name="Finished_5" nservers-x="0.5" type="EXP" x="23.55" y="23.0"/>
-      <transition name="_6" type="IMM" x="38.85" y="26.0"/>
-      <transition delay="2.1" label-x="-0.5" label-y="2.5" name="Finished_6" nservers-x="0.5" type="EXP" x="36.55" y="31.0"/>
-      <place label-x="4.5" label-y="0.0" name="InpectingL4" x="40.0" y="30.0"/>
+      <transition delay="1.5" name="Finished_3" nservers-x="0.5" type="EXP" x="31.55" y="24.0"/>
+      <transition delay="1.5" delay-x="-2.0" delay-y="1.5" name="Finished_5" nservers-x="0.5" type="EXP" x="23.55" y="23.0"/>
+      <transition name="_6" type="IMM" x="37.85" y="25.0"/>
+      <transition delay="3" label-x="-0.5" label-y="2.5" name="Finished_6" nservers-x="0.5" type="EXP" x="37.55" y="32.0"/>
+      <place label-x="4.5" label-y="0.0" name="InpectingL4" x="41.0" y="28.0"/>
       <transition name="_7" type="IMM" x="41.85" y="4.0"/>
-      <transition delay="3.3" label-y="3.0" name="Finished_7" nservers-x="0.5" type="EXP" x="41.55" y="10.0"/>
+      <transition delay="3" label-y="3.0" name="Finished_7" nservers-x="0.5" type="EXP" x="41.55" y="10.0"/>
       <place name="InspectingL3" x="46.0" y="7.0"/>
       <transition name="_8" type="IMM" x="10.85" y="24.0"/>
-      <transition delay="4.5" label-y="-2.5" name="Finished_8" nservers-x="0.5" type="EXP" x="3.55" y="23.0"/>
+      <transition delay="1.5" label-y="-2.5" name="Finished_8" nservers-x="0.5" type="EXP" x="3.55" y="23.0"/>
       <place name="Recharging" x="4.0" y="27.0"/>
-      <place marking="1" name="AvailableL3" x="57.0" y="7.0"/>
-      <place name="FullL3" x="47.0" y="1.0"/>
-      <place name="FullL4" x="52.0" y="25.0"/>
-      <place marking="1" name="AvailableL4" x="52.0" y="33.0"/>
+      <place marking="1" name="AvailableL3" x="51.0" y="4.0"/>
+      <place name="FullL3" x="56.0" y="10.0"/>
+      <place name="FullL4" x="56.0" y="32.0"/>
+      <place marking="1" name="AvailableL4" x="51.0" y="25.0"/>
+      <transition delay="10" delay-x="-2.0" delay-y="0.0" label-x="-3.0" name="Finished_9" nservers-x="0.5" type="EXP" x="51.55" y="17.0"/>
     </nodes>
     <edges>
       <arc head="_0" kind="INPUT" tail="L1"/>
@@ -75,14 +76,14 @@
       <arc head="Recharging" kind="OUTPUT" tail="_8"/>
       <arc head="Finished_8" kind="INPUT" tail="Recharging"/>
       <arc head="L1" kind="OUTPUT" tail="Finished_8"/>
+      <arc head="AvailableL4" kind="OUTPUT" tail="Finished_9"/>
+      <arc head="AvailableL3" kind="OUTPUT" tail="Finished_9"/>
+      <arc head="Finished_9" kind="INPUT" tail="FullL3"/>
+      <arc head="Finished_9" kind="INPUT" tail="FullL4"/>
       <arc head="_7" kind="INPUT" tail="AvailableL3"/>
-      <arc head="FullL3" kind="OUTPUT" tail="_7"/>
-      <arc head="AvailableL3" kind="OUTPUT" tail="Finished_7"/>
-      <arc head="Finished_7" kind="INPUT" tail="FullL3"/>
-      <arc head="Finished_6" kind="INPUT" tail="FullL4"/>
-      <arc head="FullL4" kind="OUTPUT" tail="_6"/>
-      <arc head="AvailableL4" kind="OUTPUT" tail="Finished_6"/>
       <arc head="_6" kind="INPUT" tail="AvailableL4"/>
+      <arc head="FullL4" kind="OUTPUT" tail="Finished_6"/>
+      <arc head="FullL3" kind="OUTPUT" tail="Finished_7"/>
     </edges>
   </gspn>
   <measures gspn-name="GSPN" name="Measures" simplified-UI="false">
