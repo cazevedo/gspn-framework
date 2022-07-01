@@ -140,20 +140,21 @@ class GSPN(object):
     def add_arcs(self, arc_in, arc_out):
         '''
         example:
+        arc_in[<output place>] = [(<input transition1>, <arc weight>),
+                                  (<input transition2>, <arc weight>), ...]
+
+        arc_out[<output transition>] = [(<input place1>, <arc weight>),
+                                        (<input place2>, <arc weight>), ...]
+
         arc_in = {}
-        arc_in['p1'] = ['t1']
-        arc_in['p2'] = ['t2']
-        arc_in['p3'] = ['t3']
-        arc_in['p4'] = ['t4']
-        arc_in['p5'] = ['t1', 't3']
+        arc_in['p1'] = [('t1', 2), ('t2', 5)]
+        arc_in['p2'] = [('t3', 1)]
+        ...
 
         arc_out = {}
-        arc_out['t1'] = ['p2']
-        arc_out['t2'] = ['p5', 'p1']
-        arc_out['t3'] = ['p4']
-        arc_out['t4'] = ['p3', 'p5']
-
-        example: {'p1':  ['t1','t2], 'p2': ['t3']}
+        arc_out['t1'] = [('p2', 1)]
+        arc_out['t2'] = [('p5', 1), ('p1', 5)]
+        ...
 
         :param arc_in: (dict) mapping the arc connections from places to transitions
         :param arc_out: (dict) mapping the arc connections from transitions to places
@@ -166,32 +167,34 @@ class GSPN(object):
         GSPN.
         '''
 
-        # these values will be the size of the coords vector used in sparse matrix
-        len_coords_in = len(self.__arc_in_m.coords[0])
-        len_coords_out = len(self.__arc_out_m.coords[0])
-
         aux_in_list = [[], []]
         aux_in_list[0] = list(self.__arc_in_m.coords[0])
         aux_in_list[1] = list(self.__arc_in_m.coords[1])
+        aux_in_weights = list(self.__arc_in_m.data)
         for place_in, list_transitions_in in arc_in.items():
-            for transition_in in list_transitions_in:
+            for arc_transition_in in list_transitions_in:
+                transition_in = arc_transition_in[0]
+                arc_weight = arc_transition_in[1]
                 aux_in_list[0].append(self.places_to_index[place_in])
                 aux_in_list[1].append(self.transitions_to_index[transition_in])
-                len_coords_in += 1
+                aux_in_weights.append(arc_weight)
 
         aux_out_list = [[], []]
         aux_out_list[0] = list(self.__arc_out_m.coords[0])
         aux_out_list[1] = list(self.__arc_out_m.coords[1])
+        aux_out_weights = list(self.__arc_out_m.data)
         for transition_out, list_places_out in arc_out.items():
-            for place_out in list_places_out:
+            for arc_place_out in list_places_out:
+                place_out = arc_place_out[0]
+                arc_weight = arc_place_out[1]
                 aux_out_list[0].append(self.transitions_to_index[transition_out])
                 aux_out_list[1].append(self.places_to_index[place_out])
-                len_coords_out += 1
+                aux_out_weights.append(arc_weight)
 
         #  Creation of Sparse Matrix
-        self.__arc_in_m = sparse.COO(aux_in_list, np.ones(len_coords_in),
+        self.__arc_in_m = sparse.COO(aux_in_list, aux_in_weights,
                                      shape=(len(self.__places), len(self.__transitions)))
-        self.__arc_out_m = sparse.COO(aux_out_list, np.ones(len_coords_out),
+        self.__arc_out_m = sparse.COO(aux_out_list, aux_out_weights,
                                       shape=(len(self.__transitions), len(self.__places)))
 
         return self.__arc_in_m, self.__arc_out_m
@@ -390,8 +393,6 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
-    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
-    # TODO: ALREADY TESTED AND COMPLETED FOR SPARSE MATRICES
     def remove_place(self, place):
         '''
         Method that removes PLACE from Petri Net, with corresponding connected input and output arcs
@@ -404,28 +405,32 @@ class GSPN(object):
         # removing place from arc_in
         places_list = self.__arc_in_m.coords[0].tolist()
         transitions_list = self.__arc_in_m.coords[1].tolist()
+        arc_weight_list = self.__arc_in_m.data.tolist()
         iterator = len(places_list) - 1
         while iterator >= 0:
             if places_list[iterator] == place_id:
                 del places_list[iterator]
                 del transitions_list[iterator]
+                del arc_weight_list[iterator]
             iterator = iterator - 1
         # creating new sparse for arc_in
-        self.__arc_in_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)),
-                                     self.__arc_in_m.shape)
+        self.__arc_in_m = sparse.COO([places_list, transitions_list], arc_weight_list,
+                                     shape=(len(places_list), len(transitions_list)))
 
         # removing place from arc_out
         transitions_list = self.__arc_out_m.coords[0].tolist()
         places_list = self.__arc_out_m.coords[1].tolist()
+        arc_weight_list = self.__arc_out_m.data.tolist()
         iterator = len(places_list) - 1
         while iterator >= 0:
             if places_list[iterator] == place_id:
                 del transitions_list[iterator]
                 del places_list[iterator]
+                del arc_weight_list[iterator]
             iterator = iterator - 1
         # creating new sparse for arc_out
-        self.__arc_out_m = sparse.COO([transitions_list, places_list], np.ones(len(places_list)),
-                                      self.__arc_out_m.shape)
+        self.__arc_out_m = sparse.COO([transitions_list, places_list], arc_weight_list,
+                                      shape=(len(transitions_list), len(places_list)))
         # removing place from __places
         self.__places.pop(place)
         if place in self.__sparse_marking:
