@@ -313,11 +313,9 @@ class GSPN(object):
     def get_arcs(self):
         return self.__arc_in_m.copy(), self.__arc_out_m.copy()
 
-    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
-    # TODO: ALREADY TESTED AND COMPLETED FOR SPARSE MATRICES
     def get_arcs_dict(self):
         '''
-        Converts the arcs DataFrames to dicts and outputs them.
+        Converts the arcs sparse matrices to dicts and outputs them.
         :return: arcs in dict form
         '''
         arcs_in = {}
@@ -414,8 +412,7 @@ class GSPN(object):
                 del arc_weight_list[iterator]
             iterator = iterator - 1
         # creating new sparse for arc_in
-        self.__arc_in_m = sparse.COO([places_list, transitions_list], arc_weight_list,
-                                     shape=(len(places_list), len(transitions_list)))
+        self.__arc_in_m = sparse.COO([places_list, transitions_list], arc_weight_list)
 
         # removing place from arc_out
         transitions_list = self.__arc_out_m.coords[0].tolist()
@@ -429,10 +426,12 @@ class GSPN(object):
                 del arc_weight_list[iterator]
             iterator = iterator - 1
         # creating new sparse for arc_out
-        self.__arc_out_m = sparse.COO([transitions_list, places_list], arc_weight_list,
-                                      shape=(len(transitions_list), len(places_list)))
+        self.__arc_out_m = sparse.COO([transitions_list, places_list], arc_weight_list)
+
         # removing place from __places
         self.__places.pop(place)
+        self.places_to_index.pop(place)
+
         if place in self.__sparse_marking:
             self.__sparse_marking.pop(place)
 
