@@ -155,18 +155,28 @@ class GSPNtools(object):
                         # future implementations that may require multiple arc weights should use: arc.get('mult')
                         if arc.get('kind') == 'INPUT':
                             if arc.get('tail') in place_name and arc.get('head') in transition_name:
-                                if arc.get('tail') in arcs_in:
-                                    arcs_in[arc.get('tail')].append(arc.get('head'))
+                                arc_mult = arc.get('mult')
+                                if arc_mult:
+                                    arc_tuple = (arc.get('head'), int(arc_mult))
                                 else:
-                                    arcs_in[arc.get('tail')] = [arc.get('head')]
+                                    arc_tuple = (arc.get('head'), 1)
+                                if arc.get('tail') in arcs_in:
+                                    arcs_in[arc.get('tail')].append(arc_tuple)
+                                else:
+                                    arcs_in[arc.get('tail')] = [arc_tuple]
                             else:
                                 raise Exception('Incorrect order in INPUT arc '+arc.get('head')+' to '+arc.get('tail'))
                         elif arc.get('kind') == 'OUTPUT':
+                            arc_mult = arc.get('mult')
+                            if arc_mult:
+                                arc_tuple = (arc.get('head'), int(arc_mult))
+                            else:
+                                arc_tuple = (arc.get('head'), 1)
                             if  arc.get('tail') in transition_name and arc.get('head') in place_name:
                                 if arc.get('tail') in arcs_out:
-                                    arcs_out[arc.get('tail')].append(arc.get('head'))
+                                    arcs_out[arc.get('tail')].append(arc_tuple)
                                 else:
-                                    arcs_out[arc.get('tail')] = [arc.get('head')]
+                                    arcs_out[arc.get('tail')] = [arc_tuple]
                             else:
                                 raise Exception(
                                     'Incorrect order in OUTPUT arc ' + arc.get('head') + ' to ' + arc.get('tail'))
