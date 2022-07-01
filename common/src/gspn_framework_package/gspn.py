@@ -19,7 +19,9 @@ class GSPN(object):
         self.__initial_marking_sparse = {}
         self.__transitions = {}
         self.__imm_transitions = {}
+        self.__imm_transitions_generated = False
         self.__timed_transitions = {}
+        self.__timed_transitions_generated = False
         self.__arc_in_m = sparse.COO([[], []], [], shape=(0, 0))
         self.__arc_out_m = sparse.COO([[], []], [], shape=(0, 0))
         self.__ct_tree = None
@@ -291,22 +293,26 @@ class GSPN(object):
         return self.__transitions.copy()
 
     def get_imm_transitions(self):
-        if not self.__imm_transitions:
+        if not self.__imm_transitions_generated:
             for tr_name, tr_info in self.__transitions.items():
                 tr_type = tr_info[0]
                 tr_rate = tr_info[1]
                 if tr_type == 'imm':
                     self.__imm_transitions[tr_name] = tr_rate
 
+            self.__imm_transitions_generated = True
+
         return self.__imm_transitions.copy()
 
     def get_timed_transitions(self):
-        if not self.__timed_transitions:
+        if not self.__timed_transitions_generated:
             for tr_name, tr_info in self.__transitions.items():
                 tr_type = tr_info[0]
                 tr_rate = tr_info[1]
                 if tr_type == 'exp':
                     self.__timed_transitions[tr_name] = tr_rate
+
+            self.__timed_transitions_generated = True
 
         return self.__timed_transitions.copy()
 
@@ -437,8 +443,6 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
-    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
-    # TODO: ALREADY TESTED AND COMPLETED FOR SPARSE MATRICES
     def remove_transition(self, transition):
         '''
         Method that removes TRANSITION from Petri Net, with corresponding input and output arcs
@@ -451,30 +455,38 @@ class GSPN(object):
         # removing transition from arc_in
         places_list = self.__arc_in_m.coords[0].tolist()
         transitions_list = self.__arc_in_m.coords[1].tolist()
+        arc_weight_list = self.__arc_in_m.data.tolist()
         iterator = len(transitions_list) - 1
         while iterator >= 0:
             if transitions_list[iterator] == transition_id:
                 del transitions_list[iterator]
                 del places_list[iterator]
+                del arc_weight_list[iterator]
             iterator = iterator - 1
         # creating new sparse for arc_in
-        self.__arc_in_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)),
-                                     self.__arc_in_m.shape)
+        self.__arc_in_m = sparse.COO([places_list, transitions_list], arc_weight_list)
 
         # removing transition from arc_out
         transitions_list = self.__arc_out_m.coords[0].tolist()
         places_list = self.__arc_out_m.coords[1].tolist()
+        arc_weight_list = self.__arc_in_m.data.tolist()
         iterator = len(transitions_list) - 1
         while iterator >= 0:
             if transitions_list[iterator] == transition_id:
                 del transitions_list[iterator]
                 del places_list[iterator]
+                del arc_weight_list[iterator]
             iterator = iterator - 1
         # creating new sparse for arc_out
-        self.__arc_out_m = sparse.COO([transitions_list, places_list], np.ones(len(places_list)),
-                                     self.__arc_out_m.shape)
+        self.__arc_out_m = sparse.COO([transitions_list, places_list], arc_weight_list)
+
         # removing transition from __transitions
         self.__transitions.pop(transition)
+        self.transitions_to_index.pop(transition)
+        self.index_to_transitions.pop(transition_id)
+
+        self.__imm_transitions_generated = False
+        self.__timed_transitions_generated = False
 
         return arcs_in, arcs_out
 
@@ -501,8 +513,7 @@ class GSPN(object):
                     value = self.find_index_value(places_list, transitions_list, place_id, transition_id)
                     del places_list[value]
                     del transitions_list[value]
-                    self.__arc_in_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)),
-                                                 self.__arc_in_m.shape)
+                    self.__arc_in_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)))
 
         if arcs_out != None:
             for transition in arcs_out:
@@ -514,8 +525,7 @@ class GSPN(object):
                     value = self.find_index_value(places_list, transitions_list, place_id, transition_id)
                     del places_list[value]
                     del transitions_list[value]
-                    self.__arc_out_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)),
-                                                  self.__arc_out_m.shape)
+                    self.__arc_out_m = sparse.COO([places_list, transitions_list], np.ones(len(places_list)))
         return True
 
     def find_index_value(self, list1, list2, element1, element2):
