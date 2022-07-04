@@ -41,7 +41,7 @@ class GSPN(object):
         return self.__arc_in_m.copy()
 
     def get_arc_out_m(self):
-        return self.__arc_out_m
+        return self.__arc_out_m.copy()
 
     def get_places(self):
         return self.__places
@@ -324,19 +324,26 @@ class GSPN(object):
         Converts the arcs sparse matrices to dicts and outputs them.
         :return: arcs in dict form
         '''
+        self.__arc_in_m.copy()
         arcs_in = {}
-        for iterator in range(len(self.get_arc_in_m().coords[0])):
-            if self.get_arc_in_m().coords[0][iterator] in arcs_in:
-                arcs_in[self.get_arc_in_m().coords[0][iterator]].append(self.get_arc_in_m().coords[1][iterator])
+        for iterator in range(len(self.__arc_in_m.coords[0])):
+            out_place = self.__arc_in_m.coords[0][iterator]
+            in_tr = self.__arc_in_m.coords[1][iterator]
+            arc_weight = self.__arc_in_m.data[iterator]
+            if out_place in arcs_in:
+                arcs_in[out_place].append((in_tr, arc_weight))
             else:
-                arcs_in[self.get_arc_in_m().coords[0][iterator]] = [self.get_arc_in_m().coords[1][iterator]]
+                arcs_in[out_place] = [(in_tr, arc_weight)]
 
         arcs_out = {}
-        for iterator in range(len(self.get_arc_out_m().coords[0])):
-            if self.get_arc_out_m().coords[0][iterator] in arcs_out:
-                arcs_out[self.get_arc_out_m().coords[0][iterator]].append(self.get_arc_out_m().coords[1][iterator])
+        for iterator in range(len(self.__arc_out_m.coords[0])):
+            out_tr = self.__arc_out_m.coords[0][iterator]
+            in_place = self.__arc_out_m.coords[1][iterator]
+            arc_weight = self.__arc_out_m.data[iterator]
+            if out_tr in arcs_out:
+                arcs_out[out_tr].append((in_place, arc_weight))
             else:
-                arcs_out[self.get_arc_out_m().coords[0][iterator]] = [self.get_arc_out_m().coords[1][iterator]]
+                arcs_out[out_tr] = [(in_place, arc_weight)]
 
         return arcs_in, arcs_out
 
