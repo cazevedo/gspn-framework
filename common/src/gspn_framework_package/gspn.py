@@ -345,60 +345,45 @@ class GSPN(object):
 
         return arcs_in, arcs_out
 
-    # TODO: FIX THIS METHOD TO TAKE INTO ACCOUNT SPARSE MATRICES
-    # TODO: ALREADY TESTED AND COMPLETED FOR SPARSE MATRICES
     def get_connected_arcs(self, name, type):
         '''
         Returns input and output arcs connected to a given element (place/transition) of the Petri Net
-        :param name: (str) Name of the element
-        :param type: (str) Either 'place' or 'transition' to indicate if the input is a place or a transition
-        :return: (dict, dict) Dictionaries of input and output arcs connected to the input element
+        :param name: (str) Name of the element (place name or transition name)
+        :param type: (str) Either the string 'place' or 'transition' to indicate if the input is a place or a transition
+        :return: (list, list) Lists of input and output elements connected to the input element
         '''
 
         if type != 'transition' and type != 'place':
-            raise NameError
+            raise Exception("Argument type not specified. Choose between 'transition' and 'place'.")
 
         if type == 'place':
-
             arcs_in_aux, arcs_out_aux = self.get_arcs_dict()
             place_index = self.places_to_index[name]
 
-            arcs_out = {}
-            for place in arcs_in_aux:
-                if place == place_index:
-                    if place in arcs_out:
-                        arcs_out[place].append(arcs_in_aux[place])
-                    else:
-                        arcs_out[place] = [arcs_in_aux[place]]
-
-            arcs_in = {}
-            for transition in arcs_out_aux:
-                for place in arcs_out_aux[transition]:
+            arcs_in = []
+            for transition in arcs_out_aux.keys():
+                for arc_info in arcs_out_aux[transition]:
+                    place = arc_info[0]
                     if place == place_index:
-                        if transition in arcs_in:
-                            arcs_in[transition].append(place)
-                        else:
-                            arcs_in[transition] = [place]
+                        arc_weight = arc_info[1]
+                        arcs_in.append((transition, arc_weight))
+
+            arcs_out = arcs_in_aux[place_index]
 
         if type == 'transition':
             arcs_in_aux, arcs_out_aux = self.get_arcs_dict()
             transition_index = self.transitions_to_index[name]
+            print('tr index ', transition_index)
 
-            arcs_in = {}
-            for place in arcs_in_aux:
-                for transition in arcs_in_aux[place]:
+            arcs_in = []
+            for place in arcs_in_aux.keys():
+                for arc_info in arcs_in_aux[place]:
+                    transition = arc_info[0]
                     if transition == transition_index:
-                        if place in arcs_in:
-                            arcs_in[place].append(transition)
-                        else:
-                            arcs_in[place] = [transition]
-            arcs_out = {}
-            for transition in arcs_out_aux:
-                if transition == transition_index:
-                    if transition in arcs_out:
-                        arcs_out[transition].append(arcs_out[transition])
-                    else:
-                        arcs_out[transition] = arcs_out_aux[transition]
+                        arc_weight = arc_info[1]
+                        arcs_in.append((place, arc_weight))
+
+            arcs_out = arcs_out_aux[transition_index]
 
         return arcs_in, arcs_out
 
@@ -408,7 +393,6 @@ class GSPN(object):
         :param (str) Name of the place to be removed
         :return: (dict)(dict) Dictionaries containing input and output arcs connected to the removed place
         '''
-        arcs_in, arcs_out = self.get_connected_arcs(place, 'place')
         place_id = self.places_to_index[place]
 
         # removing place from arc_in
@@ -446,7 +430,7 @@ class GSPN(object):
         if place in self.__sparse_marking:
             self.__sparse_marking.pop(place)
 
-        return arcs_in, arcs_out
+        return True
 
     def remove_transition(self, transition):
         '''
@@ -454,7 +438,6 @@ class GSPN(object):
         :param transition:(str) Name of the transition to be removed
         :return: (dict)(dict) Dictionaries containing input and output arcs connected to the removed transition
         '''
-        arcs_in, arcs_out = self.get_connected_arcs(transition, 'transition')
         transition_id = self.transitions_to_index[transition]
 
         # removing transition from arc_in
@@ -493,7 +476,7 @@ class GSPN(object):
         self.__imm_transitions_generated = False
         self.__timed_transitions_generated = False
 
-        return arcs_in, arcs_out
+        return True
 
     def remove_arc(self, arcs_in=None, arcs_out=None):
         '''
