@@ -4,7 +4,6 @@ import numpy as np
 from gspn_framework_package import gspn_analysis
 import sparse
 
-# TODO: include arc firing with more than one token (for that change fire_transition and get_enabled_transitions)
 class GSPN(object):
     """
     """
@@ -568,17 +567,20 @@ class GSPN(object):
         # for each transition get all the places that have an input arc connection
         for list_index, transition in enumerate(self.__arc_in_m.coords[1]):
             place = self.__arc_in_m.coords[0][list_index]
-            if transition in input_places:
-                input_places[transition].append(place)
+            arc_weight = self.__arc_in_m.data[list_index]
+            if transition in input_places.keys():
+                input_places[transition].append((place, arc_weight))
             else:
-                input_places[transition] = [place]
+                input_places[transition] = [(place, arc_weight)]
 
-        # for all transitions check the ones that are enabled (have at least one token in all input places)
+        # for all transitions check the ones that are enabled
+        # i.e. the input places have at least same number of tokens as the input arc weight
         for tr, list_places in input_places.items():
             enabled_transition = True
-            for in_pl in list_places:
+            for in_pl, in_weight in list_places:
                 in_pl_name = self.index_to_places[in_pl]
-                if current_marking[in_pl_name] == 0:
+                # if current_marking[in_pl_name] == 0:
+                if current_marking[in_pl_name] < in_weight:
                     enabled_transition = False
                     break
 
