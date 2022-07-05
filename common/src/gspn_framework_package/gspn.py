@@ -64,6 +64,27 @@ class GSPN(object):
         rate = tr_info[-1]
         return rate
 
+    def rename_place(self, place, new_name):
+        ntokens = self.__places[place]
+        place_index = self.places_to_index[place]
+
+        if ntokens > 0:
+            self.__sparse_marking[new_name] = ntokens
+            del self.__sparse_marking[place]
+
+        self.__places[new_name] = ntokens
+        del self.__places[place]
+
+        self.places_to_index[new_name] = place_index
+        del self.places_to_index[place]
+
+        self.index_to_places[place_index] = new_name
+
+        self.__initial_marking = self.__places.copy()
+        self.__initial_marking_sparse = self.__sparse_marking.copy()
+
+        return True
+
     def add_places(self, name, ntokens=[], set_initial_marking=True):
         '''
         Adds new places to the existing ones in the GSPN object. Replaces the ones with the same name.
