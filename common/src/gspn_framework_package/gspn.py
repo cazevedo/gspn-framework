@@ -43,7 +43,7 @@ class GSPN(object):
         return self.__arc_out_m.copy()
 
     def get_places(self):
-        return self.__places
+        return self.__places.copy()
 
     def set_places(self, new_places):
         self.__places = new_places
@@ -121,6 +121,20 @@ class GSPN(object):
             self.__initial_marking_sparse = self.__sparse_marking.copy()
 
         return self.__places.copy()
+
+    def rename_transition(self, transition, new_name):
+        tr_info = self.__transitions[transition]
+        transition_index = self.transitions_to_index[transition]
+
+        self.__transitions[new_name] = tr_info
+        del self.__transitions[transition]
+
+        self.transitions_to_index[new_name] = transition_index
+        del self.transitions_to_index[transition]
+
+        self.index_to_transitions[transition_index] = new_name
+
+        return True
 
     def add_transitions(self, tname, tclass=[], trate=[]):
         '''
