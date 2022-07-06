@@ -501,7 +501,7 @@ class GSPN(object):
         '''
         Method that removes TRANSITION from Petri Net, with corresponding input and output arcs
         :param transition:(str) Name of the transition to be removed
-        :return: (dict)(dict) Dictionaries containing input and output arcs connected to the removed transition
+        :return: (bool) True
         '''
         transition_id = self.transitions_to_index[transition]
 
@@ -522,7 +522,7 @@ class GSPN(object):
         # removing transition from arc_out
         transitions_list = self.__arc_out_m.coords[0].tolist()
         places_list = self.__arc_out_m.coords[1].tolist()
-        arc_weight_list = self.__arc_in_m.data.tolist()
+        arc_weight_list = self.__arc_out_m.data.tolist()
         iterator = len(transitions_list) - 1
         while iterator >= 0:
             if transitions_list[iterator] == transition_id:
@@ -530,6 +530,7 @@ class GSPN(object):
                 del places_list[iterator]
                 del arc_weight_list[iterator]
             iterator = iterator - 1
+
         # creating new sparse for arc_out
         self.__arc_out_m = sparse.COO([transitions_list, places_list], arc_weight_list)
 
