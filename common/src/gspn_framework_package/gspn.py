@@ -113,15 +113,6 @@ class GSPN(object):
 
         return self.__places.copy()
 
-    def add_places_dict(self, places_dict, set_initial_marking=True):
-        self.__places.update(places_dict.copy())
-
-        if set_initial_marking:
-            self.__initial_marking = self.__places.copy()
-            self.__initial_marking_sparse = self.__sparse_marking.copy()
-
-        return self.__places.copy()
-
     def rename_transition(self, transition, new_name):
         tr_info = self.__transitions[transition]
         transition_index = self.transitions_to_index[transition]
@@ -152,11 +143,11 @@ class GSPN(object):
             if tclass:
                 self.__transitions[transition_name].append(tclass[index])
             else:
-                self.__transitions[transition_name].append('imm')
+                raise Exception('No transition type defined for transition '+str(tclass[index]))
             if trate:
                 self.__transitions[transition_name].append(trate[index])
             else:
-                self.__transitions[transition_name].append(1.0)
+                raise Exception('No transition rate defined for transition '+str(tclass[index]))
 
             self.transitions_to_index[tname[index]] = lenTransitions
             self.index_to_transitions[lenTransitions] = tname[index]
@@ -164,11 +155,7 @@ class GSPN(object):
 
         return self.__transitions.copy()
 
-    def add_transitions_dict(self, transitions_dict):
-        self.__transitions.update(transitions_dict.copy())
-        return self.__transitions.copy()
-
-    def add_arcs_sparse_matrices(self, new_arc_in, new_arc_out):
+    def replace_arcs_sparse_matrices(self, new_arc_in, new_arc_out):
         self.__arc_in_m = new_arc_in
         self.__arc_out_m = new_arc_out
         return True
@@ -303,6 +290,45 @@ class GSPN(object):
         else:
             raise Exception('Number of elements in list of tokens to remove does not match the number of places.')
 
+    def get_places_lists(self):
+        n_places = len(self.__places.keys())
+        place_list = [0]*n_places
+        ntokens_list = [0]*n_places
+        for index, (place, ntokens) in enumerate(self.__places.items()):
+            place_list[index] = place
+            ntokens_list[index] = ntokens
+
+        return place_list, ntokens_list
+
+    def get_transitions_lists(self):
+        n_transitions = len(self.__transitions.keys())
+
+        tr_name_list = [0]*n_transitions
+        tr_type_list = [0]*n_transitions
+        tr_rate_list = [0]*n_transitions
+        for index, (tr_name, tr_info) in enumerate(self.__transitions.items()):
+            tr_name_list[index] = tr_name
+            tr_type_list[index] = tr_info[0]
+            tr_rate_list[index] = tr_info[1]
+
+        return tr_name_list, tr_type_list, tr_rate_list
+
+    def merge_gspn(self, gspn):
+        # merge places
+        place_list, ntokens_list = gspn.get_places_lists()
+        self.add_places(place_list, ntokens_list, set_initial_marking=True)
+
+        # merge transitions
+        tr_name_list, tr_type_list, tr_rate_list = gspn.get_transitions_lists()
+        self.add_transitions(tr_name_list, tr_type_list, tr_rate_list)
+
+        # merge arcs
+        arcs_in, arcs_out = gspn.get_arcs_dict()
+        self.add_arcs(arcs_in, arcs_out)
+
+        self.__imm_transitions_generated = False
+        self.__timed_transitions_generated = False
+
     def get_current_marking(self, sparse_marking=False):
         if sparse_marking:
             return self.__sparse_marking.copy()
@@ -361,7 +387,9 @@ class GSPN(object):
         arcs_in = {}
         for iterator in range(len(self.__arc_in_m.coords[0])):
             out_place = self.__arc_in_m.coords[0][iterator]
+            out_place = self.index_to_places[out_place]
             in_tr = self.__arc_in_m.coords[1][iterator]
+            in_tr = self.index_to_transitions[in_tr]
             arc_weight = self.__arc_in_m.data[iterator]
             if out_place in arcs_in:
                 arcs_in[out_place].append((in_tr, arc_weight))
@@ -371,7 +399,9 @@ class GSPN(object):
         arcs_out = {}
         for iterator in range(len(self.__arc_out_m.coords[0])):
             out_tr = self.__arc_out_m.coords[0][iterator]
+            out_tr = self.index_to_transitions[out_tr]
             in_place = self.__arc_out_m.coords[1][iterator]
+            in_place = self.index_to_places[in_place]
             arc_weight = self.__arc_out_m.data[iterator]
             if out_tr in arcs_out:
                 arcs_out[out_tr].append((in_place, arc_weight))
