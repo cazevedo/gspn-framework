@@ -4,17 +4,22 @@ from gym.utils import seeding
 
 import numpy as np
 from gspn_framework_package import gspn_tools
-# import gspn_tools
 
 class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, gspn_path, set_actions=None, verbose=False):
+    def __init__(self, gspn_model=None, gspn_path=None, set_actions=None, verbose=False):
         self.verbose = verbose
         print('Multi GSPN Gym Env')
-        pn_tool = gspn_tools.GSPNtools()
-        self.mr_gspn = pn_tool.import_greatspn(gspn_path)[0]
-        # pn_tool.draw_gspn(mr_gspn)
+
+        if gspn_path != None:
+            pn_tool = gspn_tools.GSPNtools()
+            self.mr_gspn = pn_tool.import_greatspn(gspn_path)[0]
+            # pn_tool.draw_gspn(mr_gspn)
+        elif gspn_model != None:
+            self.mr_gspn = gspn_model
+        else:
+            raise Exception('Please provide a GSPN object or a GSPN path of the environment model.')
         self.timestamp = 0
 
         n_robots = self.mr_gspn.get_number_of_tokens()
@@ -61,9 +66,6 @@ class MultiGSPNenv(gym.Env):
             print('Action: ', action)
 
         if transition != None:
-            # get reward
-            reward = self.reward_function(current_state, transition)
-
             # apply action
             self.mr_gspn.fire_transition(transition)
             # get execution time (until next decision state)
@@ -76,6 +78,9 @@ class MultiGSPNenv(gym.Env):
             # this is the expected time that corresponds to the selected action
             # action_expected_time = 1.0 / transition_rate
             action_expected_time = self.get_action_time(action)
+
+            # get reward
+            reward = self.reward_function(current_state, transition, fired_transitions)
 
         else:
             if self.verbose:
@@ -91,7 +96,7 @@ class MultiGSPNenv(gym.Env):
             print('Reward: ', reward)
             print('Timestamp: ', self.timestamp)
             print('Action expected time: ', action_expected_time)
-            print('Actions disabled: ', disabled_actions_names)
+            print("S actions disabled: ", disabled_actions_names)
 
         # get enabled actions in the next state
         next_state_enabled_actions_names, next_state_enabled_actions_indexes = self.get_enabled_actions()
@@ -101,7 +106,7 @@ class MultiGSPNenv(gym.Env):
         # next_state_string = self.get_current_state()
         if self.verbose:
             print("S': ", self.get_current_state())
-            # print("S': ", next_state)
+            print("S' available actions: ", next_state_enabled_actions_names)
             print()
 
         episode_done = False
@@ -162,8 +167,14 @@ class MultiGSPNenv(gym.Env):
 
         return state
 
-    def reward_function(self, sparse_state, transition):
+    def reward_function(self, sparse_state, transition, fired_transitions):
         reward = 0.0
+
+        # robot scalability
+        for action_pair in fired_transitions:
+            action_name = action_pair[0]
+            if action_name == 'AllAvailable':
+                reward = 10
 
         # inspection test
         # if 'L4' in sparse_state.keys() and transition == '_6':
@@ -177,12 +188,6 @@ class MultiGSPNenv(gym.Env):
 
         # if 'FullL4' in sparse_state.keys() and 'FullL3' in sparse_state.keys() and transition == '_9':
         #     reward = 1
-
-        # robot scalability
-        # if 'L4' in sparse_state.keys() and transition == '_5':
-        #     reward = 1
-        if 'L3' in sparse_state.keys() and transition == '_4':
-            reward = 1
 
         return reward
 
