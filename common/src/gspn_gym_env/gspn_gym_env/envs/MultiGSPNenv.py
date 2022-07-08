@@ -50,6 +50,7 @@ class MultiGSPNenv(gym.Env):
 
         # # {0,1,...,n_actions}
         self.action_space = spaces.Discrete(n_actions)
+        self.init_action_execution_time_correction()
 
     def step(self, action):
         # get disabled actions in current state
@@ -71,17 +72,21 @@ class MultiGSPNenv(gym.Env):
             # get execution time (until next decision state)
             # get also the sequence of the fired transitions (name
             # get the transition rate
-            elapsed_time, fired_transitions, transition_rate = self.get_execution_time(action)
-            self.timestamp += elapsed_time
+            actual_elapsed_time, expected_elapsed_time, fired_transitions = self.get_execution_time()
 
             # in a MRS the fired timed transition may not correspond to the selected action
             # this is the expected time that corresponds to the selected action
-            # action_expected_time = 1.0 / transition_rate
             action_expected_time = self.get_action_time(action)
+            # action_expected_time = 1.0 / transition_rate
+
+            corrected_elapsed_time = self.correct_action_execution_time(action, fired_transitions)
 
             # get reward
             reward = self.reward_function(current_state, transition, fired_transitions)
 
+            # self.timestamp += actual_elapsed_time
+            # self.timestamp += expected_elapsed_time
+            self.timestamp += corrected_elapsed_time
         else:
             if self.verbose:
                 print('Transition not enabled')
@@ -118,10 +123,50 @@ class MultiGSPNenv(gym.Env):
                 'action_time': action_expected_time}
                 # 'next_state_string': next_state_string}
 
+    def init_action_execution_time_correction(self):
+        self.actions_executing = []
+        enabled_timed_transitions, _ = self.mr_gspn.get_enabled_transitions()
+        for tr_name in enabled_timed_transitions:
+            if 'Finished' in tr_name:
+                exe_action_index = int(tr_name.split('_')[-1])
+                self.actions_executing.append([exe_action_index, 0])
+
+    def correct_action_execution_time(self, new_action, fired_transitions):
+        self.actions_executing.append([new_action, 0])
+
+        extra_time = 0
+        for fired_act_info in fired_transitions:
+            fired_action_name = fired_act_info[0]
+            if 'Finished' in fired_action_name:
+                fired_action_index = int(fired_act_info[0].split('_')[-1])
+                fired_action_expected_time = fired_act_info[2]
+
+                max_time_exec = -np.inf
+                for i, exe_act_info in enumerate(self.actions_executing.copy()):
+                    exe_action_index = exe_act_info[0]
+                    exe_action_time = exe_act_info[1]
+                    if exe_action_index == fired_action_index and exe_action_time > max_time_exec:
+                        max_time_exec_index = i
+                        max_time_exec = exe_action_time
+            else:
+                fired_action_expected_time = fired_act_info[2]
+                extra_time += fired_action_expected_time
+
+        poped_action = self.actions_executing[max_time_exec_index]
+        poped_action_time = poped_action[1]
+        corrected_elapsed_time = fired_action_expected_time + extra_time - poped_action_time
+        del self.actions_executing[max_time_exec_index]
+
+        for exe_act_info in self.actions_executing:
+            exe_act_info[1] += (fired_action_expected_time + extra_time)
+
+        return corrected_elapsed_time
+
     def reset(self):
         self.timestamp = 0
         self.mr_gspn.reset_simulation()
         next_state = self.marking_to_state()
+        self.init_action_execution_time_correction()
 
         # get enabled actions in the next state
         next_state_enabled_actions_names, next_state_enabled_actions_indexes = self.get_enabled_actions()
@@ -210,22 +255,24 @@ class MultiGSPNenv(gym.Env):
 
         return wait_until_fire, timed_transition, timed_transition_rate
 
-    def get_execution_time(self, action):
-        total_elapsed_time = 0
-        actions_info = [('action-available_'+str(action), 0)]
-        transitions_rate = []
+    def get_execution_time(self):
+        actual_elapsed_time = 0
+        expected_elapsed_time = 0
+        fired_transitions = []
 
+        # Fire all enabled timed transitions until the next decision step
+        # Store the elapsed time between transitions
         enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
         while(enabled_timed_transitions and not enabled_imm_transitions):
-            action_time, timed_transition, tr_rate = self.fire_timed_transitions()
-            total_elapsed_time += action_time
-            actions_info.append((timed_transition, action_time))
-            transitions_rate.append(tr_rate)
-            # actions_info = (timed_transition, action_time)
+            action_elapsed_time, timed_transition, tr_rate = self.fire_timed_transitions()
+            actual_elapsed_time += action_elapsed_time
+            action_expected_time = 1.0/tr_rate
+            expected_elapsed_time += action_expected_time
+            fired_transitions.append((timed_transition, action_elapsed_time, action_expected_time))
 
             enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
 
-        return total_elapsed_time, actions_info, transitions_rate
+        return actual_elapsed_time, expected_elapsed_time, fired_transitions
 
     def get_action_info_attributes(self, action):
         action_name = action[0]
