@@ -48,6 +48,7 @@ class MultiGSPNenv(gym.Env):
 
             n_actions = len(actions.keys())
 
+        self.enabled_parallel_transitions = {}
         # # {0,1,...,n_actions}
         self.action_space = spaces.Discrete(n_actions)
         self.init_action_execution_time_correction()
@@ -69,24 +70,23 @@ class MultiGSPNenv(gym.Env):
         if transition != None:
             # apply action
             self.mr_gspn.fire_transition(transition)
+
             # get execution time (until next decision state)
             # get also the sequence of the fired transitions (name
             # get the transition rate
-            actual_elapsed_time, expected_elapsed_time, fired_transitions = self.get_execution_time()
+            elapsed_time, fired_transitions = self.execute_actions()
 
             # in a MRS the fired timed transition may not correspond to the selected action
             # this is the expected time that corresponds to the selected action
             action_expected_time = self.get_action_time(action)
             # action_expected_time = 1.0 / transition_rate
 
-            corrected_elapsed_time = self.correct_action_execution_time(action, fired_transitions)
+            # corrected_elapsed_time = self.correct_action_execution_time(action, fired_transitions)
 
             # get reward
             reward = self.reward_function(current_state, transition, fired_transitions)
 
-            # self.timestamp += actual_elapsed_time
-            # self.timestamp += expected_elapsed_time
-            self.timestamp += corrected_elapsed_time
+            self.timestamp += elapsed_time
         else:
             if self.verbose:
                 print('Transition not enabled')
@@ -236,43 +236,173 @@ class MultiGSPNenv(gym.Env):
 
         return reward
 
-    def fire_timed_transitions(self):
-        enabled_exp_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+    def fire_timed_transitions(self, enabled_timed_transitions, use_expected_time=True):
+        if use_expected_time:
+            # convert the rate into expected time and store that transition if it was not already stored
+            for tr_name, tr_rate in enabled_timed_transitions.copy().items():
+                if tr_name not in self.enabled_parallel_transitions:
+                    self.enabled_parallel_transitions[tr_name] = [1.0 / tr_rate]
 
-        wait_times = enabled_exp_transitions.copy()
-        # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
-        # in this case the beta rate parameter is used instead, where beta = 1/lambda
-        for key, value in enabled_exp_transitions.items():
-            wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
-            # wait_times[key] = np.random.normal(loc=value, scale=10)
+                n_sampled_times = len(self.enabled_parallel_transitions[tr_name])
+                tr_index = self.mr_gspn.transitions_to_index[tr_name]
+                arcs_in = self.mr_gspn.get_arc_in_m()
+                places_dict = self.mr_gspn.get_places()
+                input_place_ratios = []
+                sample_new_time = True
+                for i, tr_coord in enumerate(arcs_in.coords[1]):
+                    if tr_coord == tr_index:
+                        place_index = arcs_in.coords[0][i]
+                        place_name = self.mr_gspn.index_to_places[place_index]
+                        n_tokens = places_dict[place_name]
+                        arc_weight = arcs_in.data[i]
+                        ratio = int(n_tokens/arc_weight)
+                        # the ratio gives us the number of sampled times that must exist in the
+                        # parallel dict, for this specific transition
+                        input_place_ratios.append(ratio)
+                        if ratio <= n_sampled_times:
+                            sample_new_time = False
+                            break
+                # sample the amount necessary such that the number of
+                # sampled times equals the smallest the place ratio
+                if sample_new_time and len(input_place_ratios) > 0:
+                    while len(self.enabled_parallel_transitions[tr_name]) < min(input_place_ratios):
+                        self.enabled_parallel_transitions[tr_name].append(1.0 / tr_rate)
 
-        timed_transition = min(wait_times, key=wait_times.get)
-        wait_until_fire = wait_times[timed_transition]
+                print(input_place_ratios)
 
-        self.mr_gspn.fire_transition(timed_transition)
+                import sys
+                sys.exit()
+        else:
+            # convert the rate into sampled elapsed time
+            # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
+            # in this case the beta rate parameter is used instead, where beta = 1/lambda
+            # store enabled transition if it was not already stored
+            for tr_name, tr_rate in enabled_timed_transitions.copy().items():
+                if tr_name not in self.enabled_parallel_transitions:
+                    self.enabled_parallel_transitions[tr_name] = [np.random.exponential(scale=(1.0 / tr_rate),
+                                                                                        size=None)]
 
-        timed_transition_rate = enabled_exp_transitions[timed_transition]
+                n_sampled_times = len(self.enabled_parallel_transitions[tr_name])
+                tr_index = self.mr_gspn.transitions_to_index[tr_name]
+                arcs_in = self.mr_gspn.get_arc_in_m()
+                places_dict = self.mr_gspn.get_places()
+                input_place_ratios = []
+                sample_new_time = True
+                for i, tr_coord in enumerate(arcs_in.coords[1]):
+                    if tr_coord == tr_index:
+                        place_index = arcs_in.coords[0][i]
+                        place_name = self.mr_gspn.index_to_places[place_index]
+                        n_tokens = places_dict[place_name]
+                        arc_weight = arcs_in.data[i]
+                        ratio = int(n_tokens / arc_weight)
+                        # the ratio gives us the number of sampled times that must exist in the
+                        # parallel dict, for this specific transition
+                        input_place_ratios.append(ratio)
+                        if ratio <= n_sampled_times:
+                            sample_new_time = False
+                            break
+                # sample the amount necessary such that the number of
+                # sampled times equals the smallest the place ratio
+                if sample_new_time and len(input_place_ratios) > 0:
+                    while len(self.enabled_parallel_transitions[tr_name]) < min(input_place_ratios):
+                        self.enabled_parallel_transitions[tr_name].append(np.random.exponential(scale=(1.0 / tr_rate),
+                                                                                                size=None))
 
-        return wait_until_fire, timed_transition, timed_transition_rate
+        # delete the transitions that were enabled, didn't fire and are not longer enabled
+        disabled_transitions = set(self.enabled_parallel_transitions.keys())-set(enabled_timed_transitions.keys())
+        for tr_name in disabled_transitions:
+            del self.enabled_parallel_transitions[tr_name]
 
-    def get_execution_time(self):
-        actual_elapsed_time = 0
-        expected_elapsed_time = 0
-        fired_transitions = []
+        # select the transition with the lowest execution time
+        timed_transition = min(self.enabled_parallel_transitions, key=self.enabled_parallel_transitions.get)
+        execution_time = self.enabled_parallel_transitions[timed_transition]
+        transitions_to_fire = []
+        transitions_to_fire.append(timed_transition)
 
-        # Fire all enabled timed transitions until the next decision step
-        # Store the elapsed time between transitions
+        # delete transition to be fired
+        del self.enabled_parallel_transitions[timed_transition]
+
+        # decreased elapsed time for the remaining enabled transitions
+        for tr_name, tr_exp_time in self.enabled_parallel_transitions.copy().items():
+            new_tr_time = tr_exp_time - execution_time
+            if new_tr_time <= 0:
+                # if some enabled transition has zero time remaining, fire it also
+                # according to PN formalism this should not happen
+                # instead we should sum a very small time (e.g. 1e-6)
+                # to ensure that only 1 transition fires at each time
+                # when using expected time this arises more often
+                transitions_to_fire.append(tr_name)
+                del self.enabled_parallel_transitions[tr_name]
+            else:
+                self.enabled_parallel_transitions[tr_name] = new_tr_time
+
+        for transition_name in transitions_to_fire:
+            self.mr_gspn.fire_transition(transition_name)
+
+        return execution_time, transitions_to_fire
+
+    def execute_actions(self, use_expected_time=True):
         enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+
+        elapsed_time = 0
+        fired_transitions = []
         while(enabled_timed_transitions and not enabled_imm_transitions):
-            action_elapsed_time, timed_transition, tr_rate = self.fire_timed_transitions()
-            actual_elapsed_time += action_elapsed_time
-            action_expected_time = 1.0/tr_rate
-            expected_elapsed_time += action_expected_time
-            fired_transitions.append((timed_transition, action_elapsed_time, action_expected_time))
-
+            action_elapsed_time, tr_fired = self.fire_timed_transitions(enabled_timed_transitions, use_expected_time)
+            elapsed_time += action_elapsed_time
             enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+            fired_transitions.append(tr_fired)
 
-        return actual_elapsed_time, expected_elapsed_time, fired_transitions
+        return elapsed_time, fired_transitions
+
+    # def fire_timed_transitions(self, max_rate_first=False):
+    #     enabled_exp_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+    #
+    #     if max_rate_first:
+    #         timed_transition = max(enabled_exp_transitions, key=enabled_exp_transitions.get)
+    #         timed_transition_rate = enabled_exp_transitions[timed_transition]
+    #         wait_until_fire = 1.0/timed_transition_rate
+    #         print('enabled tr: ')
+    #         print(enabled_exp_transitions)
+    #         print('timed transition: ', timed_transition)
+    #         print('rate: ', timed_transition_rate)
+    #         print('elapsed time: ', wait_until_fire)
+    #         print()
+    #
+    #     else:
+    #         wait_times = enabled_exp_transitions.copy()
+    #         # sample from each exponential distribution prob_dist(x) = lambda * exp(-lambda * x)
+    #         # in this case the beta rate parameter is used instead, where beta = 1/lambda
+    #         for key, value in enabled_exp_transitions.items():
+    #             wait_times[key] = np.random.exponential(scale=(1.0 / value), size=None)
+    #             # wait_times[key] = np.random.normal(loc=value, scale=10)
+    #
+    #         timed_transition = min(wait_times, key=wait_times.get)
+    #         wait_until_fire = wait_times[timed_transition]
+    #
+    #         timed_transition_rate = enabled_exp_transitions[timed_transition]
+    #
+    #     self.mr_gspn.fire_transition(timed_transition)
+    #
+    #     return wait_until_fire, timed_transition, timed_transition_rate
+    #
+    # def get_execution_time(self):
+    #     actual_elapsed_time = 0
+    #     expected_elapsed_time = 0
+    #     fired_transitions = []
+    #
+    #     # Fire all enabled timed transitions until the next decision step
+    #     # Store the elapsed time between transitions
+    #     enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+    #     while(enabled_timed_transitions and not enabled_imm_transitions):
+    #         action_elapsed_time, timed_transition, tr_rate = self.fire_timed_transitions(max_rate_first=True)
+    #         actual_elapsed_time += action_elapsed_time
+    #         action_expected_time = 1.0/tr_rate
+    #         expected_elapsed_time += action_expected_time
+    #         fired_transitions.append((timed_transition, action_elapsed_time, action_expected_time))
+    #
+    #         enabled_timed_transitions, enabled_imm_transitions = self.mr_gspn.get_enabled_transitions()
+    #
+    #     return actual_elapsed_time, expected_elapsed_time, fired_transitions
 
     def get_action_info_attributes(self, action):
         action_name = action[0]
