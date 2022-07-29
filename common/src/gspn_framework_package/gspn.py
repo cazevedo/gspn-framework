@@ -241,7 +241,7 @@ class GSPN(object):
                     if tokens_to_add == 'w':
                         self.__places[p] = 'w'
                         self.__sparse_marking[p] = 'w'
-                    else:
+                    elif tokens_to_add > 0:
                         self.__places[p] = self.__places[p] + tokens_to_add
                         if p in self.__sparse_marking:
                             self.__sparse_marking[p] = self.__sparse_marking[p] + tokens_to_add
