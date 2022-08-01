@@ -60,6 +60,7 @@ class MultiGSPNenv(gym.Env):
         current_state = self.get_current_state()
         if self.verbose:
             print('S: ', current_state)
+            print('Enabled Timed transitions : ', self.enabled_parallel_transitions)
 
         # map input action to associated transition
         transition = self.action_to_transition(action)
@@ -70,9 +71,11 @@ class MultiGSPNenv(gym.Env):
             # apply action
             self.mr_gspn.fire_transition(transition)
 
-            # get execution time (until next decision state)
-            # get also the sequence of the fired transitions (name
-            # get the transition rate
+            # # get reward
+            # reward = self.reward_function(current_state, transition)
+
+            # get execution time (until the next decision state)
+            # get also the sequence of the fired transitions ['t1', 't2', ...]
             elapsed_time, fired_transitions = self.execute_actions(use_expected_time=True)
 
             # in a MRS the fired timed transition may not correspond to the selected action
@@ -170,13 +173,37 @@ class MultiGSPNenv(gym.Env):
 
         return state
 
-    def reward_function(self, sparse_state, transition, fired_transitions):
+    def reward_function(self, sparse_state=None, transition=None, fired_transitions=None):
         reward = 0.0
 
-        # robot scalability
-        for action in fired_transitions:
-            if action == 'AllAvailable':
-                reward = 10
+        tr_index = self.from_action_to_index(transition)
+        location_index = int(tr_index/3.0)
+        # when this condition is true it means the mrs decided to inspect
+        if location_index != tr_index/3.0:
+            reward = 1.0
+
+        # # robot scalability
+        # for action in fired_transitions:
+        #     if action == 'AllAvailable':
+        #         reward = 10.0
+
+        # robot scalability 2
+        # tr_index = self.from_action_to_index(transition)
+        # location_index = int(tr_index/3.0)
+        # # when this condition is true it means the mrs decided to inspect
+        # if location_index != tr_index/3.0:
+        #     # easier for comparison reasons
+        #     enabled_tr_str = ''.join(self.enabled_parallel_transitions.keys())
+        #     # when this condition is true it means the mrs decided to inspect the left (L) panel
+        #     if tr_index > location_index*3+1:
+        #         # this means the panel needed inspection
+        #         if 'NeedsInspAgainL'+str(location_index)+'L' not in enabled_tr_str:
+        #             reward = 10.0
+        #     # otherwise it means the mrs decided to inspect the right (R) panel
+        #     else:
+        #         # this means the panel needed inspection
+        #         if 'NeedsInspAgainL'+str(location_index)+'R' not in enabled_tr_str:
+        #             reward = 10.0
 
         # inspection test
         # if 'L4' in sparse_state.keys() and transition == '_6':
