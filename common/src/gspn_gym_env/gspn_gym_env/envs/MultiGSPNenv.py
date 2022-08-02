@@ -144,7 +144,7 @@ class MultiGSPNenv(gym.Env):
 
     def close(self):
         self.reset()
-        print('Au Revoir Shoshanna!')
+        # print('Au Revoir Shoshanna!')
 
     def get_current_state(self):
         sparse_state = self.mr_gspn.get_current_marking(sparse_marking=True)
@@ -176,11 +176,12 @@ class MultiGSPNenv(gym.Env):
     def reward_function(self, sparse_state=None, transition=None, fired_transitions=None):
         reward = 0.0
 
+        # robot scalability
         tr_index = self.from_action_to_index(transition)
         location_index = int(tr_index/3.0)
         # when this condition is true it means the mrs decided to inspect
         if location_index != tr_index/3.0:
-            reward = 1.0
+            reward = 10.0
 
         # # robot scalability
         # for action in fired_transitions:
