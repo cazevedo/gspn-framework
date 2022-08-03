@@ -10,7 +10,7 @@ class MultiGSPNenv(gym.Env):
 
     def __init__(self, gspn_model=None, gspn_path=None, set_actions=None, verbose=False):
         self.verbose = verbose
-        print('Multi GSPN Gym Env')
+        # print('Multi GSPN Gym Env')
 
         if gspn_path != None:
             pn_tool = gspn_tools.GSPNtools()
