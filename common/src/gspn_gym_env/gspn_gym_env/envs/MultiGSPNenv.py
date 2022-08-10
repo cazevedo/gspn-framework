@@ -8,7 +8,7 @@ from gspn_framework_package import gspn_tools
 class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, gspn_model=None, gspn_path=None, set_actions=None, verbose=False):
+    def __init__(self, gspn_model=None, gspn_path=None, set_actions=None, use_expected_time=False, verbose=False):
         self.verbose = verbose
         # print('Multi GSPN Gym Env')
 
@@ -52,6 +52,8 @@ class MultiGSPNenv(gym.Env):
         # # {0,1,...,n_actions}
         self.action_space = spaces.Discrete(n_actions)
 
+        self.use_expected_time = use_expected_time
+
     def step(self, action):
         # get disabled actions in current state
         disabled_actions_names, disabled_actions_indexes = self.get_disabled_actions()
@@ -76,7 +78,7 @@ class MultiGSPNenv(gym.Env):
 
             # get execution time (until the next decision state)
             # get also the sequence of the fired transitions ['t1', 't2', ...]
-            elapsed_time, fired_transitions = self.execute_actions(use_expected_time=True)
+            elapsed_time, fired_transitions = self.execute_actions(use_expected_time=self.use_expected_time)
 
             # in a MRS the fired timed transition may not correspond to the selected action
             # this is the expected time that corresponds to the selected action
