@@ -125,7 +125,18 @@ class GSPN(object):
 
         self.index_to_transitions[transition_index] = new_name
 
+        self.__imm_transitions_generated = False
+        self.__timed_transitions_generated = False
+
         return True
+
+    def change_transition_rate(self, transition_name, new_rate):
+        tr_info = self.__transitions[transition_name]
+        tr_info[1] = new_rate
+        self.__transitions[transition_name] = tr_info
+
+        self.__imm_transitions_generated = False
+        self.__timed_transitions_generated = False
 
     def add_transitions(self, tname, tclass=[], trate=[]):
         '''
@@ -152,6 +163,9 @@ class GSPN(object):
             self.transitions_to_index[tname[index]] = lenTransitions
             self.index_to_transitions[lenTransitions] = tname[index]
             lenTransitions += 1
+
+        self.__imm_transitions_generated = False
+        self.__timed_transitions_generated = False
 
         return self.__transitions.copy()
 
