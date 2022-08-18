@@ -57,7 +57,10 @@ class GSPN(object):
         return total_tokens
 
     def get_sparse_marking(self):
-        return self.__sparse_marking
+        return self.__sparse_marking.copy()
+
+    def get_initial_sparse_marking(self):
+        return self.__initial_marking_sparse.copy()
 
     def get_transition_rate(self, transition):
         tr_info = self.__transitions[transition]
@@ -264,7 +267,7 @@ class GSPN(object):
 
             if set_initial_marking:
                 self.__initial_marking = self.__places.copy()
-                self.__initial_marking_sparse = self.__initial_marking.copy()
+                self.__initial_marking_sparse = self.__sparse_marking.copy()
 
             return True
         else:
