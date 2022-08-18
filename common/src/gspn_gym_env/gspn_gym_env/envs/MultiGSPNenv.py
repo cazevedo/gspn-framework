@@ -8,7 +8,8 @@ from gspn_framework_package import gspn_tools
 class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, gspn_model=None, gspn_path=None, set_actions=None, use_expected_time=False, verbose=False):
+    def __init__(self, gspn_model=None, gspn_path=None, set_actions=None, n_locations=None,
+                 use_expected_time=False, verbose=False):
         self.verbose = verbose
         # print('Multi GSPN Gym Env')
 
@@ -54,6 +55,11 @@ class MultiGSPNenv(gym.Env):
 
         self.use_expected_time = use_expected_time
 
+        self.n_locations = n_locations
+        if n_locations != None:
+            all_actions = set(range(3 * self.n_locations))
+            self.optimal_actions = all_actions - set(3 * np.array(range(self.n_locations)))
+
     def step(self, action):
         # get disabled actions in current state
         disabled_actions_names, disabled_actions_indexes = self.get_disabled_actions()
@@ -82,7 +88,8 @@ class MultiGSPNenv(gym.Env):
 
             # in a MRS the fired timed transition may not correspond to the selected action
             # this is the expected time that corresponds to the selected action
-            action_expected_time = self.get_action_time(action)
+            # action_expected_time = self.get_action_time(action)
+            action_expected_time = self.get_action_time_noiseless(action)
             # action_expected_time = 1.0 / transition_rate
 
             # get reward
@@ -400,6 +407,17 @@ class MultiGSPNenv(gym.Env):
         transition_rate = self.mr_gspn.get_transition_rate(transition)
         action_expected_time = 1.0/transition_rate
         return action_expected_time
+
+    def get_action_time_noiseless(self, action):
+        if self.n_locations == None:
+            raise Exception('Please specify the number of locations when instantiating the environment.')
+        else:
+            if action in self.optimal_actions:
+                # 1.0/0.5
+                return 2.0
+            else:
+                # 1.0/1.0
+                return 1.0
 
     # def seed(self, seed=None):
     #     self.np_random, seed = seeding.np_random(seed)
