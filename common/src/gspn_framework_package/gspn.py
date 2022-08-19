@@ -260,10 +260,7 @@ class GSPN(object):
                         self.__sparse_marking[p] = 'w'
                     elif tokens_to_add > 0:
                         self.__places[p] = self.__places[p] + tokens_to_add
-                        if p in self.__sparse_marking:
-                            self.__sparse_marking[p] = self.__sparse_marking[p] + tokens_to_add
-                        else:
-                            self.__sparse_marking[p] = tokens_to_add
+                        self.__sparse_marking[p] = self.__places[p]
 
             if set_initial_marking:
                 self.__initial_marking = self.__places.copy()
@@ -292,10 +289,10 @@ class GSPN(object):
                 if tokens_to_remove == 'w':
                     self.__places[p] = 0
                     del self.__sparse_marking[p]
-                else:
+                elif tokens_to_remove > 0:
                     if self.__places[p] != 'w':
                         self.__places[p] = self.__places[p] - tokens_to_remove
-                        self.__sparse_marking[p] = self.__sparse_marking[p] - tokens_to_remove
+                        self.__sparse_marking[p] = self.__places[p]
                         if self.__sparse_marking[p] <= 0:
                             del self.__sparse_marking[p]
 
