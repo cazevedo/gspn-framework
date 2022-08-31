@@ -9,7 +9,8 @@ class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, gspn_model=None, gspn_path=None, n_locations=None, n_robots=None,
-                 set_actions=None, use_expected_time=False, verbose=False):
+                 set_actions=None, use_expected_time=False, verbose=False, idd=None):
+        self.id = idd
         self.verbose = verbose
         # print('Multi GSPN Gym Env')
 
@@ -109,6 +110,8 @@ class MultiGSPNenv(gym.Env):
 
             self.timestamp += elapsed_time
         else:
+            raise Exception('Disabled transition selected! This is not possible.')
+
             if self.verbose:
                 print('Transition not enabled')
             # stay in the same state, return reward -1, timestamp 0
