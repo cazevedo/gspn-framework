@@ -8,8 +8,8 @@ from gspn_framework_package import gspn_tools
 class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, gspn_model=None, gspn_path=None, set_actions=None, n_locations=None,
-                 use_expected_time=False, verbose=False):
+    def __init__(self, gspn_model=None, gspn_path=None, n_locations=None, n_robots=None,
+                 set_actions=None, use_expected_time=False, verbose=False):
         self.verbose = verbose
         # print('Multi GSPN Gym Env')
 
@@ -23,10 +23,9 @@ class MultiGSPNenv(gym.Env):
             raise Exception('Please provide a GSPN object or a GSPN path of the environment model.')
         self.timestamp = 0
 
-        n_robots = self.mr_gspn.get_number_of_tokens()
-
-        # [0, 1, 1, 0, 1, 2, 0]
-        self.observation_space = spaces.MultiDiscrete(nvec=[n_robots+1]*len(self.mr_gspn.get_current_marking()))
+        # [max_n_tokens_in_place0, max_n_tokens_in_place1, ... max_n_tokens_in_placen]
+        # we approximate this to: [n_robots, n_robots, ... nrobots]
+        self.observation_space = spaces.MultiDiscrete(nvec=[n_robots]*len(self.mr_gspn.get_current_marking()))
 
         # # [0.0...1.0]
         # self.action_space = spaces.Box(low=0.0, high=1.0,
@@ -36,8 +35,21 @@ class MultiGSPNenv(gym.Env):
             # when the number of robots (tokens) is smaller than the number of locations (places/transitions)
             # the most efficient approach is define a set of actions that are common to every robot
             # and replicate it with different names for each robot
+            self.robots_map = {}
+            self.robots_map_inv = {}
+            self.set_actions = set_actions
             n_actions = len(set_actions) * n_robots
+            m_zero = self.mr_gspn.get_sparse_marking()
+
+            r_number = 0
+            for pl, token in m_zero.items():
+                if 'Available' not in pl and 'Global' not in pl:
+                    self.robots_map[pl] = r_number
+                    self.robots_map_inv[r_number] = pl
+                    r_number += 1
         else:
+            self.robots_map = None
+
             # get number of transitions in order to get number of actions
             # when the number of robots (tokens) is considerably bigger than the number of locations (places/transitions)
             # the most efficient approach is to use every single transition as an individual action
@@ -162,15 +174,31 @@ class MultiGSPNenv(gym.Env):
         return sparse_state
 
     def action_to_transition(self, action):
-        action = self.from_index_to_action(int(action))
+        if self.robots_map:
+            # round_nearest(n_actions * (action_multiplier - robot_number))
+            action_index = np.round(len(self.set_actions)*(action/len(self.set_actions)
+                                                           - np.floor(action/len(self.set_actions))), 0)
+            robot_number = np.floor(action/len(self.set_actions))
 
-        # check if action exists in the enabled transitions; if don't fire any transition
-        _, enabled_actions = self.mr_gspn.get_enabled_transitions()
+            robot_loc = self.robots_map_inv[robot_number]
+            if 'Nav' in robot_loc or 'Inp' in robot_loc:
+                return None
+            else:
+                robot_loc_index = int(self.robots_map_inv[robot_number].split('L')[-1])
 
-        if action in enabled_actions.keys():
-            return action
+                transition = '_'+str(int(len(self.set_actions)*robot_loc_index + action_index))
+
+                return transition
         else:
-            return None
+            action = self.from_index_to_action(int(action))
+
+            # check if action exists in the enabled transitions; if don't fire any transition
+            _, enabled_actions = self.mr_gspn.get_enabled_transitions()
+
+            if action in enabled_actions.keys():
+                return action
+            else:
+                return None
 
     def marking_to_state(self):
         # map dict marking to list marking
