@@ -10,9 +10,12 @@ class MultiGSPNenv(gym.Env):
 
     def __init__(self, gspn_model=None, gspn_path=None, n_locations=None, n_robots=None,
                  set_actions=None, use_expected_time=False, verbose=False, idd=None):
+        # print('Multi GSPN Gym Env')
         self.id = idd
         self.verbose = verbose
-        # print('Multi GSPN Gym Env')
+        self.n_robots = n_robots
+        self.n_locations = n_locations
+        self.use_expected_time = use_expected_time
 
         if gspn_path != None:
             pn_tool = gspn_tools.GSPNtools()
@@ -22,6 +25,8 @@ class MultiGSPNenv(gym.Env):
             self.mr_gspn = gspn_model
         else:
             raise Exception('Please provide a GSPN object or a GSPN path of the environment model.')
+
+        # Init timestamp
         self.timestamp = 0
 
         # [max_n_tokens_in_place0, max_n_tokens_in_place1, ... max_n_tokens_in_placen]
@@ -66,9 +71,6 @@ class MultiGSPNenv(gym.Env):
         # # {0,1,...,n_actions}
         self.action_space = spaces.Discrete(n_actions)
 
-        self.use_expected_time = use_expected_time
-
-        self.n_locations = n_locations
         if n_locations != None:
             all_actions = set(range(3 * self.n_locations))
             self.optimal_actions = all_actions - set(3 * np.array(range(self.n_locations)))
