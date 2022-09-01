@@ -222,6 +222,8 @@ class MultiGSPNenv(gym.Env):
         # when this condition is true it means the mrs decided to inspect
         if location_index != tr_index/3.0:
             reward = 10.0
+        else:
+            reward = -1.0
 
         # # robot scalability
         # for action in fired_transitions:
