@@ -9,13 +9,16 @@ class MultiGSPNenv(gym.Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, gspn_model=None, gspn_path=None, n_locations=None, n_robots=None,
-                 set_actions=None, use_expected_time=False, verbose=False, idd=None):
+                 set_actions=None, reward_function=None, use_expected_time=False, verbose=False, idd=None):
         # print('Multi GSPN Gym Env')
         self.id = idd
         self.verbose = verbose
         self.n_robots = n_robots
         self.n_locations = n_locations
         self.use_expected_time = use_expected_time
+        if not reward_function:
+            raise Exception('Please select one reward function: either 1 or 2')
+        self.reward_function_type = reward_function
 
         if gspn_path != None:
             pn_tool = gspn_tools.GSPNtools()
@@ -94,8 +97,9 @@ class MultiGSPNenv(gym.Env):
             # apply action
             self.mr_gspn.fire_transition(transition)
 
-            # # get reward
-            # reward = self.reward_function(current_state, transition)
+            if self.reward_function_type == 2:
+                # get reward inspect 2
+                reward = self.reward_function(current_state, transition)
 
             # get execution time (until the next decision state)
             # get also the sequence of the fired transitions ['t1', 't2', ...]
@@ -107,8 +111,9 @@ class MultiGSPNenv(gym.Env):
             action_expected_time = self.get_action_time_noiseless(action)
             # action_expected_time = 1.0 / transition_rate
 
-            # get reward
-            reward = self.reward_function(current_state, transition, fired_transitions)
+            if self.reward_function_type == 1:
+                # get reward inspect 1
+                reward = self.reward_function(current_state, transition, fired_transitions)
 
             self.timestamp += elapsed_time
         else:
@@ -218,38 +223,43 @@ class MultiGSPNenv(gym.Env):
     def reward_function(self, sparse_state=None, transition=None, fired_transitions=None):
         reward = 0.0
 
-        # robot scalability
-        tr_index = self.from_action_to_index(transition)
-        location_index = int(tr_index/3.0)
+        if self.reward_function_type == 1:
+            # robot scalability
+            tr_index = self.from_action_to_index(transition)
+            location_index = int(tr_index/3.0)
 
-        # when this condition is true it means the mrs decided to inspect
-        if location_index != tr_index/3.0:
-            reward = 10.0
-        # else:
-        #     reward = -1.0
+            # when this condition is true it means the mrs decided to inspect
+            if location_index != tr_index/3.0:
+                reward = 10.0
 
         # # robot scalability
         # for action in fired_transitions:
         #     if action == 'AllAvailable':
         #         reward = 10.0
 
-        # robot scalability 2
-        # tr_index = self.from_action_to_index(transition)
-        # location_index = int(tr_index/3.0)
-        # # when this condition is true it means the mrs decided to inspect
-        # if location_index != tr_index/3.0:
-        #     # easier for comparison reasons
-        #     enabled_tr_str = ''.join(self.enabled_parallel_transitions.keys())
-        #     # when this condition is true it means the mrs decided to inspect the left (L) panel
-        #     if tr_index > location_index*3+1:
-        #         # this means the panel needed inspection
-        #         if 'NeedsInspAgainL'+str(location_index)+'L' not in enabled_tr_str:
-        #             reward = 10.0
-        #     # otherwise it means the mrs decided to inspect the right (R) panel
-        #     else:
-        #         # this means the panel needed inspection
-        #         if 'NeedsInspAgainL'+str(location_index)+'R' not in enabled_tr_str:
-        #             reward = 10.0
+        elif self.reward_function_type == 2:
+            # robot scalability 2
+            # (when uncommenting this make sure in the step function this comes before transition firing)
+            tr_index = self.from_action_to_index(transition)
+            location_index = int(tr_index/3.0)
+            # when this condition is true it means the mrs decided to inspect
+            if location_index != tr_index/3.0:
+                # easier for comparison reasons
+                enabled_tr_str = ''.join(self.enabled_parallel_transitions.keys())
+                # when this condition is true it means the mrs decided to inspect the left (L) panel
+                if tr_index > location_index*3+1:
+                    # this means the panel needed inspection
+                    if 'NeedsInspAgainL'+str(location_index)+'L' not in enabled_tr_str:
+                        reward = 20.0
+                    else:
+                        reward = -1.0
+                # otherwise it means the mrs decided to inspect the right (R) panel
+                else:
+                    # this means the panel needed inspection
+                    if 'NeedsInspAgainL'+str(location_index)+'R' not in enabled_tr_str:
+                        reward = 20.0
+                    else:
+                        reward = -1.0
 
         # inspection test
         # if 'L4' in sparse_state.keys() and transition == '_6':
@@ -265,6 +275,20 @@ class MultiGSPNenv(gym.Env):
         #     reward = 1
 
         return reward
+
+    def which_panels_require_inspection(self):
+        enabled_tr, _ = self.mr_gspn.get_enabled_transitions()
+
+        req_insp_actions = []
+        # self.enabled_parallel_transitions.keys()
+        for location_index in range(self.n_locations):
+            # this means the panel needed inspection
+            if 'NeedsInspAgainL' + str(location_index) + 'R' not in enabled_tr:
+                req_insp_actions.append(location_index * 3 + 1)
+            if 'NeedsInspAgainL' + str(location_index) + 'L' not in enabled_tr:
+                req_insp_actions.append(location_index*3+2)
+
+        return req_insp_actions
 
     def fire_timed_transitions(self, enabled_timed_transitions, use_expected_time):
         if use_expected_time:
