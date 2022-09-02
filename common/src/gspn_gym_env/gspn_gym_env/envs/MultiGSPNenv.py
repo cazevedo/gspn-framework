@@ -155,7 +155,7 @@ class MultiGSPNenv(gym.Env):
                 # 'next_state_string': next_state_string}
 
     def reset(self):
-        self.timestamp = 0
+        self.timestamp = 0.0
         self.mr_gspn.reset_simulation()
         next_state = self.marking_to_state()
         self.enabled_parallel_transitions = {}
