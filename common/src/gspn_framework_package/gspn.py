@@ -68,6 +68,9 @@ class GSPN(object):
         return rate
 
     def rename_place(self, place, new_name):
+        if place == new_name:
+            return False
+
         ntokens = self.__places[place]
         place_index = self.places_to_index[place]
 
@@ -117,6 +120,9 @@ class GSPN(object):
         return self.__places.copy()
 
     def rename_transition(self, transition, new_name):
+        if transition == new_name:
+            return False
+
         tr_info = self.__transitions[transition]
         transition_index = self.transitions_to_index[transition]
 
