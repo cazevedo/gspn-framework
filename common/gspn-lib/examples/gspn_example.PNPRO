@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- This project file has been saved by the New GreatSPN Editor, v.100 --><project name="gspn_example" version="121">
+  <gspn name="GSPN 1" show-color-cmd="false" show-fluid-cmd="false">
+    <nodes>
+      <place marking="1" name="p1" x="11.0" y="7.0"/>
+      <place name="p2" x="26.0" y="7.0"/>
+      <transition name="t1" type="IMM" x="18.85" y="3.0"/>
+      <transition name="t2" type="IMM" x="18.85" y="7.0"/>
+      <transition name="t3" type="IMM" x="18.85" y="11.0"/>
+      <transition delay="1" label-y="2.0" name="t4" nservers-x="0.5" type="EXP" x="35.55" y="7.0"/>
+      <place marking="1" name="p3" x="11.0" y="23.0"/>
+      <transition label-y="-2.0" name="t5" type="IMM" x="18.85" y="21.0"/>
+      <transition name="t6" type="IMM" x="18.85" y="25.0"/>
+      <place name="p4" x="26.0" y="23.0"/>
+      <transition delay="1" label-x="-0.5" label-y="2.5" name="t7" nservers-x="0.5" type="EXP" x="35.55" y="23.0"/>
+    </nodes>
+    <edges>
+      <arc head="t1" kind="INPUT" tail="p1"/>
+      <arc head="t2" kind="INPUT" tail="p1"/>
+      <arc head="t3" kind="INPUT" tail="p1"/>
+      <arc head="p2" kind="OUTPUT" tail="t1"/>
+      <arc head="p2" kind="OUTPUT" tail="t2"/>
+      <arc head="p2" kind="OUTPUT" tail="t3"/>
+      <arc head="t4" kind="INPUT" tail="p2"/>
+      <arc head="p1" kind="OUTPUT" tail="t4">
+        <point x="36.0" y="1.5"/>
+        <point x="12.0" y="1.5"/>
+      </arc>
+      <arc head="t5" kind="INPUT" tail="p3"/>
+      <arc head="t6" kind="INPUT" tail="p3"/>
+      <arc head="p4" kind="OUTPUT" tail="t6"/>
+      <arc head="p4" kind="OUTPUT" tail="t5"/>
+      <arc head="t7" kind="INPUT" tail="p4"/>
+      <arc head="p3" kind="OUTPUT" tail="t7">
+        <point x="36.0" y="18.5"/>
+        <point x="12.0" y="18.5"/>
+      </arc>
+    </edges>
+  </gspn>
+  <measures gspn-name="GSPN" name="Measures" simplified-UI="false">
+    <assignments/>
+    <greatspn/>
+    <formulas>
+      <formula comment="Basic statistics of the toolchain execution." language="STAT"/>
+      <formula comment="All the basic Petri net measures" language="ALL"/>
+    </formulas>
+  </measures>
+</project>
