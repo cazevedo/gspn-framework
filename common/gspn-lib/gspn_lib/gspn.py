@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 import time
 import numpy as np
-from gspn_framework_package import gspn_analysis
+from gspn_lib import gspn_analysis
 import sparse
 
 class GSPN(object):

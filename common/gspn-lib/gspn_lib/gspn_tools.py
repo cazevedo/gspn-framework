@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-from gspn_framework_package import gspn as pn
+from gspn_lib import gspn as pn
 import pandas as pd
 import xml.etree.ElementTree as et  # XML parser
 from graphviz import Digraph
