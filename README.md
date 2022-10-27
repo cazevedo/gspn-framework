@@ -15,7 +15,7 @@ cd gspn-framework/common/gspn-lib
 pip install -e .
 ```
 ```bash
-cd gspn-framework/common/gspn_gym_env
+cd gspn-framework/common/gspn-gym-env
 pip install -e .
 ```
 Build the package:
