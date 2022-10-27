@@ -1,4 +1,3 @@
-repo<!-- TABLE OF CONTENTS -->
 ## Software Toolbox to Model, Plan and Execute Multi-Robot Tasks
 
 ## About the Package
