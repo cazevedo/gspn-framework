@@ -1,0 +1,3 @@
+[submodule "common/gspn-lib"]
+	path = common/gspn-lib
+	url = git@github.com:cazevedo/gspn-lib.git
