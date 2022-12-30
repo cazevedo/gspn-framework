@@ -19,12 +19,12 @@ class GSPNExecutor:
     Coordinates multi-robot systems following a given GSPN model and policy.
     '''
     def __init__(self):
-        rospy.log('Connecting to navigation server...')
-        self.nav_client = actionlib.SimpleActionClient('navigation_client',
+        rospy.loginfo('Connecting to navigation server...')
+        self.nav_client = actionlib.SimpleActionClient('/jackal2/NavigateWaypointActionServer',
                                                   multi_jackal_tutorials.msg.NavigateWaypointAction)
-        rospy.log('Waiting for navigation server...')
+        rospy.loginfo('Waiting for navigation server...')
         self.nav_client.wait_for_server()
-        rospy.log('Connected to navigation server...')
+        rospy.loginfo('Connected to navigation server...')
 
         # self.event_in_msg = None
         # self.event_in_msg_received = False
@@ -40,9 +40,9 @@ class GSPNExecutor:
         nav_waypoint = multi_jackal_tutorials.msg.NavigateWaypointGoal()
         nav_waypoint.destination = 'panel1'
         nav_waypoint.origin = 'center'
-        rospy.log('Goal sent!')
+        rospy.loginfo('Goal sent!')
         self.nav_client.send_goal(nav_waypoint)
-        rospy.log('Waiting for result...')
+        rospy.loginfo('Waiting for result...')
         self.nav_client.wait_for_result()
         print(self.nav_client.get_result())
 
