@@ -72,9 +72,11 @@ class GSPNExecutor:
 
     def execute_cb(self, result):
         pass
+        # fire transition finished action
 
-    def update_gspn(self, transition):
-        self.gspn.fire_transition(transition)
+        # if random switch comes next, read battery level and fire it
+
+        # set flag to issue new action
 
     def get_next_action(self, marking, enabled_imm_transitions):
         enabled_actions_indexes = []
